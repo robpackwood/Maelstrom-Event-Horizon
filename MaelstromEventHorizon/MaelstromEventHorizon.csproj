@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>MaelstromEventHorizon</AssemblyName>
+    <RootNamespace>MaelstromEventHorizon</RootNamespace>
+    <ApplicationIcon>Assets\MaelstromEventHorizon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\deep-space.png" LogicalName="Assets/deep-space.png" />
+    <EmbeddedResource Include="Assets\through-the-universe.mp3" LogicalName="Assets/through-the-universe.mp3" />
+    <EmbeddedResource Include="Assets\singularity-action.mp3" LogicalName="Assets/singularity-action.mp3" />
+    <EmbeddedResource Include="Assets\ship-destruction.wav" LogicalName="Assets/ship-destruction.wav" />
+    <EmbeddedResource Include="Assets\music-license.txt" LogicalName="Assets/music-license.txt" />
+    <EmbeddedResource Include="Assets\MaelstromEventHorizon.ico" LogicalName="Assets/MaelstromEventHorizon.ico" />
+    <EmbeddedResource Include="Assets\maelstrom-icon.png" LogicalName="Assets/maelstrom-icon.png" />
+    <EmbeddedResource Include="Assets\Sprites\*.png" Exclude="Assets\Sprites\_*.png"
+                      LogicalName="Assets/Sprites/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

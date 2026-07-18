@@ -1,0 +1,49 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+artifacts/
+
+# User and IDE files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Test and coverage output
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Package caches
+packages/
+*.nupkg
+*.snupkg
+
+# Runtime output
+logs/
+Drift.Package/Assets/*.png
+!Drift.Package/Assets/logo.png
+
+# Local secrets
+credentials/
+
+# Generated executable build outputs
+ExecutableBuilds/**
+!ExecutableBuilds/
+!ExecutableBuilds/**/
+!ExecutableBuilds/Regenerate-Executables.ps1
+!ExecutableBuilds/README.md
+!ExecutableBuilds/**/*.exe
+
+
+# APM dependencies
+apm_modules/
