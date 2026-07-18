@@ -5,8 +5,20 @@ An original WPF arcade game inspired by the structure and feel of the classic Ma
 ## Build and run
 
 ```powershell
-dotnet build C:\MaelstromSol\MaelstromEventHorizon.slnx
-dotnet run --project C:\MaelstromSol\MaelstromEventHorizon\MaelstromEventHorizon.csproj
+dotnet build .\MaelstromEventHorizon.slnx
+dotnet run --project .\MaelstromEventHorizon\MaelstromEventHorizon.csproj
+```
+
+## Packaged executable
+
+The self-contained Windows x64 build is available at
+[`ExecutableBuilds/win-x64/MaelstromEventHorizon.exe`](ExecutableBuilds/win-x64/MaelstromEventHorizon.exe).
+It includes the .NET runtime and game assets, so no separate installation is required.
+
+Regenerate it from the repository root with:
+
+```powershell
+dotnet publish .\MaelstromEventHorizon\MaelstromEventHorizon.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishDir=.\ExecutableBuilds\win-x64\
 ```
 
 ## Controls
