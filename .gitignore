@@ -42,7 +42,6 @@ ExecutableBuilds/**
 !ExecutableBuilds/**/
 !ExecutableBuilds/Regenerate-Executables.ps1
 !ExecutableBuilds/README.md
-!ExecutableBuilds/**/*.exe
 
 
 # APM dependencies
