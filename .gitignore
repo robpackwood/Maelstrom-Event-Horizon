@@ -43,6 +43,8 @@ ExecutableBuilds/**
 !ExecutableBuilds/Regenerate-Executables.ps1
 !ExecutableBuilds/README.md
 
+# Generated Microsoft Store packages
+MaelstromEventHorizon.Package/AppPackages/
 
 # APM dependencies
 apm_modules/

@@ -1,6 +1,7 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="MaelstromEventHorizon/MaelstromEventHorizon.csproj" />
+  <Project Path="MaelstromEventHorizon.Package/MaelstromEventHorizon.Package.wapproj" />
 </Solution>
