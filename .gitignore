@@ -45,6 +45,7 @@ ExecutableBuilds/**
 
 # Generated Microsoft Store packages
 MaelstromEventHorizon.Package/AppPackages/
+MaelstromEventHorizon.Package/*.assets.cache
 
 # APM dependencies
 apm_modules/
