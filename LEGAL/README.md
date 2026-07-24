@@ -35,6 +35,7 @@ items in `CERTIFICATION-READINESS.md` are completed truthfully.
   or rights owner to complete.
 - `CERTIFICATION-READINESS.md`: blockers and submission checklist.
 - `Generate-AssetManifest.ps1`: reproducibly rebuilds the hash manifest.
+- `../PRIVACY.md`: public-facing privacy policy for the game and Store listing.
 
 ## Important limits
 

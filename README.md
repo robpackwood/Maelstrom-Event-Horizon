@@ -2,6 +2,12 @@
 
 An original WPF arcade game inspired by the structure and feel of the classic Macintosh game Maelstrom. It uses original artwork, procedural effects, synthesized sound effects, and per-wave procedural music.
 
+## Privacy
+
+Maelstrom: Event Horizon is an offline game with no advertising, analytics, or
+telemetry. See the [Privacy Policy](PRIVACY.md) for details about locally saved
+high scores and preferences.
+
 ## Build and run
 
 ```powershell
