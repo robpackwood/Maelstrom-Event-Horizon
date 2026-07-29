@@ -232,8 +232,8 @@ internal sealed class OverlayRenderer
         view.DrawText(dc, "MULTIPLIER", 420, 339, 15, label, FontWeights.SemiBold);
         view.DrawText(dc, $"x {view.Game.SummaryMultiplier}", 733, 339, 18,
             new SolidColorBrush(Color.FromRgb(217, 159, 255)), FontWeights.Bold);
-        view.DrawText(dc, "COMET TOTAL", 420, 378, 15, label, FontWeights.SemiBold);
-        view.DrawText(dc, view.Money(view.Game.SummaryCometCash * view.Game.SummaryMultiplier), 733, 378, 18,
+        view.DrawText(dc, "MULTIPLIED BONUS", 420, 378, 15, label, FontWeights.SemiBold);
+        view.DrawText(dc, view.Money((view.Game.SummaryLevelBonusCash + view.Game.SummaryCometCash) * view.Game.SummaryMultiplier), 733, 378, 18,
             new SolidColorBrush(Color.FromRgb(123, 229, 255)), FontWeights.Bold);
         dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(135, 77, 192, 220)), 1), new Point(410, 405), new Point(870, 405));
         view.DrawText(dc, "WAVE DEPOSIT", 420, 448, 17, Brushes.White, FontWeights.Bold);

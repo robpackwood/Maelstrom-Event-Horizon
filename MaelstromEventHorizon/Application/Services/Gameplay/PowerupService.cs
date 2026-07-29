@@ -56,7 +56,6 @@ internal sealed class PowerupService
             case PowerupKind.Shields: game.Player.Shield = Math.Min(100, game.Player.Shield + 65); break;
             case PowerupKind.Freeze: game.FreezeTime = 8; break;
             case PowerupKind.SmartBomb: SmartBomb(game); break;
-            case PowerupKind.RetroVision: game.RetroVisionActive = true; break;
             case PowerupKind.RicochetArena: game.RicochetArenaActive = true; break;
             case PowerupKind.GiantShip:
                 game.Player.SetGiant(true);
@@ -91,7 +90,6 @@ internal sealed class PowerupService
         game.LuckActive = false;
         game.TripleFireActive = false;
         game.LongRangeActive = false;
-        game.RetroVisionActive = false;
         game.RicochetArenaActive = false;
         game.Player.SetGiant(false);
         game.FreezeTime = 0;

@@ -1,4 +1,5 @@
 # Build output
+*.exe
 [Bb]in/
 [Oo]bj/
 [Dd]ebug/

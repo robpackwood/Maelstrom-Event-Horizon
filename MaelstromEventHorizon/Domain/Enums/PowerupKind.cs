@@ -10,7 +10,6 @@ internal enum PowerupKind
     Shields,
     Freeze,
     SmartBomb,
-    RetroVision,
     RicochetArena,
     GiantShip
 }

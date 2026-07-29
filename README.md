@@ -45,15 +45,13 @@ The title screen also provides separate **Music** and **Sound FX** sliders. Sele
 
 ## Gameplay
 
-Clear escalating asteroid waves, fight two classes of pursuing fighters, and survive homing mines, black holes, and supernovas. Homing mines track the ship and require five direct shots to destroy. Black holes have a 12.5% chance to appear after wave 1, gently pull the ship off course, collapse when shot, and destroy the ship on contact. Canisters drift in from the edge and contain rapid fire, air brakes, luck, triple fire, long range, shield energy, enemy freeze, a smart bomb, 16-Bit Vision, Ricochet Arena, or Giant Ship. Shoot floating score bonuses, multipliers, and fast bonus comets before they escape.
+Clear escalating asteroid waves, fight two classes of pursuing fighters, and survive homing mines, black holes, and supernovas. Homing mines track the ship and require five direct shots to destroy. Black holes have a 12.5% chance to appear after wave 1, gently pull the ship off course, collapse when shot, and destroy the ship on contact. Canisters drift in from the edge and contain rapid fire, air brakes, luck, triple fire, long range, shield energy, enemy freeze, a smart bomb, Ricochet Arena, or Giant Ship. Shoot floating score bonuses, multipliers, and fast bonus comets before they escape.
 
 Giant Ship doubles the player's visual size and collision footprint across wave transitions. The first otherwise lethal non-black-hole hit shrinks the ship to normal size, leaves it alive with brief invulnerability, and plays an original descending transformation jingle. A regular-size ship is destroyed by the next unprotected lethal hit as usual.
 
 Every fifth wave is a weapons-off dodge trial. Diagonal Metal Storm, Quad-Cross Crossfire, Shifting Slalom, Spiral Swarm, 3D Warp Tunnel, and 3D Orbital Dive rotate between appearances while their speed and density continue to rise. Firing and shields are unavailable, stored shield energy is preserved, each avoided hazard earns $500, and one collision fails the trial for $0 without costing a ship.
 
 Each dodge trial is followed by a dedicated alien boss encounter. The Sludge Maw, Eye Tyrant, Bone Broodmother, and Void Leech cycle through different pursuit, orbit, charge, fan, radial, and spiral-shot patterns. Later encounters increase boss health, speed, and firing tempo. A warning siren and intense music announce each boss round, and defeating the creature banks an escalating boss bounty through the normal wave recap.
-
-16-Bit Vision renders the entire game on a 640x360 pixel grid in RGB565 color with nearest-neighbor scaling, giving backgrounds, ships, effects, and interfaces a unified 16-bit appearance without sacrificing HUD readability. It remains equipped across waves until the current player ship is destroyed.
 
 Ricochet Arena seals the playfield with illuminated rails and replaces edge wrapping with wall reflection for the player, enemies, ordinary asteroids, hazards, pickups, comets, debris, particles, and projectiles. Every shot becomes a rotating striped beach ball and bounces until its normal lifetime expires. Bonus-stage fly-through asteroids retain their one-pass exit behavior so the dodge stage can still finish. The arena remains active until the current wave ends.
 

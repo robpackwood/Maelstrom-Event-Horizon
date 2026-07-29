@@ -27,6 +27,7 @@ internal sealed class CollisionService
             if (fighter is not null)
             {
                 shot.Alive = false;
+                game.Audio.Play(SoundCue.SteelHit, .42);
 
                 if ((fighter.HitPoints -= shot.Damage) <= 0)
                 {
@@ -54,6 +55,7 @@ internal sealed class CollisionService
             if (mine is not null)
             {
                 shot.Alive = false;
+                game.Audio.Play(SoundCue.SteelHit, .42);
 
                 if ((mine.HitPoints -= shot.Damage) <= 0)
                 {
@@ -376,7 +378,7 @@ internal sealed class CollisionService
 
     internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition)
     {
-        if (!boss.Alive)
+        if (!boss.Alive || boss.Age < 2)
         {
             return;
         }

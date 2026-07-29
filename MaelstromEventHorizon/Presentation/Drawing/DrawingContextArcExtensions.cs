@@ -24,6 +24,7 @@ internal static class DrawingContextArcExtensions
             context.ArcTo(p1, new Size(radius, radius), 0, Math.Abs(sweepDegrees) > 180,
                 sweepDegrees >= 0 ? SweepDirection.Clockwise : SweepDirection.Counterclockwise, true, false);
         }
+        geometry.Freeze();
         dc.DrawGeometry(null, pen, geometry);
     }
 }

@@ -105,7 +105,7 @@ internal sealed class PlayerSimulationService
             game.ThrustRamp = Math.Max(0, game.ThrustRamp - dt * 1.8);
         }
 
-        if (game.AirBrakesActive)
+        if (game.AirBrakesActive && !game.Player.Thrusting)
         {
             game.Player.Velocity *= Math.Pow(.08, dt);
         }

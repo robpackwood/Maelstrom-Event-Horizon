@@ -2,6 +2,7 @@ using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Math;
 using MaelstromEventHorizon.Domain.Scores;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Media;
 
@@ -9,6 +10,15 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class DrawingPrimitiveService
 {
+    private const int TextCacheCapacity = 512;
+    private const int PenCacheCapacity = 512;
+    private readonly Dictionary<uint, SolidColorBrush> brushes = [];
+    private readonly Dictionary<PenKey, Pen> pens = [];
+    private readonly Dictionary<TextKey, FormattedText> formattedText = [];
+    private readonly ConditionalWeakTable<Asteroid, Geometry> asteroidGeometry = [];
+    private readonly Dictionary<double, Geometry> shipGeometry = [];
+    private readonly Dictionary<int, Geometry> shipDebrisGeometry = [];
+
     internal void DrawHighScores(GameView view, DrawingContext dc)
     {
         var label = new SolidColorBrush(Color.FromRgb(123, 163, 187));
@@ -47,19 +57,36 @@ internal sealed class DrawingPrimitiveService
     }
 
     internal Geometry ShipGeometry(double expand)
-        => Polygon((27 + expand, 0), (5, -8), (-14 - expand, -16 - expand), (-18 - expand, -8),
-            (-9, 0), (-18 - expand, 8), (-14 - expand, 16 + expand), (5, 8));
-
-    internal Geometry ShipDebrisGeometry(int kind) => kind switch
     {
-        0 => Polygon((27, 0), (5, -8), (0, 0), (5, 8)),
-        1 => Polygon((4, -7), (-14, -16), (-18, -8), (-9, 0), (0, 0)),
-        2 => Polygon((0, 0), (-9, 0), (-18, 8), (-14, 16), (4, 7)),
-        3 => Polygon((-17, -7), (-8, -4), (-8, 4), (-17, 7)),
-        _ => Polygon((-5, -6), (10, 0), (-5, 6), (0, 0))
-    };
+        if (shipGeometry.TryGetValue(expand, out Geometry? geometry))
+            return geometry;
 
-    internal Geometry AsteroidGeometry(Asteroid rock)
+        geometry = Polygon((27 + expand, 0), (5, -8), (-14 - expand, -16 - expand), (-18 - expand, -8),
+            (-9, 0), (-18 - expand, 8), (-14 - expand, 16 + expand), (5, 8));
+        shipGeometry.Add(expand, geometry);
+        return geometry;
+    }
+
+    internal Geometry ShipDebrisGeometry(int kind)
+    {
+        if (shipDebrisGeometry.TryGetValue(kind, out Geometry? geometry))
+            return geometry;
+
+        geometry = kind switch
+        {
+            0 => Polygon((27, 0), (5, -8), (0, 0), (5, 8)),
+            1 => Polygon((4, -7), (-14, -16), (-18, -8), (-9, 0), (0, 0)),
+            2 => Polygon((0, 0), (-9, 0), (-18, 8), (-14, 16), (4, 7)),
+            3 => Polygon((-17, -7), (-8, -4), (-8, 4), (-17, 7)),
+            _ => Polygon((-5, -6), (10, 0), (-5, 6), (0, 0))
+        };
+        shipDebrisGeometry.Add(kind, geometry);
+        return geometry;
+    }
+
+    internal Geometry AsteroidGeometry(Asteroid rock) => asteroidGeometry.GetValue(rock, CreateAsteroidGeometry);
+
+    private Geometry CreateAsteroidGeometry(Asteroid rock)
     {
         int count = rock.Size == 3 ? 13 : rock.Size == 2 ? 11 : 9;
         var points = new (double x, double y)[count];
@@ -102,7 +129,7 @@ internal sealed class DrawingPrimitiveService
     internal void DrawGlowGeometry(DrawingContext dc, Geometry geometry, Color color, double width)
     {
         for (int i = 3; i >= 1; i--)
-            dc.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromArgb((byte)(20 + i * 8), color.R, color.G, color.B)), width * i), geometry);
+            dc.DrawGeometry(null, Pen(Color.FromArgb((byte)(20 + i * 8), color.R, color.G, color.B), width * i), geometry);
     }
 
     internal void DrawGlowEllipse(DrawingContext dc, V2 center, double radius, Color color, int layers, double intensity)
@@ -111,7 +138,7 @@ internal sealed class DrawingPrimitiveService
         {
             double r = radius + i * 4;
             byte alpha = (byte)(Math.Clamp(intensity, 0, 1) * 55 / i);
-            dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B)), null, Pt(center), r, r);
+            dc.DrawEllipse(Brush(Color.FromArgb(alpha, color.R, color.G, color.B)), null, Pt(center), r, r);
         }
     }
 
@@ -128,9 +155,54 @@ internal sealed class DrawingPrimitiveService
     }
 
     internal FormattedText Format(string text, double size, Brush brush, FontWeight weight)
+    {
+        if (brush is not SolidColorBrush solid)
+            return CreateFormattedText(text, size, brush, weight);
+
+        var key = new TextKey(text, size, ColorKey(solid.Color), weight.ToOpenTypeWeight());
+        if (formattedText.TryGetValue(key, out FormattedText? cached))
+            return cached;
+
+        if (formattedText.Count >= TextCacheCapacity)
+            formattedText.Clear();
+        cached = CreateFormattedText(text, size, Brush(solid.Color), weight);
+        formattedText.Add(key, cached);
+        return cached;
+    }
+
+    internal SolidColorBrush Brush(Color color)
+    {
+        uint key = ColorKey(color);
+        if (brushes.TryGetValue(key, out SolidColorBrush? brush))
+            return brush;
+
+        brush = new SolidColorBrush(color);
+        brush.Freeze();
+        brushes.Add(key, brush);
+        return brush;
+    }
+
+    internal Pen Pen(Color color, double thickness)
+    {
+        var key = new PenKey(ColorKey(color), thickness);
+        if (pens.TryGetValue(key, out Pen? pen))
+            return pen;
+
+        if (pens.Count >= PenCacheCapacity)
+            pens.Clear();
+        pen = new Pen(Brush(color), thickness);
+        pen.Freeze();
+        pens.Add(key, pen);
+        return pen;
+    }
+
+    private static FormattedText CreateFormattedText(string text, double size, Brush brush, FontWeight weight)
         => new(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, weight, FontStretches.Normal), size, brush, 1.0)
         { TextAlignment = TextAlignment.Left };
+
+    private static uint ColorKey(Color color) =>
+        ((uint)color.A << 24) | ((uint)color.R << 16) | ((uint)color.G << 8) | color.B;
 
     internal Point Pt(V2 v) => new(v.X, v.Y);
     internal string Money(int value) => value.ToString("$#,0", CultureInfo.InvariantCulture);
@@ -141,4 +213,7 @@ internal sealed class DrawingPrimitiveService
         => Color.FromRgb((byte)(c.R + (255 - c.R) * amount), (byte)(c.G + (255 - c.G) * amount), (byte)(c.B + (255 - c.B) * amount));
     internal Color Darken(Color c, double amount)
         => Color.FromRgb((byte)(c.R * (1 - amount)), (byte)(c.G * (1 - amount)), (byte)(c.B * (1 - amount)));
+
+    private readonly record struct TextKey(string Text, double Size, uint Color, int FontWeight);
+    private readonly record struct PenKey(uint Color, double Thickness);
 }

@@ -327,7 +327,6 @@ internal sealed class EffectsPhysicsService
         PowerupKind.Shields => "SHIELD ENERGY",
         PowerupKind.Freeze => "TIME FREEZE",
         PowerupKind.SmartBomb => "SMART BOMB",
-        PowerupKind.RetroVision => "16-BIT VISION",
         PowerupKind.RicochetArena => "RICOCHET ARENA",
         PowerupKind.GiantShip => "GIANT SHIP",
         _ => kind.ToString().ToUpperInvariant()

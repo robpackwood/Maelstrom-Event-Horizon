@@ -19,8 +19,8 @@ internal sealed class EffectsHudRenderer
             byte alpha = (byte)(255 * Math.Min(1, life * 2.4));
             Color color = view.FromArgb(text.Color, alpha);
             view.DrawCenteredText(dc, text.Text, text.Position.X + 1.5, y + 1.5, 18,
-                new SolidColorBrush(Color.FromArgb((byte)(alpha * .7), 2, 7, 14)), FontWeights.Black);
-            view.DrawCenteredText(dc, text.Text, text.Position.X, y, 18, new SolidColorBrush(color), FontWeights.Black);
+                view.Brush(Color.FromArgb((byte)(alpha * .7), 2, 7, 14)), FontWeights.Black);
+            view.DrawCenteredText(dc, text.Text, text.Position.X, y, 18, view.Brush(color), FontWeights.Black);
         }
     }
 
@@ -91,7 +91,7 @@ internal sealed class EffectsHudRenderer
             double size = radius * (.18 + i * .08);
             V2 position = shot.Position + trail * (radius * (.55 + i * .54)) +
                 new V2(-heading.Y, heading.X) * Math.Sin(shot.Angle + i * 1.9) * radius * .2;
-            dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(35 + i * 17), color.R, color.G, color.B)),
+            dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(35 + i * 17), color.R, color.G, color.B)),
                 null, view.Pt(position), size, size * .8);
         }
 
@@ -122,11 +122,11 @@ internal sealed class EffectsHudRenderer
             double lobe = radius * (.34 + .09 * Math.Sin(i * 3.7 + shot.Angle));
             dc.DrawEllipse(body, null, center, lobe, lobe * .9);
         }
-        dc.DrawEllipse(body, new Pen(new SolidColorBrush(Color.FromArgb(205, 168, 235, 91)), .85),
+        dc.DrawEllipse(body, new Pen(view.Brush(Color.FromArgb(205, 168, 235, 91)), .85),
             new Point(), radius, radius * .91);
-        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(175, 230, 255, 161)), null,
+        dc.DrawEllipse(view.Brush(Color.FromArgb(175, 230, 255, 161)), null,
             new Point(-radius * .3, -radius * .27), radius * .18, radius * .13);
-        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(145, 42, 83, 27)), null,
+        dc.DrawEllipse(view.Brush(Color.FromArgb(145, 42, 83, 27)), null,
             new Point(radius * .27, radius * .21), radius * .15, radius * .19);
 
         if (shot.SludgeVomit) dc.Pop();
@@ -150,7 +150,7 @@ internal sealed class EffectsHudRenderer
         {
             double a0 = (i * 60 - 8) * Math.PI / 180;
             double a1 = (i * 60 + 30) * Math.PI / 180;
-            dc.DrawGeometry(new SolidColorBrush(colors[i % colors.Length]), null,
+            dc.DrawGeometry(view.Brush(colors[i % colors.Length]), null,
                 view.Polygon((0, 0), (Math.Cos(a0) * radius * 1.35, Math.Sin(a0) * radius * 1.35),
                     (Math.Cos(a1) * radius * 1.35, Math.Sin(a1) * radius * 1.35)));
         }
@@ -166,8 +166,8 @@ internal sealed class EffectsHudRenderer
         shade.GradientStops.Add(new GradientStop(Color.FromArgb(105, 0, 18, 36), 1));
         dc.DrawEllipse(shade, null, new Point(), radius, radius);
         dc.Pop();
-        dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromRgb(232, 251, 255)), 1.1), new Point(), radius, radius);
-        dc.DrawEllipse(Brushes.White, new Pen(new SolidColorBrush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22, radius * .22);
+        dc.DrawEllipse(null, new Pen(view.Brush(Color.FromRgb(232, 251, 255)), 1.1), new Point(), radius, radius);
+        dc.DrawEllipse(Brushes.White, new Pen(view.Brush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22, radius * .22);
         dc.Pop();
         dc.Pop();
     }
@@ -202,8 +202,8 @@ internal sealed class EffectsHudRenderer
             double life = Math.Clamp(1 - p.Age / p.Lifetime, 0, 1);
             Color c = view.FromArgb(p.Color, (byte)(255 * life));
             double r = p.StartSize * (.35 + life * .8);
-            dc.DrawEllipse(new SolidColorBrush(c), null, view.Pt(p.Position), r, r);
-            if (r > 3) dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position), r * 2.8, r * 2.8);
+            dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
+            if (r > 3) dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position), r * 2.8, r * 2.8);
         }
     }
 
@@ -214,7 +214,7 @@ internal sealed class EffectsHudRenderer
             double p = ring.Age / ring.Lifetime;
             double r = ring.MaxRadius * view.EaseOut(p);
             Color color = view.FromArgb(ring.Color, (byte)(220 * (1 - p)));
-            dc.DrawEllipse(null, new Pen(new SolidColorBrush(color), Math.Max(.7, 5 * (1 - p))), view.Pt(ring.Position), r, r);
+            dc.DrawEllipse(null, new Pen(view.Brush(color), Math.Max(.7, 5 * (1 - p))), view.Pt(ring.Position), r, r);
         }
     }
 
@@ -293,7 +293,6 @@ internal sealed class EffectsHudRenderer
         if (view.Game.LuckActive) active.Add("LUCK");
         if (view.Game.TripleFireActive) active.Add("TRIPLE FIRE");
         if (view.Game.LongRangeActive) active.Add("LONG RANGE");
-        if (view.Game.RetroVisionActive) active.Add("16-BIT VISION");
         if (view.Game.RicochetArenaActive) active.Add("RICOCHET ARENA");
         if (view.Game.Player.Giant) active.Add("GIANT SHIP");
         if (view.Game.FreezeTime > 0) active.Add("TIME FREEZE");

@@ -38,31 +38,6 @@ internal sealed class SceneRenderer
         view.DrawTransitionCurtain(dc);
     }
 
-    internal void DrawRetroFrame(GameView view, DrawingContext dc)
-    {
-        const int pixelWidth = 640;
-        const int pixelHeight = 360;
-        var visual = new DrawingVisual();
-        using (DrawingContext lowResolution = visual.RenderOpen())
-        {
-            lowResolution.PushTransform(new ScaleTransform(
-                pixelWidth / GameEngine.Width, pixelHeight / GameEngine.Height));
-            DrawGameCanvas(view, lowResolution);
-            lowResolution.Pop();
-        }
-
-        var bitmap = new RenderTargetBitmap(pixelWidth, pixelHeight, 96, 96, PixelFormats.Pbgra32);
-        bitmap.Render(visual);
-        bitmap.Freeze();
-        var reducedColor = new FormatConvertedBitmap(bitmap, PixelFormats.Bgr565, null, 0);
-        RenderOptions.SetBitmapScalingMode(reducedColor, BitmapScalingMode.NearestNeighbor);
-        reducedColor.Freeze();
-        dc.DrawImage(reducedColor, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
-        var scanline = new SolidColorBrush(Color.FromArgb(22, 0, 4, 8));
-        for (double y = 2; y < GameEngine.Height; y += 4)
-            dc.DrawRectangle(scanline, null, new Rect(0, y, GameEngine.Width, 1));
-    }
-
     private void DrawBackdrop(GameView view, DrawingContext dc)
     {
         bool titleScene = view.Game.Mode is GameMode.Title or GameMode.Controls;
@@ -74,22 +49,7 @@ internal sealed class SceneRenderer
         {
             if (view.Game.IsBonusStage)
             {
-                Vector drift = view.Game.BonusStageVariant switch
-                {
-                    BonusStageKind.Crossfire => new Vector(-44, Math.Sin(view.Game.BonusTravelTime * .7) * 16),
-                    BonusStageKind.SlalomGates => new Vector(-72, 0),
-                    BonusStageKind.SpiralSwarm => new Vector(-18, 28),
-                    _ => new Vector(-34, 20)
-                };
-                int backgroundIndex = waveIndex % view.WaveBackgrounds.Length;
-                ImageBrush movingBackdrop = view.BonusBackgroundBrushes[backgroundIndex] ??=
-                    GameView.CreateBonusBackgroundBrush(selectedBackground);
-                if (movingBackdrop.Transform is TranslateTransform transform)
-                {
-                    transform.X = view.Game.BonusTravelTime * drift.X;
-                    transform.Y = view.Game.BonusTravelTime * drift.Y;
-                }
-                dc.DrawRectangle(movingBackdrop, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+                dc.DrawImage(selectedBackground, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
             }
             else
             {
@@ -142,13 +102,13 @@ internal sealed class SceneRenderer
             double twinkle = .48 + .52 * Math.Sin(view.Game.TotalTime * (1.2 + star.Depth * 2.5) + star.Phase);
             double size = .65 + star.Depth * 1.55 + twinkle * .6;
             byte alpha = (byte)(85 + twinkle * 155);
-            var brush = new SolidColorBrush(Color.FromArgb(alpha,
+            var brush = view.Brush(Color.FromArgb(alpha,
                 (byte)(180 + star.Depth * 70), (byte)(205 + star.Depth * 45), 255));
             var position = new Point(x, y);
             dc.DrawEllipse(brush, null, position, size, size);
             if (star.Depth > .82 && twinkle > .78)
             {
-                var pen = new Pen(new SolidColorBrush(Color.FromArgb((byte)(alpha / 2), 160, 205, 255)), .7);
+                var pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);
                 dc.DrawLine(pen, new Point(x - size * 3, y), new Point(x + size * 3, y));
                 dc.DrawLine(pen, new Point(x, y - size * 3), new Point(x, y + size * 3));
             }

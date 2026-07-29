@@ -170,22 +170,6 @@ internal sealed class TitleScreenRenderer
                 dc.DrawLine(pen, new Point(5, -7), new Point(10, -13));
                 dc.DrawLine(new Pen(Brushes.White, 1.8), new Point(9, -13), new Point(13, -10));
                 break;
-            case GameView.TickerIcon.RetroVision:
-                dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(13, 25, 38)), pen, new Rect(-13, -10, 26, 20));
-                Color[] pixels =
-                [
-                    view.Lighten(tint, .45), tint, Color.FromRgb(255, 99, 92),
-                    Color.FromRgb(92, 221, 255), Color.FromRgb(125, 246, 151), Color.FromRgb(190, 113, 255)
-                ];
-                for (int i = 0; i < pixels.Length; i++)
-                {
-                    int row = i / 3;
-                    dc.DrawRectangle(new SolidColorBrush(pixels[i]), null,
-                        new Rect(-9 + i % 3 * 6, -6 + row * 7, 5, 6));
-                }
-                dc.DrawLine(pen, new Point(-5, 11), new Point(5, 11));
-                dc.DrawLine(pen, new Point(0, 10), new Point(0, 14));
-                break;
             case GameView.TickerIcon.RicochetArena:
                 dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(70, tint.R, tint.G, tint.B)),
                     new Pen(pale, 2), new Rect(-13, -11, 26, 22));

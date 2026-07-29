@@ -26,7 +26,6 @@ internal sealed class GameView : FrameworkElement
         Shield,
         Freeze,
         SmartBomb,
-        RetroVision,
         RicochetArena,
         GiantShip,
         Cash,
@@ -63,6 +62,7 @@ internal sealed class GameView : FrameworkElement
     internal readonly BitmapSource RescueShipSprite;
     internal readonly BitmapSource MineBodySprite;
     internal readonly BitmapSource VortexCoreSprite;
+    internal readonly BitmapImage? CometTailSprite;
     internal readonly BitmapSource NovaCoreSprite;
     internal readonly Dictionary<uint, BitmapSource> CometHeadSprites;
     internal readonly BitmapSource[][] BossSpriteFrames;
@@ -72,7 +72,7 @@ internal sealed class GameView : FrameworkElement
     internal const double BossSpriteFrameRate = 12;
     internal static readonly Color[] WaveGrades = [Color.FromRgb(8, 26, 50), Color.FromRgb(45, 7, 13), Color.FromRgb(4, 38, 27), Color.FromRgb(24, 8, 43), Color.FromRgb(48, 26, 3), Color.FromRgb(5, 31, 42), Color.FromRgb(37, 7, 34), Color.FromRgb(35, 19, 8)];
     internal static readonly Brush VignetteBrush = CreateVignetteBrush();
-    internal static readonly (TickerIcon Icon, string Name, string Description, uint Tint)[] TitleItemGuide = [(TickerIcon.Canister, "ITEM CANISTER", "contains one random ship power-up", 0xff50eaff), (TickerIcon.RapidFire, "RAPID FIRE", "hold fire for 15-round bursts", 0xffff6e72), (TickerIcon.AirBrakes, "AIR BRAKES", "adds strong momentum control", 0xff73d8ff), (TickerIcon.Luck, "LUCK OF THE IRISH", "triggers every special event once this wave", 0xff72f09a), (TickerIcon.TripleFire, "TRIPLE FIRE", "launches a three-way shot", 0xffffb85d), (TickerIcon.LongRange, "LONG RANGE", "keeps shots active farther", 0xff8fd5ff), (TickerIcon.Shield, "SHIELD ENERGY", "restores shield charge", 0xff64edff), (TickerIcon.Freeze, "TIME FREEZE", "stops hostile motion for eight seconds", 0xffb18cff), (TickerIcon.SmartBomb, "SMART BOMB", "fractures asteroids and clears nearby threats", 0xffff7b68), (TickerIcon.RetroVision, "16-BIT VISION", "pixelates every graphic until the ship is lost", 0xffffd45d), (TickerIcon.RicochetArena, "RICOCHET ARENA", "seals the screen and makes every moving object bounce", 0xff74f3c5), (TickerIcon.GiantShip, "GIANT SHIP", "doubles ship size and absorbs one lethal hit", 0xffffd85a), (TickerIcon.Cash, "CASH BONUS", "adds dollars to the current wave", 0xffffd66b), (TickerIcon.Multiplier, "MULTIPLIER", "multiplies banked comet cash", 0xffd08aff), (TickerIcon.Comet, "COMET", "shoot any part for $500 to $5,000", 0xff73e7ff), (TickerIcon.RescueShip, "RESCUE SHIP", "touch it to gain one extra life", 0xff79f3b2)];
+    internal static readonly (TickerIcon Icon, string Name, string Description, uint Tint)[] TitleItemGuide = [(TickerIcon.Canister, "ITEM CANISTER", "contains one random ship power-up", 0xff50eaff), (TickerIcon.RapidFire, "RAPID FIRE", "hold fire for 15-round bursts", 0xffff6e72), (TickerIcon.AirBrakes, "AIR BRAKES", "adds strong momentum control", 0xff73d8ff), (TickerIcon.Luck, "LUCK OF THE IRISH", "triggers every special event once this wave", 0xff72f09a), (TickerIcon.TripleFire, "TRIPLE FIRE", "launches a three-way shot", 0xffffb85d), (TickerIcon.LongRange, "LONG RANGE", "keeps shots active farther", 0xff8fd5ff), (TickerIcon.Shield, "SHIELD ENERGY", "restores shield charge", 0xff64edff), (TickerIcon.Freeze, "TIME FREEZE", "stops hostile motion for eight seconds", 0xffb18cff), (TickerIcon.SmartBomb, "SMART BOMB", "fractures asteroids and clears nearby threats", 0xffff7b68), (TickerIcon.RicochetArena, "RICOCHET ARENA", "seals the screen and makes every moving object bounce", 0xff74f3c5), (TickerIcon.GiantShip, "GIANT SHIP", "doubles ship size and absorbs one lethal hit", 0xffffd85a), (TickerIcon.Cash, "CASH BONUS", "adds dollars to the current wave", 0xffffd66b), (TickerIcon.Multiplier, "MULTIPLIER", "multiplies banked comet cash", 0xffd08aff), (TickerIcon.Comet, "COMET", "shoot any part for $500 to $5,000", 0xff73e7ff), (TickerIcon.RescueShip, "RESCUE SHIP", "touch it to gain one extra life", 0xff79f3b2)];
     internal static readonly (TickerIcon Icon, string Name, string Description, uint Tint)[] TitleHazardGuide = [(TickerIcon.Asteroid, "ASTEROID", "fractures into smaller rocks when shot", 0xffd5c5aa), (TickerIcon.SteelAsteroid, "STEEL ASTEROID", "resists gunfire and hits hard", 0xffd4edf5), (TickerIcon.Raider, "RAIDER", "pursues the ship and fires scattered shots", 0xffff6984), (TickerIcon.Interceptor, "INTERCEPTOR", "moves faster and leads its fire", 0xff69e8ff), (TickerIcon.Mine, "HOMING MINE", "tracks the ship and takes five shots to destroy", 0xffffdf58), (TickerIcon.BlackHole, "BLACK HOLE", "pulls the ship inward; contact is fatal", 0xffc187ff), (TickerIcon.Supernova, "SUPERNOVA", "shoot it before it detonates", 0xffff8c50), (TickerIcon.MetalStorm, "DODGE TRIAL", "six intense patterns; weapons and shields disabled", 0xffb9e8f7), (TickerIcon.AlienBoss, "ALIEN BOSS", "appears after every dodge trial; learn its attack pattern", 0xff91ef62)];
     internal const string TitleObjectives = "BREAK ASTEROIDS  /  SURVIVE EACH WAVE  /  DESTROY ENEMY SHIPS  /  SHOOT COMETS FOR CASH  /  " + "COLLECT POWER-UPS  /  BANK WAVE EARNINGS  /  SURVIVE A NEW DODGE TRIAL EVERY 5 WAVES  /  DEFEAT THE ALIEN BOSS THAT FOLLOWS  /  " + "EARN AN EXTRA SHIP EVERY $50,000  /  CHASE THE HIGHEST SCORE";
     public GameView(GameEngine game, IAssetProvider assets, GameRenderServices renderers)
@@ -93,9 +93,10 @@ internal sealed class GameView : FrameworkElement
         PlayerShipSprite = LoadOrPrerenderSprite("player-ship.png", 192, 72, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), false));
         GiantPlayerShipSprite = LoadOrPrerenderSprite("player-ship-giant.png", 192, 80, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), true));
         RescueShipSprite = LoadOrPrerenderSprite("rescue-ship.png", 192, 72, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(74, 255, 145), false));
-        MineBodySprite = LoadOrPrerenderSprite("hazard-mine.png", 160, 54, DrawMineBody);
-        VortexCoreSprite = LoadOrPrerenderSprite("hazard-black-hole-core.png", 192, 84, DrawVortexCore);
-        NovaCoreSprite = LoadOrPrerenderSprite("hazard-supernova-core.png", 192, 104, DrawNovaCore);
+        MineBodySprite = LoadOrPrerenderSprite("hazard-mine-v2.png", 160, 54, DrawMineBody);
+        VortexCoreSprite = LoadOrPrerenderSprite("hazard-black-hole-core-v2.png", 192, 84, DrawVortexCore);
+        NovaCoreSprite = LoadOrPrerenderSprite("hazard-supernova-core-v2.png", 192, 104, DrawNovaCore);
+        CometTailSprite = LoadSprite("comet-tail-v2.png");
         CometHeadSprites = BuildCometHeadSprites();
         BossSpriteFrames = BuildBossSpriteFrames();
         Background = LoadBitmapAsset("deep-space.png");
@@ -329,17 +330,13 @@ internal sealed class GameView : FrameworkElement
         dc.PushClip(new RectangleGeometry(new Rect(x, y, GameEngine.Width * scale, GameEngine.Height * scale)));
         dc.PushTransform(new TranslateTransform(x, y));
         dc.PushTransform(new ScaleTransform(scale, scale));
-        if (Game.RetroVisionActive)
-            DrawRetroFrame(dc);
-        else
-            DrawGameCanvas(dc);
+        DrawGameCanvas(dc);
         dc.Pop();
         dc.Pop();
         dc.Pop();
     }
 
     internal void DrawGameCanvas(DrawingContext dc) => Renderers.SceneRenderer.DrawGameCanvas(this, dc);
-    internal void DrawRetroFrame(DrawingContext dc) => Renderers.SceneRenderer.DrawRetroFrame(this, dc);
     internal double PositiveModulo(double value, double modulus) => Renderers.SceneRenderer.PositiveModulo(value, modulus);
     internal void DrawShip(DrawingContext dc) => Renderers.PlayerAsteroidRenderer.DrawShip(this, dc);
     internal void DrawDetailedShipHull(DrawingContext dc, double time, Color accent, bool armored) => Renderers.PlayerAsteroidRenderer.DrawDetailedShipHull(this, dc, time, accent, armored);
@@ -386,4 +383,6 @@ internal sealed class GameView : FrameworkElement
     internal Color Lighten(Color c, double amount) => Renderers.DrawingPrimitiveService.Lighten(c, amount);
     internal Color Darken(Color c, double amount) => Renderers.DrawingPrimitiveService.Darken(c, amount);
     internal StreamGeometry Polygon(params (double x, double y)[] points) => Renderers.DrawingPrimitiveService.Polygon(points);
+    internal SolidColorBrush Brush(Color color) => Renderers.DrawingPrimitiveService.Brush(color);
+    internal Pen Pen(Color color, double thickness) => Renderers.DrawingPrimitiveService.Pen(color, thickness);
 }

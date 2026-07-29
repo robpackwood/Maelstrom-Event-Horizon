@@ -142,7 +142,6 @@ internal sealed class GameEngine
     public bool LuckActive { get; internal set; }
     public bool TripleFireActive { get; internal set; }
     public bool LongRangeActive { get; internal set; }
-    public bool RetroVisionActive { get; internal set; }
     public bool RicochetArenaActive { get; internal set; }
     public double TotalTime { get; private set; }
     public double BonusTravelTime { get; internal set; }

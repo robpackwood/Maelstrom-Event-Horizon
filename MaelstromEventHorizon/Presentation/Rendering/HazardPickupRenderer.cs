@@ -178,29 +178,11 @@ internal sealed class HazardPickupRenderer
         V2 back = -comet.Velocity.Normalized;
         V2 side = new(-back.Y, back.X);
         Point head = view.Pt(position);
-        var outerTail = new StreamGeometry();
-        using (var c = outerTail.Open())
-        {
-            c.BeginFigure(view.Pt(position + side * 14), true, true);
-            c.LineTo(view.Pt(position + back * Comet.TrailLength), true, false);
-            c.LineTo(view.Pt(position - side * 14), true, false);
-        }
-        var outerBrush = new LinearGradientBrush(Color.FromArgb(0, color.R, color.G, color.B), Color.FromArgb(205, color.R, color.G, color.B),
-            view.Pt(position + back * Comet.TrailLength), head)
-        { MappingMode = BrushMappingMode.Absolute };
-        dc.DrawGeometry(outerBrush, null, outerTail);
-
-        var innerTail = new StreamGeometry();
-        using (var c = innerTail.Open())
-        {
-            c.BeginFigure(view.Pt(position + side * 5), true, true);
-            c.LineTo(view.Pt(position + back * (Comet.TrailLength * .78)), true, false);
-            c.LineTo(view.Pt(position - side * 5), true, false);
-        }
-        var innerBrush = new LinearGradientBrush(Color.FromArgb(0, 255, 255, 255), Color.FromArgb(225, 255, 255, 255),
-            view.Pt(position + back * (Comet.TrailLength * .78)), head)
-        { MappingMode = BrushMappingMode.Absolute };
-        dc.DrawGeometry(innerBrush, null, innerTail);
+        dc.PushTransform(new TranslateTransform(position.X, position.Y));
+        dc.PushTransform(new RotateTransform(Math.Atan2(back.Y, back.X) * 180 / Math.PI));
+        dc.DrawImage(view.CometTailSprite!, new Rect(0, -18, Comet.TrailLength, 36));
+        dc.Pop();
+        dc.Pop();
 
         BitmapSource headSprite = view.CometHeadSprites.TryGetValue(comet.Tint, out BitmapSource? sprite)
             ? sprite

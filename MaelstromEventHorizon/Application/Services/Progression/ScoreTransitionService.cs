@@ -51,7 +51,8 @@ internal sealed class ScoreTransitionService
         game.SummaryCometCash = game.WaveCometCash;
         game.SummaryLevelBonusCash = game.LevelBonusCash;
         game.SummaryMultiplier = game.Multiplier;
-        game.SummaryTotalCash = game.SummaryBaseCash + game.SummaryLevelBonusCash + game.SummaryCometCash * game.SummaryMultiplier;
+        game.SummaryTotalCash = game.SummaryBaseCash +
+                                (game.SummaryLevelBonusCash + game.SummaryCometCash) * game.SummaryMultiplier;
         game.SummaryDeposited = 0;
         game.SummaryElapsed = 0;
         game.SummaryScreenElapsed = 0;
