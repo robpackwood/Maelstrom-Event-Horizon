@@ -9,6 +9,8 @@ internal sealed class WaveSpawnService
     internal void BeginNextWave(GameEngine game)
     {
         game.Mode = GameMode.Playing;
+        game.BossCountdown = 0;
+        game.BossInvulnerability = 0;
         game.CashConfettiTime = 0;
         game.RicochetArenaActive = false;
         game.CenterPlayerWithShield();
@@ -51,13 +53,13 @@ internal sealed class WaveSpawnService
             game.BonusStageVariant = (BonusStageKind)((bonusStageNumber - 1) % Enum.GetValues<BonusStageKind>().Length);
             game.BonusAsteroidTotal = game.BonusStageVariant switch
             {
-                BonusStageKind.SlalomGates => Math.Min(40, 22 + bonusStageNumber * 2),
+                BonusStageKind.SlalomGates => Math.Min(44, 26 + bonusStageNumber * 3),
                 BonusStageKind.SpiralSwarm => Math.Min(34, 14 + bonusStageNumber * 2),
                 _ => Math.Min(40, 16 + bonusStageNumber * 2)
             };
             game.BonusAsteroidsRemaining = game.BonusAsteroidTotal;
             game.BonusPatternStep = 0;
-            game.BonusAsteroidSpawnTimer = game.BonusStageVariant == BonusStageKind.SlalomGates ? 1.6 : 1.25;
+            game.BonusAsteroidSpawnTimer = game.BonusStageVariant == BonusStageKind.SlalomGates ? 1.35 : 1.25;
             game.EventTimer = double.MaxValue;
             game.RescueTimer = -1;
             game.Player.Shielding = false;
@@ -71,6 +73,7 @@ internal sealed class WaveSpawnService
             game.EventTimer = double.MaxValue;
             game.RescueTimer = -1;
             SpawnAlienBoss(game);
+            game.BossCountdown = 3;
         }
         else
         {
@@ -82,7 +85,8 @@ internal sealed class WaveSpawnService
                 bool steel = game.Wave >= 4 && i == normalRocks - 1 && game.Wave % 3 == 1;
                 game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3), 3, steel, game.Random.Next()));
             }
-            if (game.Wave >= 2 && game.Wave % 2 == 0) SpawnFighter(game);
+            double openingFighterChance = Math.Clamp(.08 + game.Wave * .035, .12, .42);
+            if (game.Wave >= 2 && game.Random.NextDouble() < openingFighterChance) SpawnFighter(game);
             game.EventTimer = 6 + game.Random.NextDouble() * 4;
             double rescueChance = Math.Min(.30, .12 + game.Wave * .008 + (game.LuckActive ? .10 : 0));
             game.RescueTimer = game.Random.NextDouble() < rescueChance ? 5 + game.Random.NextDouble() * 10 : -1;
@@ -175,23 +179,23 @@ internal sealed class WaveSpawnService
 
     private void SpawnSlalomGate(GameEngine game, int difficulty)
     {
-        int lanes = Math.Clamp(7 + (difficulty - 1) / 3, 7, 9);
+        int lanes = Math.Clamp(8 + (difficulty - 1) / 3, 8, 10);
         int gapPositions = lanes - 1;
         int gapCycle = Math.Max(1, gapPositions * 2 - 2);
         int gapStep = (game.BonusPatternStep + difficulty) % gapCycle;
         int gap = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
         int spawned = 0;
-        double speed = 220 + difficulty * 10;
+        double speed = 255 + difficulty * 13;
         for (int lane = 0; lane < lanes && game.BonusAsteroidsRemaining > 0; lane++)
         {
             if (lane == gap || lane == gap + 1) continue;
             double y = 48 + lane / (double)(lanes - 1) * (GameEngine.Height - 96);
             V2 origin = new(GameEngine.Width + 78 + spawned * 5, y);
-            V2 target = new(-95, y + Math.Sin(game.BonusPatternStep * .72 + lane) * (12 + difficulty * 3));
-            SpawnBonusRock(game, origin, target, speed + game.Random.NextDouble() * 22, 2);
+            V2 target = new(-95, y + Math.Sin(game.BonusPatternStep * .86 + lane) * (18 + difficulty * 4));
+            SpawnBonusRock(game, origin, target, speed + game.Random.NextDouble() * 30, 2);
             spawned++;
         }
-        game.BonusAsteroidSpawnTimer = Math.Max(1.35, 1.78 - difficulty * .04);
+        game.BonusAsteroidSpawnTimer = Math.Max(1.12, 1.5 - difficulty * .045);
     }
 
     private void SpawnSpiralSwarm(GameEngine game, int difficulty)
@@ -231,6 +235,22 @@ internal sealed class WaveSpawnService
         game.Audio.Play(SoundCue.EnemyWarning, .68);
     }
 
+    internal void SpawnFighterAssault(GameEngine game)
+    {
+        if (game.Fighters.Any(f => f.Alive) || game.FighterSpawnedThisWave) return;
+
+        game.FighterSpawnedThisWave = true;
+        for (int i = 0; i < 3; i++)
+        {
+            FighterKind kind = game.Wave >= 4 && game.Random.NextDouble() < .45 ? FighterKind.Interceptor : FighterKind.Raider;
+            game.Fighters.Add(new Fighter(game.SafeEdgePosition(), game.RandomDirection() * game.Random.Next(70, 105), kind));
+        }
+
+        game.ShowBanner("ENEMY ASSAULT — 3 HOSTILES", 2.2);
+        game.Audio.Play(SoundCue.EnemyWarning, .9);
+        game.Audio.Play(SoundCue.BossAlarm, .7);
+    }
+
     internal void SpawnMine(GameEngine game)
     {
         game.Mines.Add(new HomingMine(game.SafeEdgePosition(), game.RandomDirection() * 75));
@@ -244,12 +264,32 @@ internal sealed class WaveSpawnService
         game.BlackHoleTimer = -1;
         game.Vortices.Add(new GravityVortex(game.SafePosition(250)));
         game.ShowBanner("BLACK HOLE", 1.6);
+        game.Audio.Play(SoundCue.Vortex, .52);
+    }
+
+    internal void SpawnVortexAssault(GameEngine game)
+    {
+        game.BlackHoleSpawned = true;
+        game.BlackHoleTimer = -1;
+        for (int i = 0; i < 3; i++) game.Vortices.Add(new GravityVortex(game.SafePosition(250)));
+        game.ShowBanner("BLACK HOLE ASSAULT", 2.2);
+        game.Audio.Play(SoundCue.BossAlarm, .8);
+        game.Audio.Play(SoundCue.Vortex, .58);
     }
 
     internal void SpawnNova(GameEngine game)
     {
         game.Novas.Add(new Nova(game.SafePosition(300)));
         game.ShowBanner("NOVA DETECTED", 1.8);
+        game.Audio.Play(SoundCue.Nova, .42);
+    }
+
+    internal void SpawnNovaAssault(GameEngine game)
+    {
+        for (int i = 0; i < 3; i++) game.Novas.Add(new Nova(game.SafePosition(300)));
+        game.ShowBanner("SUPERNOVA ASSAULT", 2.2);
+        game.Audio.Play(SoundCue.BossAlarm, .8);
+        game.Audio.Play(SoundCue.Nova, .5);
     }
 
     internal void SpawnCanister(GameEngine game)

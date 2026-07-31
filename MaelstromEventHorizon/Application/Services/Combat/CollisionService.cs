@@ -5,13 +5,20 @@ using MaelstromEventHorizon.Domain.Math;
 
 namespace MaelstromEventHorizon.Application.Services.Combat;
 
-internal sealed class CollisionService
+internal sealed partial class CollisionService
 {
     internal void HandleCollisions(GameEngine game)
     {
-        foreach (Shot shot in game.Shots.Where(s => s is { Alive: true, Enemy: false }).ToArray())
+        int shotCount = game.Shots.Count;
+        for (int shotIndex = 0; shotIndex < shotCount; shotIndex++)
         {
-            Asteroid? asteroid = game.Asteroids.FirstOrDefault(a => a.Alive && game.Touching(shot, a));
+            Shot shot = game.Shots[shotIndex];
+            if (!shot.Alive || shot.Enemy)
+            {
+                continue;
+            }
+
+            Asteroid? asteroid = FindHitAsteroid(game, shot);
 
             if (asteroid is not null)
             {
@@ -22,7 +29,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            Fighter? fighter = game.Fighters.FirstOrDefault(f => f.Alive && game.Touching(shot, f));
+            Fighter? fighter = FindHitFighter(game, shot);
 
             if (fighter is not null)
             {
@@ -41,7 +48,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            AlienBoss? boss = game.Bosses.FirstOrDefault(b => b.Alive && game.Touching(shot, b));
+            AlienBoss? boss = FindHitBoss(game, shot);
 
             if (boss is not null)
             {
@@ -50,7 +57,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            HomingMine? mine = game.Mines.FirstOrDefault(m => m.Alive && game.Touching(shot, m));
+            HomingMine? mine = FindHitMine(game, shot);
 
             if (mine is not null)
             {
@@ -65,7 +72,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            GravityVortex? vortex = game.Vortices.FirstOrDefault(v => v.Alive && game.Touching(shot, v));
+            GravityVortex? vortex = FindHitVortex(game, shot);
 
             if (vortex is not null)
             {
@@ -74,8 +81,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            Nova? nova = game.Novas.FirstOrDefault(
-                n => n is { Alive: true, Detonated: false } && game.Touching(shot, n));
+            Nova? nova = FindHitNova(game, shot);
 
             if (nova is not null)
             {
@@ -84,7 +90,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            Comet? comet = game.Comets.FirstOrDefault(c => c.Alive && game.TouchingComet(shot, c));
+            Comet? comet = FindHitComet(game, shot);
 
             if (comet is not null)
             {
@@ -99,8 +105,7 @@ internal sealed class CollisionService
                 continue;
             }
 
-            Pickup? prize = game.Pickups.FirstOrDefault(p =>
-                p is { Alive: true, Kind: PickupKind.Multiplier or PickupKind.Bonus } && game.Touching(shot, p));
+            Pickup? prize = FindHitPrize(game, shot);
 
             if (prize is not null)
             {
@@ -123,8 +128,15 @@ internal sealed class CollisionService
 
         if (!game.PlayerRespawning)
         {
-            foreach (Shot shot in game.Shots.Where(s => s is { Alive: true, Enemy: true }).ToArray())
+            int enemyShotCount = game.Shots.Count;
+            for (int shotIndex = 0; shotIndex < enemyShotCount; shotIndex++)
             {
+                Shot shot = game.Shots[shotIndex];
+                if (!shot.Alive || !shot.Enemy)
+                {
+                    continue;
+                }
+
                 if (game.Touching(shot, game.Player))
                 {
                     shot.Alive = false;
@@ -133,38 +145,38 @@ internal sealed class CollisionService
             }
         }
 
-        foreach (Pickup pickup in game.Pickups.Where(p =>
-                         !game.PlayerRespawning && p is
-                             { Alive: true, Kind: PickupKind.Canister or PickupKind.RescueShip })
-                     .ToArray())
+        if (!game.PlayerRespawning)
         {
-            if (!game.Touching(pickup, game.Player))
+            int pickupCount = game.Pickups.Count;
+            for (int pickupIndex = 0; pickupIndex < pickupCount; pickupIndex++)
             {
-                continue;
-            }
-
-            pickup.Alive = false;
-
-            if (pickup.Kind == PickupKind.RescueShip)
-            {
-                game.Lives++;
-                game.ShowBanner("RESCUE +1 SHIP", 2);
-                game.Audio.Play(SoundCue.Life);
-            }
-            else
-            {
-                game.AwardCanister();
-                if (game.IsDemoMode)
+                Pickup pickup = game.Pickups[pickupIndex];
+                if (!pickup.Alive || pickup.Kind is not (PickupKind.Canister or PickupKind.RescueShip) ||
+                    !game.Touching(pickup, game.Player))
                 {
-                    game.DemoPowerupCollected = true;
+                    continue;
+                }
+
+                pickup.Alive = false;
+
+                if (pickup.Kind == PickupKind.RescueShip)
+                {
+                    game.Lives++;
+                    game.ShowBanner("RESCUE +1 SHIP", 2);
+                    game.Audio.Play(SoundCue.Life);
+                }
+                else
+                {
+                    game.AwardCanister();
+                    if (game.IsDemoMode)
+                    {
+                        game.DemoPowerupCollected = true;
+                    }
                 }
             }
         }
 
-        Asteroid? bonusImpact = game is { PlayerRespawning: false, IsBonusStage: true, BonusStageFailed: false }
-            ? game.Asteroids.FirstOrDefault(
-                a => a is { Alive: true, ExitsArena: true } && game.Touching(game.Player, a))
-            : null;
+        Asteroid? bonusImpact = FindBonusImpact(game);
 
         if (bonusImpact is not null)
         {
@@ -174,9 +186,7 @@ internal sealed class CollisionService
 
         if (game is { PlayerRespawning: false, Player.Invulnerable: <= 0 })
         {
-            Body? danger = game.Asteroids.Cast<Body>().Concat(game.Fighters).Concat(game.Bosses).Concat(game.Mines)
-                .Concat(game.Vortices)
-                .FirstOrDefault(b => b.Alive && game.Touching(game.Player, b));
+            Body? danger = FindPlayerDanger(game);
 
             if (danger is not null)
             {
@@ -225,9 +235,12 @@ internal sealed class CollisionService
         game.BonusStageFailed = true;
         game.BonusAsteroidsRemaining = 0;
 
-        foreach (Asteroid asteroid in game.Asteroids.Where(a => a.ExitsArena))
+        foreach (Asteroid asteroid in game.Asteroids)
         {
-            asteroid.Alive = false;
+            if (asteroid.ExitsArena)
+            {
+                asteroid.Alive = false;
+            }
         }
 
         game.WaveBaseCash = 0;
@@ -378,7 +391,7 @@ internal sealed class CollisionService
 
     internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition)
     {
-        if (!boss.Alive || boss.Age < 2)
+        if (!boss.Alive || game.BossInvulnerability > 0)
         {
             return;
         }
@@ -403,9 +416,12 @@ internal sealed class CollisionService
         int reward = 5_000 + boss.Encounter * 1_500;
         game.AddScore(reward);
 
-        foreach (Shot shot in game.Shots.Where(s => s is { Alive: true, BossShot: true }))
+        foreach (Shot shot in game.Shots)
         {
-            shot.Alive = false;
+            if (shot is { Alive: true, BossShot: true })
+            {
+                shot.Alive = false;
+            }
         }
 
         game.Explosion(boss.Position, 92, game.BossTint(boss.Kind));

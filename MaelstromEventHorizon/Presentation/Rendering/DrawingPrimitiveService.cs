@@ -11,6 +11,7 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 internal sealed class DrawingPrimitiveService
 {
     private const int TextCacheCapacity = 512;
+    private const int BrushCacheCapacity = 2_048;
     private const int PenCacheCapacity = 512;
     private readonly Dictionary<uint, SolidColorBrush> brushes = [];
     private readonly Dictionary<PenKey, Pen> pens = [];
@@ -176,6 +177,8 @@ internal sealed class DrawingPrimitiveService
         if (brushes.TryGetValue(key, out SolidColorBrush? brush))
             return brush;
 
+        if (brushes.Count >= BrushCacheCapacity)
+            brushes.Clear();
         brush = new SolidColorBrush(color);
         brush.Freeze();
         brushes.Add(key, brush);

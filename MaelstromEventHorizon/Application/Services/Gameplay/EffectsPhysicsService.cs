@@ -323,6 +323,7 @@ internal sealed class EffectsPhysicsService
         PowerupKind.AirBrakes => "AIR BRAKES",
         PowerupKind.Luck => "LUCK OF THE IRISH",
         PowerupKind.TripleFire => "TRIPLE FIRE",
+        PowerupKind.RiftVolley => "RIFT VOLLEY",
         PowerupKind.LongRange => "LONG RANGE",
         PowerupKind.Shields => "SHIELD ENERGY",
         PowerupKind.Freeze => "TIME FREEZE",

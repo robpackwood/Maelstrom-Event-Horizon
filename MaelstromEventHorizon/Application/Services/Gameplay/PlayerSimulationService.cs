@@ -22,6 +22,10 @@ internal sealed class PlayerSimulationService
         }
 
         game.BannerTime -= dt;
+        bool bossCountdownWasActive = game.BossCountdown > 0;
+        game.BossCountdown = Math.Max(0, game.BossCountdown - dt);
+        game.BossInvulnerability = Math.Max(0, game.BossInvulnerability - dt);
+        if (bossCountdownWasActive && game.BossCountdown <= 0) game.BossInvulnerability = 2;
         game.LastPowerupTime -= dt;
         game.FreezeTime -= dt;
         game.Player.Invulnerable -= dt;
@@ -62,7 +66,7 @@ internal sealed class PlayerSimulationService
             turn += 1;
         }
 
-        double targetTurnVelocity = turn * 4.35;
+        double targetTurnVelocity = turn * 3.48;
         game.TurnVelocity += (targetTurnVelocity - game.TurnVelocity) * Math.Min(1, dt * 12);
         game.Player.Angle += game.TurnVelocity * dt;
         bool wasThrusting = game.Player.Thrusting;
@@ -336,9 +340,10 @@ internal sealed class PlayerSimulationService
             Shot shot = new(game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range)
             {
-                Radius = 4.3,
+                Radius = 4.945,
                 Damage = 1,
-                PowerLevel = 0
+                PowerLevel = 0,
+                RiftDelay = game.RiftVolleyActive ? .18 : -1
             };
 
             game.Shots.Add(shot);
@@ -374,7 +379,12 @@ internal sealed class PlayerSimulationService
 
     internal void UpdateWorld(GameEngine game, double dt)
     {
-        bool frozen = game.FreezeTime > 0;
+        if (game.FreezeTime > 0)
+        {
+            UpdateShots(game, dt, playerShotsOnly: true);
+            UpdateVisualEffects(game, dt);
+            return;
+        }
 
         foreach (Asteroid asteroid in game.Asteroids)
         {
@@ -420,11 +430,6 @@ internal sealed class PlayerSimulationService
         {
             fighter.Age += dt;
 
-            if (frozen)
-            {
-                continue;
-            }
-
             V2 toShip = game.ArenaDelta(fighter.Position, game.Player.Position);
             V2 tangent = new(-toShip.Y, toShip.X);
             double weave = Math.Sin(fighter.Age * (fighter.Kind == FighterKind.Interceptor ? 2.8 : 1.5));
@@ -456,25 +461,22 @@ internal sealed class PlayerSimulationService
             }
         }
 
-        game.UpdateBosses(dt, frozen);
+        game.UpdateBosses(dt);
 
         foreach (HomingMine mine in game.Mines)
         {
             mine.Age += dt;
 
-            if (!frozen)
+            V2 delta = game.ArenaDelta(mine.Position, game.Player.Position);
+            mine.Velocity += delta.Normalized * (105 * dt);
+
+            if (mine.Velocity.Length > 220)
             {
-                V2 delta = game.ArenaDelta(mine.Position, game.Player.Position);
-                mine.Velocity += delta.Normalized * (105 * dt);
-
-                if (mine.Velocity.Length > 220)
-                {
-                    mine.Velocity = mine.Velocity.Normalized * 220;
-                }
-
-                mine.Angle += dt * 4.5;
-                mine.Position = game.MoveBody(mine, mine.Position + mine.Velocity * dt);
+                mine.Velocity = mine.Velocity.Normalized * 220;
             }
+
+            mine.Angle += dt * 4.5;
+            mine.Position = game.MoveBody(mine, mine.Position + mine.Velocity * dt);
         }
 
         foreach (GravityVortex vortex in game.Vortices)
@@ -534,10 +536,22 @@ internal sealed class PlayerSimulationService
             }
         }
 
+        UpdateShots(game, dt, playerShotsOnly: false);
+
+        UpdateVisualEffects(game, dt);
+
+        game.UpdateShipDebris(dt);
+    }
+
+    private static void UpdateShots(GameEngine game, double dt, bool playerShotsOnly)
+    {
         List<Shot>? splittingSludge = null;
+        List<Shot>? riftShots = null;
 
         foreach (Shot shot in game.Shots)
         {
+            if (playerShotsOnly && shot.Enemy) continue;
+
             shot.Age += dt;
             shot.Angle += dt * (shot.Enemy ? -5.4 : 6.8);
             V2 nextPosition = shot.Position + shot.Velocity * dt;
@@ -565,43 +579,55 @@ internal sealed class PlayerSimulationService
             {
                 (splittingSludge ??= []).Add(shot);
             }
+
+            if (shot is { Alive: true, Enemy: false, RiftDelay: > 0 } && shot.Age >= shot.RiftDelay)
+            {
+                shot.RiftDelay = -1;
+                V2 direction = shot.Velocity.Normalized;
+                V2 offset = new V2(-direction.Y, direction.X) * 18;
+                double remainingLifetime = Math.Max(.12, shot.Lifetime - shot.Age);
+                riftShots ??= [];
+                riftShots.Add(new Shot(shot.Position - direction * 46 - offset, shot.Velocity, false, remainingLifetime)
+                {
+                    Radius = shot.Radius,
+                    Damage = shot.Damage,
+                    PowerLevel = Math.Max(1, shot.PowerLevel)
+                });
+                riftShots.Add(new Shot(shot.Position - direction * 46 + offset, shot.Velocity, false, remainingLifetime)
+                {
+                    Radius = shot.Radius,
+                    Damage = shot.Damage,
+                    PowerLevel = Math.Max(1, shot.PowerLevel)
+                });
+                game.Shockwaves.Add(new Shockwave(shot.Position - direction * 46 - offset, .18, 0xffa774ff, 28));
+                game.Shockwaves.Add(new Shockwave(shot.Position - direction * 46 + offset, .18, 0xffa774ff, 28));
+            }
         }
 
         if (splittingSludge is not null)
         {
-            foreach (Shot glob in splittingSludge)
-            {
-                game.SplitSludgeGlob(glob);
-            }
+            foreach (Shot glob in splittingSludge) game.SplitSludgeGlob(glob);
         }
 
+        if (riftShots is not null) game.Shots.AddRange(riftShots);
+    }
+
+    private static void UpdateVisualEffects(GameEngine game, double dt)
+    {
         foreach (Particle particle in game.Particles)
         {
             particle.Age += dt;
             particle.Position = game.MoveBody(particle, particle.Position + particle.Velocity * dt, false);
             particle.Velocity *= Math.Pow(.96, dt * 60);
-
-            if (particle.Age >= particle.Lifetime)
-            {
-                particle.Alive = false;
-            }
+            if (particle.Age >= particle.Lifetime) particle.Alive = false;
         }
 
         foreach (Shockwave ring in game.Shockwaves)
         {
             ring.Age += dt;
-
-            if (ring.Age >= ring.Lifetime)
-            {
-                ring.Alive = false;
-            }
+            if (ring.Age >= ring.Lifetime) ring.Alive = false;
         }
 
-        foreach (FloatingText text in game.FloatingTexts)
-        {
-            text.Age += dt;
-        }
-
-        game.UpdateShipDebris(dt);
+        foreach (FloatingText text in game.FloatingTexts) text.Age += dt;
     }
 }

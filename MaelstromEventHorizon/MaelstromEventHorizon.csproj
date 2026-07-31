@@ -20,6 +20,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
+    <PublishDir>$(MSBuildProjectDirectory)\ExecutableBuilds\</PublishDir>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
@@ -34,7 +35,6 @@
     <EmbeddedResource Include="Assets\space-atlas-a.png" LogicalName="Assets/space-atlas-a.png" />
     <EmbeddedResource Include="Assets\space-atlas-b.png" LogicalName="Assets/space-atlas-b.png" />
     <EmbeddedResource Include="Assets\through-the-universe.mp3" LogicalName="Assets/through-the-universe.mp3" />
-    <EmbeddedResource Include="Assets\singularity-action.mp3" LogicalName="Assets/singularity-action.mp3" />
     <EmbeddedResource Include="Assets\Music\*.mp3" LogicalName="Assets/Music/%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets\ship-destruction.wav" LogicalName="Assets/ship-destruction.wav" />
     <EmbeddedResource Include="Assets\music-license.txt" LogicalName="Assets/music-license.txt" />

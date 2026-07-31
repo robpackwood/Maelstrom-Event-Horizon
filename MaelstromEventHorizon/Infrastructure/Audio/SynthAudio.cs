@@ -44,19 +44,22 @@ internal sealed class SynthAudio : IAudioService
     {
         clips = soundEffects.Clips;
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
-        bonusMusicPath = assets.PathFor("singularity-action.mp3");
+        bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
         waveMusicPaths =
         [
-            assets.PathFor("Music", "wave-01-our-expanse.mp3"),
+            assets.PathFor("Music", "wave-12-gsf-discovery.mp3"),
             assets.PathFor("Music", "wave-02-lift-off.mp3"),
-            assets.PathFor("Music", "wave-03-building-a-colony.mp3"),
+            assets.PathFor("Music", "singularity-action.mp3"),
             assets.PathFor("Music", "wave-04-star-on-the-horizon.mp3"),
             assets.PathFor("Music", "wave-05-racing-through-asteroids.mp3"),
             assets.PathFor("Music", "wave-06-emergency.mp3"),
             assets.PathFor("Music", "wave-07-magic-space.mp3"),
             assets.PathFor("Music", "wave-08-the-calm-unknown.mp3"),
             assets.PathFor("Music", "wave-09-anti-entity.mp3"),
-            assets.PathFor("Music", "wave-10-battle-in-outer-space.mp3")
+            assets.PathFor("Music", "wave-10-battle-in-outer-space.mp3"),
+            assets.PathFor("Music", "wave-11-outworld.mp3"), assets.PathFor("Music", "wave-13-joining-forces.mp3"),
+            assets.PathFor("Music", "wave-18-robotic-soundtrack.mp3"),
+            assets.PathFor("Music", "wave-19-anti-entity-original.mp3"), assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
         PrepareLayeredEffects();
     }

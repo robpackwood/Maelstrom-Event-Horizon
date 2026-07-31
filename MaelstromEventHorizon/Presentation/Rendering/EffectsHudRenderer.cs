@@ -203,7 +203,13 @@ internal sealed class EffectsHudRenderer
             Color c = view.FromArgb(p.Color, (byte)(255 * life));
             double r = p.StartSize * (.35 + life * .8);
             dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
-            if (r > 3) dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position), r * 2.8, r * 2.8);
+            if (r > 3)
+            {
+                dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position), r * 2.8, r * 2.8);
+                V2 trail = p.Velocity.Normalized * Math.Min(18, p.Velocity.Length * .045) * life;
+                dc.DrawLine(view.Pen(Color.FromArgb((byte)(105 * life), c.R, c.G, c.B), Math.Max(.65, r * .38)),
+                    view.Pt(p.Position), view.Pt(p.Position - trail));
+            }
         }
     }
 
@@ -222,6 +228,8 @@ internal sealed class EffectsHudRenderer
     {
         if (view.Game.Mode is GameMode.Title or GameMode.Controls) return;
         var dim = new SolidColorBrush(Color.FromRgb(137, 168, 191));
+        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(118, 2, 12, 25)),
+            new Pen(new SolidColorBrush(Color.FromArgb(72, 102, 203, 237)), 1), new Rect(18, 10, 436, 34), 5, 5);
         view.DrawText(dc, "SCORE", 30, 29, 12, dim, FontWeights.SemiBold);
         view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
         dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(90, 92, 149, 177)), 1), new Point(251, 12), new Point(251, 39));
@@ -262,6 +270,14 @@ internal sealed class EffectsHudRenderer
                 new Rect(barRect.X + 2, barRect.Y + 2, (bossBarWidth - 4) * health, 8), 2, 2);
         }
 
+        if (view.Game.BossCountdownActive)
+        {
+            int seconds = Math.Max(1, (int)Math.Ceiling(view.Game.BossCountdown));
+            Brush countdownBrush = seconds == 1 ? Brushes.OrangeRed : Brushes.Gold;
+            view.DrawCenteredText(dc, $"BOSS ENGAGES IN {seconds}", GameEngine.Width / 2, 330, 30, countdownBrush, FontWeights.Bold);
+            view.DrawCenteredText(dc, "SHIP SYSTEMS LOCKED", GameEngine.Width / 2, 368, 14, Brushes.White, FontWeights.Bold);
+        }
+
         view.DrawText(dc, view.Game.IsBonusStage ? "SHIELD OFFLINE" : "SHIELD", 30, 682, 12,
             view.Game.IsBonusStage ? new SolidColorBrush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
         double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
@@ -292,6 +308,7 @@ internal sealed class EffectsHudRenderer
         if (view.Game.AirBrakesActive) active.Add("AIR BRAKES");
         if (view.Game.LuckActive) active.Add("LUCK");
         if (view.Game.TripleFireActive) active.Add("TRIPLE FIRE");
+        if (view.Game.RiftVolleyActive) active.Add("RIFT VOLLEY");
         if (view.Game.LongRangeActive) active.Add("LONG RANGE");
         if (view.Game.RicochetArenaActive) active.Add("RICOCHET ARENA");
         if (view.Game.Player.Giant) active.Add("GIANT SHIP");
@@ -307,8 +324,10 @@ internal sealed class EffectsHudRenderer
                 measured = view.Format(activeLabel, activeSize, Brushes.White, FontWeights.SemiBold);
             }
             double panelWidth = Math.Min(760, measured.Width + 30);
+            double panelPulse = .72 + .28 * Math.Sin(view.Game.TotalTime * 4.2);
+            Color panelGlow = view.Game.FreezeTime > 0 ? Color.FromRgb(126, 240, 255) : Color.FromRgb(86, 193, 215);
             dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(150, 1, 10, 18)),
-                new Pen(new SolidColorBrush(Color.FromArgb(80, 86, 193, 215)), 1),
+                new Pen(new SolidColorBrush(Color.FromArgb((byte)(90 + panelPulse * 80), panelGlow.R, panelGlow.G, panelGlow.B)), 1 + panelPulse * .5),
                 new Rect(GameEngine.Width / 2 - panelWidth / 2, 674, panelWidth, 29), 3, 3);
             view.DrawCenteredText(dc, activeLabel, GameEngine.Width / 2, 694, activeSize,
                 new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);

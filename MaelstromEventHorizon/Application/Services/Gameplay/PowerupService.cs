@@ -52,6 +52,7 @@ internal sealed class PowerupService
                 game.EnsureLuckyWaveEvents();
                 break;
             case PowerupKind.TripleFire: game.TripleFireActive = true; break;
+            case PowerupKind.RiftVolley: game.RiftVolleyActive = true; break;
             case PowerupKind.LongRange: game.LongRangeActive = true; break;
             case PowerupKind.Shields: game.Player.Shield = Math.Min(100, game.Player.Shield + 65); break;
             case PowerupKind.Freeze: game.FreezeTime = 8; break;
@@ -89,6 +90,7 @@ internal sealed class PowerupService
         game.AirBrakesActive = false;
         game.LuckActive = false;
         game.TripleFireActive = false;
+        game.RiftVolleyActive = false;
         game.LongRangeActive = false;
         game.RicochetArenaActive = false;
         game.Player.SetGiant(false);
@@ -155,6 +157,6 @@ internal sealed class PowerupService
         game.Spark(nova.Position, 0xffa7efff, 16);
         game.Shockwaves.Add(new Shockwave(nova.Position, .42, 0xffa7efff, 68));
         game.ShowBanner("NOVA NEUTRALIZED", 1.8);
-        game.Audio.Play(SoundCue.Pickup, .58);
+        game.Audio.Play(SoundCue.Nova, .58);
     }
 }

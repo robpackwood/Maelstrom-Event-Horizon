@@ -77,7 +77,46 @@ internal sealed class SceneRenderer
             dc.DrawRectangle(fallback, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
 
+        DrawDeepSpace(view, dc, waveIndex, titleScene);
         dc.DrawRectangle(GameView.VignetteBrush, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+    }
+
+    private static void DrawDeepSpace(GameView view, DrawingContext dc, int waveIndex, bool titleScene)
+    {
+        double time = view.Game.TotalTime;
+        Color nebulaA = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
+        Color nebulaB = Color.FromRgb((byte)(42 + waveIndex * 17 % 55), (byte)(38 + waveIndex * 29 % 70), 122);
+        var leftNebula = new RadialGradientBrush(nebulaA, Color.FromArgb(0, nebulaA.R, nebulaA.G, nebulaA.B))
+        {
+            RadiusX = .8,
+            RadiusY = .8,
+            Opacity = titleScene ? .14 : .2
+        };
+        var rightNebula = new RadialGradientBrush(nebulaB, Color.FromArgb(0, nebulaB.R, nebulaB.G, nebulaB.B))
+        {
+            RadiusX = .8,
+            RadiusY = .8,
+            Opacity = .15
+        };
+        dc.PushTransform(new RotateTransform(Math.Sin(time * .035 + waveIndex) * 8, 180, 150));
+        dc.DrawEllipse(leftNebula, null, new Point(170, 145), 300, 190);
+        dc.Pop();
+        dc.DrawEllipse(rightNebula, null, new Point(1080, 590), 350, 225);
+
+        double planetRadius = 92 + waveIndex % 4 * 16;
+        Point planet = new(1050 + Math.Sin(time * .02 + waveIndex) * 38, -36 + Math.Cos(time * .017 + waveIndex) * 18);
+        var planetBrush = new RadialGradientBrush
+        {
+            GradientOrigin = new Point(.28, .25),
+            Center = new Point(.42, .4),
+            RadiusX = .82,
+            RadiusY = .82,
+            Opacity = titleScene ? .2 : .3
+        };
+        planetBrush.GradientStops.Add(new GradientStop(view.Lighten(nebulaB, .38), 0));
+        planetBrush.GradientStops.Add(new GradientStop(nebulaB, .46));
+        planetBrush.GradientStops.Add(new GradientStop(Color.FromRgb(4, 9, 28), 1));
+        dc.DrawEllipse(planetBrush, new Pen(new SolidColorBrush(Color.FromArgb(42, 166, 210, 255)), 1), planet, planetRadius, planetRadius);
     }
 
     private void DrawStars(GameView view, DrawingContext dc)
@@ -106,6 +145,12 @@ internal sealed class SceneRenderer
                 (byte)(180 + star.Depth * 70), (byte)(205 + star.Depth * 45), 255));
             var position = new Point(x, y);
             dc.DrawEllipse(brush, null, position, size, size);
+            if (view.Game.Player.Thrusting && star.Depth > .56 && !view.Game.IsBonusStage)
+            {
+                double streak = (star.Depth - .45) * 20;
+                dc.DrawLine(view.Pen(Color.FromArgb((byte)(alpha * .38), 146, 212, 255), .55 + star.Depth * .6),
+                    new Point(x - streak, y), new Point(x + size, y));
+            }
             if (star.Depth > .82 && twinkle > .78)
             {
                 var pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);

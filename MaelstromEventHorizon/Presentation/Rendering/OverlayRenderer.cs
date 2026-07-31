@@ -73,9 +73,9 @@ internal sealed class OverlayRenderer
                 new SolidColorBrush(Color.FromRgb(230, 247, 252)), FontWeights.Black);
             view.DrawCenteredText(dc, "THE CURRENT RUN WILL END", GameEngine.Width / 2, 356, 14,
                 new SolidColorBrush(Color.FromRgb(255, 180, 128)), FontWeights.SemiBold);
-            view.DrawCenteredText(dc, "ENTER  CONFIRM", 524, 421, 14,
+            view.DrawCenteredText(dc, "ENTER  CONTINUE", 524, 421, 14,
                 new SolidColorBrush(Color.FromRgb(118, 239, 168)), FontWeights.Bold);
-            view.DrawCenteredText(dc, "ESC  CANCEL", 756, 421, 14,
+            view.DrawCenteredText(dc, "ESC  EXIT", 756, 421, 14,
                 new SolidColorBrush(Color.FromRgb(128, 213, 241)), FontWeights.Bold);
         }
         else if (view.Game.Mode == GameMode.Paused)

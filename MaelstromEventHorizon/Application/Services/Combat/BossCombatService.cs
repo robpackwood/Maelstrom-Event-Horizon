@@ -19,17 +19,17 @@ internal sealed class BossCombatService
         game.AddScore(500);
     }
 
-    internal void UpdateBosses(GameEngine game, double dt, bool frozen)
+    internal void UpdateBosses(GameEngine game, double dt)
     {
+        if (game.BossCountdownActive)
+        {
+            return;
+        }
+
         foreach (AlienBoss boss in game.Bosses)
         {
             boss.Age += dt;
             boss.HurtFlash = Math.Max(0, boss.HurtFlash - dt);
-
-            if (frozen)
-            {
-                continue;
-            }
 
             V2 toPlayer = game.ArenaDelta(boss.Position, game.Player.Position);
             V2 direction = toPlayer.Normalized;

@@ -17,7 +17,7 @@ $sources = @{
         Source = 'https://opengameart.org/content/through-the-universe'
         Note = 'Exact SHA-256 match to source MP3.'
     }
-    'MaelstromEventHorizon\Assets\singularity-action.mp3' = @{
+    'MaelstromEventHorizon\Assets\Music\singularity-action.mp3' = @{
         Status = 'VERIFIED_EXACT'
         Work = 'Singularity (Action)'
         Author = 'Vitalezzz'
@@ -69,7 +69,6 @@ $sources = @{
 
 $outerSpaceTracks = @{
     'wave-02-lift-off.mp3' = 'Lift Off'
-    'wave-03-building-a-colony.mp3' = 'Building a Colony'
     'wave-05-racing-through-asteroids.mp3' = 'Racing Through Asteroids'
     'wave-06-emergency.mp3' = 'Emergency!'
     'wave-10-battle-in-outer-space.mp3' = 'Battle in Outer Space'
@@ -95,10 +94,31 @@ $sources['MaelstromEventHorizon\Assets\Music\wave-08-the-calm-unknown.mp3'] = @{
     Note = 'Source page verified; OGG transcoded to MP3; conversion log unavailable.'
 }
 
-$files = @(
-    Get-ChildItem -LiteralPath $gameAssets -Recurse -File
-    Get-ChildItem -LiteralPath $packageImages -Recurse -File
-) | Where-Object { $_.Extension.ToLowerInvariant() -in $extensions }
+$newWaveTracks = @{
+    'wave-11-outworld.mp3' = @('Outworld', 'Vitalezzz', 'CC0-1.0', 'https://opengameart.org/content/outworld', 'Exact SHA-256 match to source MP3.')
+    'wave-12-gsf-discovery.mp3' = @('GSF Discovery', 'Vitalezzz', 'CC0-1.0', 'https://opengameart.org/content/gsf-discovery', 'Exact SHA-256 match to source MP3.')
+    'wave-13-joining-forces.mp3' = @('Joining Forces', 'Vitalezzz', 'CC0-1.0', 'https://opengameart.org/content/joining-forces', 'Exact SHA-256 match to source MP3.')
+    'wave-18-robotic-soundtrack.mp3' = @('Robotic', 'Fato Shadow', 'CC-BY-4.0', 'https://opengameart.org/content/robotic-soundtrack', 'Exact SHA-256 match to source MP3.')
+    'wave-19-anti-entity-original.mp3' = @('Anti Entity', 'TAD', 'CC-BY-4.0', 'https://opengameart.org/content/anti-entity', 'Exact SHA-256 match to source MP3.')
+    'wave-20-stillness-of-space.mp3' = @('Stillness of Space', 'Leonardo Paz', 'CC-BY-4.0', 'https://opengameart.org/content/outer-space-music-pack', 'Source OGG transcoded to MP3 with FFmpeg for game playback.')
+}
+
+foreach ($entry in $newWaveTracks.GetEnumerator()) {
+    $track = $entry.Value
+    $sources["MaelstromEventHorizon\Assets\Music\$($entry.Key)"] = @{
+        Status = if ($entry.Key -eq 'wave-20-stillness-of-space.mp3') { 'LICENSE_VERIFIED_TRANSCODE' } else { 'VERIFIED_EXACT' }
+        Work = $track[0]; Author = $track[1]; License = $track[2]; Source = $track[3]; Note = $track[4]
+    }
+}
+
+$assetRoots = @($gameAssets)
+if (Test-Path -LiteralPath $packageImages) {
+    $assetRoots += $packageImages
+}
+
+$files = $assetRoots | ForEach-Object {
+    Get-ChildItem -LiteralPath $_ -Recurse -File
+} | Where-Object { $_.Extension.ToLowerInvariant() -in $extensions }
 
 $rows = foreach ($file in $files | Sort-Object FullName) {
     $relativePath = $file.FullName.Substring($repoRoot.Length + 1)

@@ -45,27 +45,14 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
 
             [SoundCue.BossAlarm] = Build(3.15, t =>
         {
-            double envelope = Envelope(t, 3.15, .012, .18);
-            double cycle = t % .78;
-            double cycleProgress = cycle / .78;
-            double riseAndFall = cycleProgress < .5
-                ? Smooth(cycleProgress * 2)
-                : Smooth((1 - cycleProgress) * 2);
-            double sirenFrequency = 455 + riseAndFall * 405;
-            double pulseGate = .58 + .42 * Math.Pow(Math.Max(0, Math.Sin(cycleProgress * Math.PI)), .45);
-            double klaxon = pulseGate *
-                (.31 * Saw(sirenFrequency, t) + .23 * Osc(sirenFrequency, t)
-                 + .11 * Osc(sirenFrequency * 1.5, t));
-
-            int warningBeat = (int)(t / .39);
-            double beatTime = t - warningBeat * .39;
-            double beatEnvelope = Envelope(beatTime, .31, .004, 1.25);
-            double alternatingTone = warningBeat % 2 == 0 ? 126 : 94;
-            double warningPulse = beatEnvelope *
-                (.28 * Osc(alternatingTone, beatTime) + .17 * Osc(alternatingTone * 2, beatTime));
-            double machinery = Envelope(t, 3.15, .02, .3) *
-                (.08 * Noise(t, 940, 877) + .13 * Osc(48 + 4 * Math.Sin(t * 13), t));
-            return envelope * (klaxon + warningPulse + machinery);
+            double envelope = Envelope(t, 3.15, .008, .16);
+            double cycle = t % .72;
+            double hornEnvelope = cycle < .42 ? Envelope(cycle, .42, .01, 1.15) : 0;
+            double pitch = cycle < .21 ? 146 : 110;
+            double brass = .37 * Saw(pitch, t) + .29 * Osc(pitch, t) +
+                           .16 * Osc(pitch * 2, t) + .08 * Osc(pitch * 3, t);
+            double air = .045 * Noise(t, 1900, 877);
+            return envelope * hornEnvelope * (brass + air);
         }, .42, .94),
 
             [SoundCue.MenuMove] = Build(.13, t =>

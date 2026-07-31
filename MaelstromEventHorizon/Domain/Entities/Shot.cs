@@ -14,4 +14,5 @@ internal sealed class Shot(V2 position, V2 velocity, bool enemy, double lifetime
     public double SplitAge = -1;
     public int Damage = 1;
     public int PowerLevel;
+    public double RiftDelay = -1;
 }

@@ -143,6 +143,12 @@ internal sealed class TitleScreenRenderer
                     dc.DrawEllipse(brush, null, end, 3, 3);
                 }
                 break;
+            case GameView.TickerIcon.RiftVolley:
+                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(-8, 0), 6, 9);
+                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(8, 0), 6, 9);
+                dc.DrawLine(pen, new Point(-4, -5), new Point(4, 5));
+                dc.DrawLine(pen, new Point(-4, 5), new Point(4, -5));
+                break;
             case GameView.TickerIcon.LongRange:
                 dc.DrawLine(pen, new Point(-13, 0), new Point(10, 0));
                 dc.DrawLine(pen, new Point(5, -5), new Point(11, 0));

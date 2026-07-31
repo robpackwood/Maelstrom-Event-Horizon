@@ -16,6 +16,10 @@ internal sealed class CombatActorRenderer
         {
             bool little = fighter.Kind == FighterKind.Interceptor;
             Color glow = little ? Color.FromRgb(63, 228, 255) : Color.FromRgb(255, 57, 112);
+            V2 exhaust = fighter.Position - fighter.Velocity.Normalized * (little ? 22 : 30);
+            view.DrawGlowEllipse(dc, exhaust, little ? 10 : 14, glow, 3, .36);
+            dc.DrawLine(view.Pen(Color.FromArgb(135, glow.R, glow.G, glow.B), little ? 2 : 2.8),
+                view.Pt(exhaust), view.Pt(exhaust - fighter.Velocity.Normalized * (little ? 19 : 27)));
             view.DrawGlowEllipse(dc, fighter.Position, fighter.Radius * .78, glow, 3, .2);
             dc.PushTransform(new TranslateTransform(fighter.Position.X, fighter.Position.Y));
             dc.PushTransform(new RotateTransform(fighter.Angle * 180 / Math.PI));
@@ -52,6 +56,15 @@ internal sealed class CombatActorRenderer
             double scaleX = 1 + breathe * (boss.Kind == AlienBossKind.VoidLeech ? .025 : .012);
             double scaleY = 1 - breathe * (boss.Kind == AlienBossKind.SludgeMaw ? .025 : .012);
             var position = new V2(boss.Position.X, boss.Position.Y + hover);
+            if (view.Game.BossCountdownActive || view.Game.BossInvulnerability > 0)
+            {
+                double phase = view.Game.TotalTime * 180;
+                double ring = boss.Radius * (1.1 + Math.Sin(view.Game.TotalTime * 7) * .06);
+                Color ward = view.Game.BossCountdownActive ? Color.FromRgb(255, 210, 91) : Color.FromRgb(105, 222, 255);
+                view.DrawGlowEllipse(dc, position, ring, ward, 5, .55);
+                dc.DrawArc(view.Pen(Color.FromArgb(185, ward.R, ward.G, ward.B), 1.5), view.Pt(position), ring, phase, 128);
+                dc.DrawArc(view.Pen(Color.FromArgb(120, ward.R, ward.G, ward.B), 1), view.Pt(position), ring * 1.17, -phase * .72, 86);
+            }
             view.DrawGlowEllipse(dc, position, boss.Radius * .92, tint, 3, .14);
             dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(75, 0, 0, 0)), null,
                 new Point(position.X + 8, position.Y + boss.Radius * .64), boss.Radius * .72, boss.Radius * .19);

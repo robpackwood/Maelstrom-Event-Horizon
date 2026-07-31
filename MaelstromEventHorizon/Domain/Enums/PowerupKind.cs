@@ -6,6 +6,7 @@ internal enum PowerupKind
     AirBrakes,
     Luck,
     TripleFire,
+    RiftVolley,
     LongRange,
     Shields,
     Freeze,

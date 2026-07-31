@@ -139,11 +139,11 @@ internal sealed class GameInputService
 
             if (key is Key.Enter or Key.Y)
             {
-                ReturnToTitle(game);
+                CancelQuitConfirmation(game);
             }
             else if (key is Key.Escape or Key.N || key == game.Bindings[GameAction.Quit])
             {
-                CancelQuitConfirmation(game);
+                ReturnToTitle(game);
             }
 
             return true;
@@ -221,7 +221,7 @@ internal sealed class GameInputService
             return true;
         }
 
-        if (game.Mode == GameMode.Playing && key == game.Bindings[GameAction.Fire])
+        if (game.Mode == GameMode.Playing && !game.BossCountdownActive && key == game.Bindings[GameAction.Fire])
         {
             if (game is { IsBonusStage: false, PlayerRespawning: false } &&
                 (!game.RapidFireActive || game is { FireCooldown: <= 0, RapidFireReload: <= 0 }))
@@ -269,7 +269,7 @@ internal sealed class GameInputService
             return true;
         }
 
-        if (game.Mode == GameMode.Playing && key == game.Bindings[GameAction.Hyperspace])
+        if (game.Mode == GameMode.Playing && !game.BossCountdownActive && key == game.Bindings[GameAction.Hyperspace])
         {
             game.Hyperspace();
             return true;

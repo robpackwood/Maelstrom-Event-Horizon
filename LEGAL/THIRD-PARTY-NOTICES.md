@@ -19,14 +19,18 @@ https://creativecommons.org/publicdomain/zero/1.0/
   Source: https://opengameart.org/content/star-on-the-horizon
 - Magic Space, by CodeManu.
   Source: https://opengameart.org/content/magic-space
+- Outworld, GSF Discovery, and Joining Forces, by Vitalezzz.
+  Sources: https://opengameart.org/content/outworld,
+  https://opengameart.org/content/gsf-discovery, and
+  https://opengameart.org/content/joining-forces
 
 ## Creative Commons Attribution 4.0 International
 
 The following works are used under CC BY 4.0:
 https://creativecommons.org/licenses/by/4.0/
 
-- Lift Off, Building a Colony, Racing Through Asteroids, Emergency!, and
-  Battle in Outer Space, by Leonardo Paz.
+- Lift Off, Racing Through Asteroids, Emergency!, and Battle in Outer Space,
+  by Leonardo Paz.
   Source: https://opengameart.org/content/outer-space-music-pack
   Changes: selected source OGG tracks were transcoded to MP3 for game playback
   and may have been trimmed or loop-prepared.
@@ -38,5 +42,8 @@ https://creativecommons.org/licenses/by/4.0/
 - Anti Entity, by TAD.
   Source: https://opengameart.org/content/anti-entity
   Changes: the loopable MP3 is redistributed under a project-specific filename.
+- Robotic, by Fato Shadow, and Stillness of Space, by Leonardo Paz. Sources:
+  https://opengameart.org/content/robotic-soundtrack and
+  https://opengameart.org/content/outer-space-music-pack
 
 No author listed above endorses this game or its publisher.

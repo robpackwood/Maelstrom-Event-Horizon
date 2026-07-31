@@ -47,6 +47,8 @@ internal sealed class HazardPickupRenderer
         foreach (var vortex in view.Game.Vortices)
         {
             double pulse = Math.Sin(view.Game.TotalTime * 4 + vortex.Position.X) * 3;
+            double distortion = 74 + pulse + Math.Sin(view.Game.TotalTime * 7) * 5;
+            dc.DrawEllipse(null, view.Pen(Color.FromArgb(48, 165, 103, 255), 1.2), view.Pt(vortex.Position), distortion, distortion * .64);
             for (int i = 6; i >= 0; i--)
             {
                 double r = 26 + i * 10 + pulse;
@@ -77,6 +79,8 @@ internal sealed class HazardPickupRenderer
             double progress = nova.Age / Nova.Fuse;
             double pulse = 1 + Math.Sin(nova.Age * (5 + progress * 22)) * (.08 + progress * .13);
             double radius = (20 + progress * 30) * pulse;
+            dc.DrawEllipse(null, view.Pen(Color.FromArgb((byte)(42 + progress * 85), 255, 164, 67), 1.1),
+                view.Pt(nova.Position), radius * 2.15, radius * 2.15);
             view.DrawGlowEllipse(dc, nova.Position, radius, Color.FromRgb(255, 176, 61), 10, .8);
             double coreSpan = radius * 2.08;
             dc.DrawImage(view.NovaCoreSprite,

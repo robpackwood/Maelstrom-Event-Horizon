@@ -102,6 +102,7 @@ internal sealed class GameEngine
     public int LevelBonusCash { get; internal set; }
     public bool IsBonusStage { get; internal set; }
     public bool IsBossStage { get; internal set; }
+    public bool BossCountdownActive => IsBossStage && BossCountdown > 0;
     public bool BonusStageFailed { get; internal set; }
     public BonusStageKind BonusStageVariant { get; internal set; }
     public string BonusStageName => BonusStageVariant switch
@@ -135,12 +136,15 @@ internal sealed class GameEngine
     public bool SummaryInputReady => Mode == GameMode.WaveSummary && SummaryScreenElapsed >= SummaryFadeInDuration + SummaryInputDelay;
     public string Banner { get; internal set; } = "EVENT HORIZON";
     public double BannerTime { get; internal set; } = 99;
+    public double BossCountdown { get; internal set; }
+    public double BossInvulnerability { get; internal set; }
     public double LastPowerupTime { get; internal set; }
     public double FreezeTime { get; internal set; }
     public bool RapidFireActive { get; internal set; }
     public bool AirBrakesActive { get; internal set; }
     public bool LuckActive { get; internal set; }
     public bool TripleFireActive { get; internal set; }
+    public bool RiftVolleyActive { get; internal set; }
     public bool LongRangeActive { get; internal set; }
     public bool RicochetArenaActive { get; internal set; }
     public double TotalTime { get; private set; }
@@ -278,7 +282,7 @@ internal sealed class GameEngine
         }
 
         TickTimers(dt);
-        if (!PlayerRespawning)
+        if (!PlayerRespawning && !BossCountdownActive)
         {
             if (IsDemoMode)
                 UpdateDemoPlayer(dt);
@@ -297,7 +301,10 @@ internal sealed class GameEngine
             return;
         }
 
-        ScheduleEvents(dt);
+        if (FreezeTime <= 0)
+        {
+            ScheduleEvents(dt);
+        }
     }
 
     internal void RaiseFullScreenChanged(bool enabled) => FullScreenChanged?.Invoke(enabled);
@@ -313,7 +320,7 @@ internal sealed class GameEngine
     internal void FirePlayer() => services.PlayerSimulationService.FirePlayer(this);
     private void UpdateWorld(double dt) => services.PlayerSimulationService.UpdateWorld(this, dt);
     internal void CompleteBonusAsteroid(Asteroid asteroid) => services.BossCombatService.CompleteBonusAsteroid(this, asteroid);
-    internal void UpdateBosses(double dt, bool frozen) => services.BossCombatService.UpdateBosses(this, dt, frozen);
+    internal void UpdateBosses(double dt) => services.BossCombatService.UpdateBosses(this, dt);
     internal void SplitSludgeGlob(Shot glob) => services.BossCombatService.SplitSludgeGlob(this, glob);
     internal void ApplyGravity(Body body, double dt) => services.BossCombatService.ApplyGravity(this, body, dt);
     internal void ApplyPlayerGravity(double dt) => services.BossCombatService.ApplyPlayerGravity(this, dt);
@@ -335,9 +342,12 @@ internal sealed class GameEngine
     internal void BeginNextWave() => services.WaveSpawnService.BeginNextWave(this);
     internal void UpdateBonusAsteroidStream(double dt) => services.WaveSpawnService.UpdateBonusAsteroidStream(this, dt);
     internal void SpawnFighter() => services.WaveSpawnService.SpawnFighter(this);
+    internal void SpawnFighterAssault() => services.WaveSpawnService.SpawnFighterAssault(this);
     internal void SpawnMine() => services.WaveSpawnService.SpawnMine(this);
     internal void SpawnVortex() => services.WaveSpawnService.SpawnVortex(this);
+    internal void SpawnVortexAssault() => services.WaveSpawnService.SpawnVortexAssault(this);
     internal void SpawnNova() => services.WaveSpawnService.SpawnNova(this);
+    internal void SpawnNovaAssault() => services.WaveSpawnService.SpawnNovaAssault(this);
     internal void SpawnCanister() => services.WaveSpawnService.SpawnCanister(this);
     internal void SpawnCanisterEntity() => services.WaveSpawnService.SpawnCanisterEntity(this);
     internal void SpawnComet() => services.WaveSpawnService.SpawnComet(this);

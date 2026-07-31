@@ -50,3 +50,6 @@ MaelstromEventHorizon.Package/*.assets.cache
 
 # APM dependencies
 apm_modules/
+
+# Local download and conversion scratch space
+tmp/
