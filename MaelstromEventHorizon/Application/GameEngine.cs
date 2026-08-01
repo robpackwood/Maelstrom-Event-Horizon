@@ -16,15 +16,19 @@ internal sealed class GameEngine
     public const double Height = 720;
     internal const double PlayerMaxSpeed = 476;
     internal const double PlayerShotSpeed = 601.92;
-    internal const double PlayerVortexGravity = 1_560_000;
+    internal const double PlayerVortexGravity = 2_150_000;
     internal const double RespawnDelay = 2.25;
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
-    internal const int TitleMenuItemCount = 6;
+    internal const int TitleMenuItemCount = 7;
     internal const double VolumeStep = .05;
     internal const int RapidFireBurstSize = 15;
     internal const double RapidFireShotInterval = .068;
     internal const double RapidFireReloadDuration = .5;
+    private const int MaxPooledShots = 240;
+    private const int MaxPooledParticles = 900;
+    private const int MaxPooledShockwaves = 24;
+    private const int MaxPooledFloatingTexts = 24;
     internal readonly IRandomSource Random;
     private readonly GameEngineServices services;
     internal readonly IAudioService Audio;
@@ -151,6 +155,7 @@ internal sealed class GameEngine
     public double BonusTravelTime { get; internal set; }
     public double ShieldImpactTime { get; internal set; }
     public V2 ShieldImpactPoint { get; internal set; }
+    internal double RicochetBounceSoundCooldown;
 
     public V2 ScreenShakeOffset
     {
@@ -193,6 +198,13 @@ internal sealed class GameEngine
     public List<FloatingText> FloatingTexts { get; } = [];
     public List<ShipDebris> ShipDebrisPieces { get; } = [];
     public List<Star> Stars { get; } = [];
+    private readonly Stack<Shot> shotPool = new();
+    private readonly Stack<Particle> particlePool = new();
+    private readonly Stack<Shockwave> shockwavePool = new();
+    private readonly Stack<FloatingText> floatingTextPool = new();
+    private readonly Stack<ShipDebris> shipDebrisPool = new();
+    internal int VisualQuality { get; private set; } = 2;
+    internal string VisualQualityName => VisualQuality switch { 0 => "LOW", 1 => "BALANCED", _ => "HIGH" };
 
     public event Action<bool>? FullScreenChanged;
     public GameEngine(IAudioService audio, IHighScoreRepository highScoreRepository, IDisplaySettingsStore displaySettingsStore, ControlBindings bindings, DisplayPreferences preferences, IRandomSource random, GameEngineServices services)
@@ -217,6 +229,7 @@ internal sealed class GameEngine
     {
         dt = Math.Min(dt, .04);
         TotalTime += dt;
+        RicochetBounceSoundCooldown = Math.Max(0, RicochetBounceSoundCooldown - dt);
         if (Mode == GameMode.Title)
         {
             TitleIdleTime += dt;
@@ -307,6 +320,96 @@ internal sealed class GameEngine
         }
     }
 
+    internal Shot SpawnShot(V2 position, V2 velocity, bool enemy, double lifetime)
+    {
+        TrimPool(Shots, shotPool, MaxPooledShots);
+        Shot shot = shotPool.Count > 0 ? shotPool.Pop().Reset(position, velocity, enemy, lifetime) : new Shot(position, velocity, enemy, lifetime);
+        Shots.Add(shot);
+        return shot;
+    }
+
+    internal Particle SpawnParticle(V2 position, V2 velocity, double lifetime, uint color, double size)
+    {
+        TrimPool(Particles, particlePool, MaxPooledParticles);
+        Particle particle = particlePool.Count > 0 ? particlePool.Pop().Reset(position, velocity, lifetime, color, size) : new Particle(position, velocity, lifetime, color, size);
+        Particles.Add(particle);
+        return particle;
+    }
+
+    internal Shockwave SpawnShockwave(V2 position, double lifetime, uint color, double maxRadius)
+    {
+        TrimPool(Shockwaves, shockwavePool, MaxPooledShockwaves);
+        Shockwave shockwave = shockwavePool.Count > 0 ? shockwavePool.Pop().Reset(position, lifetime, color, maxRadius) : new Shockwave(position, lifetime, color, maxRadius);
+        Shockwaves.Add(shockwave);
+        return shockwave;
+    }
+
+    internal FloatingText SpawnFloatingText(V2 position, string text, uint color)
+    {
+        while (FloatingTexts.Count >= MaxPooledFloatingTexts) { floatingTextPool.Push(FloatingTexts[0]); FloatingTexts.RemoveAt(0); }
+        FloatingText floatingText = floatingTextPool.Count > 0 ? floatingTextPool.Pop().Reset(position, text, color) : new FloatingText(position, text, color);
+        FloatingTexts.Add(floatingText);
+        return floatingText;
+    }
+
+    internal ShipDebris SpawnShipDebris(V2 position, V2 velocity, int kind, double angle, double spin)
+    {
+        while (ShipDebrisPieces.Count >= 32) { shipDebrisPool.Push(ShipDebrisPieces[0]); ShipDebrisPieces.RemoveAt(0); }
+        ShipDebris piece = shipDebrisPool.Count > 0 ? shipDebrisPool.Pop().Reset(position, velocity, kind, angle, spin) : new ShipDebris(position, velocity, kind, angle, spin).Initialize();
+        ShipDebrisPieces.Add(piece);
+        return piece;
+    }
+
+    internal void RecycleShipDebris()
+    {
+        for (int i = ShipDebrisPieces.Count - 1; i >= 0; i--)
+            if (!ShipDebrisPieces[i].Alive) { shipDebrisPool.Push(ShipDebrisPieces[i]); ShipDebrisPieces.RemoveAt(i); }
+    }
+
+    internal void CycleVisualQuality()
+    {
+        VisualQuality = (VisualQuality + 1) % 3;
+        ShowBanner($"VISUAL QUALITY  {VisualQualityName}", 1.8);
+    }
+
+    internal bool LowerVisualQualityIfNeeded()
+    {
+        if (VisualQuality == 0) return false;
+        VisualQuality--;
+        ShowBanner($"PERFORMANCE MODE  {VisualQualityName}", 2.2);
+        return true;
+    }
+
+    internal void RecycleEffects()
+    {
+        RecycleDead(Shots, shotPool);
+        RecycleDead(Particles, particlePool);
+        RecycleDead(Shockwaves, shockwavePool);
+        for (int i = FloatingTexts.Count - 1; i >= 0; i--)
+            if (!FloatingTexts[i].Alive) { floatingTextPool.Push(FloatingTexts[i]); FloatingTexts.RemoveAt(i); }
+    }
+
+    internal void RecycleAllEffects()
+    {
+        foreach (Shot item in Shots) shotPool.Push(item);
+        foreach (Particle item in Particles) particlePool.Push(item);
+        foreach (Shockwave item in Shockwaves) shockwavePool.Push(item);
+        foreach (FloatingText item in FloatingTexts) floatingTextPool.Push(item);
+        foreach (ShipDebris item in ShipDebrisPieces) shipDebrisPool.Push(item);
+        Shots.Clear(); Particles.Clear(); Shockwaves.Clear(); FloatingTexts.Clear(); ShipDebrisPieces.Clear();
+    }
+
+    private static void RecycleDead<T>(List<T> active, Stack<T> pool) where T : Body
+    {
+        for (int i = active.Count - 1; i >= 0; i--)
+            if (!active[i].Alive) { pool.Push(active[i]); active.RemoveAt(i); }
+    }
+
+    private static void TrimPool<T>(List<T> active, Stack<T> pool, int maximum)
+    {
+        while (active.Count >= maximum) { pool.Push(active[0]); active.RemoveAt(0); }
+    }
+
     internal void RaiseFullScreenChanged(bool enabled) => FullScreenChanged?.Invoke(enabled);
     private void StartDemo() => services.GameInputService.StartDemo(this);
     public bool HandleCommandKey(Key key, bool isRepeat) => services.GameInputService.HandleCommandKey(this, key, isRepeat);
@@ -375,6 +478,7 @@ internal sealed class GameEngine
     internal void EmitThrust() => services.EffectsPhysicsService.EmitThrust(this);
     internal void Spark(V2 position, uint color, int count) => services.EffectsPhysicsService.Spark(this, position, color, count);
     internal void Explosion(V2 position, int count, uint color) => services.EffectsPhysicsService.Explosion(this, position, count, color);
+    internal void AsteroidBreakup(V2 position, int count, uint color) => services.EffectsPhysicsService.AsteroidBreakup(this, position, count, color);
     private void RemoveDead() => services.EffectsPhysicsService.RemoveDead(this);
     internal void ClearWorld() => services.EffectsPhysicsService.ClearWorld(this);
     internal void TriggerScreenShake(double duration, double magnitude) => services.EffectsPhysicsService.TriggerScreenShake(this, duration, magnitude);

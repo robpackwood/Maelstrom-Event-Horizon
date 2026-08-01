@@ -6,6 +6,9 @@ internal interface IAudioService
 {
     void StartTitleMusic();
     void StartWaveMusic(int wave, bool intense);
+    void StartBossMusic();
+    void StartSummaryMusic(bool earnedCashBonus);
+    void StartGameOverMusic();
     void SetVolumes(double musicLevel, double effectsLevel);
     void StopMusic(bool stopEffects = true);
     void PauseAll();

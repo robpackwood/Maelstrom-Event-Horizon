@@ -5,8 +5,8 @@ namespace MaelstromEventHorizon.Domain.Entities;
 internal sealed class Shot(V2 position, V2 velocity, bool enemy, double lifetime)
     : Body(position, velocity, enemy ? 4 : 3)
 {
-    public readonly bool Enemy = enemy;
-    public readonly double Lifetime = lifetime;
+    public bool Enemy = enemy;
+    public double Lifetime = lifetime;
     public bool BossShot;
     public uint Tint;
     public bool Sludge;
@@ -15,4 +15,12 @@ internal sealed class Shot(V2 position, V2 velocity, bool enemy, double lifetime
     public int Damage = 1;
     public int PowerLevel;
     public double RiftDelay = -1;
+
+    internal Shot Reset(V2 position, V2 velocity, bool enemy, double lifetime)
+    {
+        Position = position; Velocity = velocity; Radius = enemy ? 4 : 3; Enemy = enemy; Lifetime = lifetime;
+        Age = 0; Angle = 0; Spin = 0; Alive = true; BossShot = false; Tint = 0; Sludge = false;
+        SludgeVomit = false; SplitAge = -1; Damage = 1; PowerLevel = 0; RiftDelay = -1;
+        return this;
+    }
 }

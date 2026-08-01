@@ -11,6 +11,8 @@ internal sealed class AlienBoss : Body
             AlienBossKind.SludgeMaw => 76,
             AlienBossKind.EyeTyrant => 70,
             AlienBossKind.BoneBroodmother => 82,
+            AlienBossKind.DreadHarvester => 78,
+            AlienBossKind.SolarWarden => 74,
             _ => 73
         })
     {
@@ -21,6 +23,8 @@ internal sealed class AlienBoss : Body
             AlienBossKind.SludgeMaw => 18,
             AlienBossKind.EyeTyrant => 20,
             AlienBossKind.BoneBroodmother => 24,
+            AlienBossKind.DreadHarvester => 26,
+            AlienBossKind.SolarWarden => 23,
             _ => 22
         };
         HitPoints = MaxHitPoints = baseHealth + encounter * 4;

@@ -27,7 +27,7 @@ internal sealed class OverlayRenderer
                 new SolidColorBrush(Color.FromRgb(82, 221, 255)), FontWeights.SemiBold);
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(150, 84, 219, 255)), 1), new Point(88, 132), new Point(551, 132));
 
-            string[] menuItems = ["PLAY", "CONTROLS", "MUSIC", "SOUND FX", "FULL SCREEN", "QUIT"];
+            string[] menuItems = ["PLAY", "CONTROLS", "MUSIC", "SOUND FX", "GRAPHICS", "FULL SCREEN", "QUIT"];
             for (int i = 0; i < menuItems.Length; i++)
             {
                 double baseline = 170 + i * 46;
@@ -40,6 +40,11 @@ internal sealed class OverlayRenderer
                     DrawVolumeSlider(view, dc, 323, baseline - 12, 176, i == 2 ? view.Game.MusicVolume : view.Game.EffectsVolume, selected);
                 }
                 else if (i == 4)
+                {
+                    view.DrawText(dc, view.Game.VisualQualityName, 363, baseline, 15,
+                        new SolidColorBrush(Color.FromRgb(255, 221, 113)), FontWeights.Bold);
+                }
+                else if (i == 5)
                 {
                     var box = new Rect(363, baseline - 18, 22, 22);
                     dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(175, 3, 15, 27)), new Pen(brush, 1.5), box);

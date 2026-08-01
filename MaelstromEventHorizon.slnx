@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Configurations>
     <Platform Name="x64" />
   </Configurations>
@@ -6,7 +6,4 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="MaelstromEventHorizon/MaelstromEventHorizon.csproj" />
-  <Project
-    Path="MaelstromEventHorizon.Package/MaelstromEventHorizon.Package.wapproj"
-    Type="c7167f0d-bc9f-4e6e-afe1-012c56b48db5" />
 </Solution>

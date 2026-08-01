@@ -7,8 +7,11 @@ namespace MaelstromEventHorizon.Application.Services.Combat;
 
 internal sealed partial class CollisionService
 {
+    private readonly CollisionSpatialHash spatialHash = new();
+
     internal void HandleCollisions(GameEngine game)
     {
+        spatialHash.Build(game);
         int shotCount = game.Shots.Count;
         for (int shotIndex = 0; shotIndex < shotCount; shotIndex++)
         {
@@ -18,7 +21,7 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            Asteroid? asteroid = FindHitAsteroid(game, shot);
+            Asteroid? asteroid = FindHitAsteroid(game, shot, spatialHash);
 
             if (asteroid is not null)
             {
@@ -29,12 +32,12 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            Fighter? fighter = FindHitFighter(game, shot);
+            Fighter? fighter = FindHitFighter(game, shot, spatialHash);
 
             if (fighter is not null)
             {
                 shot.Alive = false;
-                game.Audio.Play(SoundCue.SteelHit, .42);
+                game.Audio.Play(SoundCue.EnemyHit, .48);
 
                 if ((fighter.HitPoints -= shot.Damage) <= 0)
                 {
@@ -48,21 +51,21 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            AlienBoss? boss = FindHitBoss(game, shot);
+            AlienBoss? boss = FindHitBoss(game, shot, spatialHash);
 
             if (boss is not null)
             {
                 shot.Alive = false;
-                DamageBoss(game, boss, shot.Damage, shot.Position);
+                DamageBoss(game, boss, shot.Damage, shot.Position, true);
                 continue;
             }
 
-            HomingMine? mine = FindHitMine(game, shot);
+            HomingMine? mine = FindHitMine(game, shot, spatialHash);
 
             if (mine is not null)
             {
                 shot.Alive = false;
-                game.Audio.Play(SoundCue.SteelHit, .42);
+                game.Audio.Play(SoundCue.MineHit, .5);
 
                 if ((mine.HitPoints -= shot.Damage) <= 0)
                 {
@@ -72,7 +75,7 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            GravityVortex? vortex = FindHitVortex(game, shot);
+            GravityVortex? vortex = FindHitVortex(game, shot, spatialHash);
 
             if (vortex is not null)
             {
@@ -81,7 +84,7 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            Nova? nova = FindHitNova(game, shot);
+            Nova? nova = FindHitNova(game, shot, spatialHash);
 
             if (nova is not null)
             {
@@ -99,8 +102,8 @@ internal sealed partial class CollisionService
                 comet.Alive = false;
                 game.AddCometCash(comet.Value);
                 game.Explosion(hitPosition, 28, comet.Tint);
-                game.Shockwaves.Add(new Shockwave(hitPosition, .55, comet.Tint, 125));
-                game.FloatingTexts.Add(new FloatingText(hitPosition, $"+${comet.Value:N0}", comet.Tint));
+                game.SpawnShockwave(hitPosition, .55, comet.Tint, 125);
+                game.SpawnFloatingText(hitPosition, $"+${comet.Value:N0}", comet.Tint);
                 game.Audio.Play(SoundCue.CometCelebration, .9);
                 continue;
             }
@@ -121,7 +124,8 @@ internal sealed partial class CollisionService
                 else
                 {
                     game.AddScore(prize.Value);
-                    game.Audio.Play(SoundCue.Coin, .78);
+                    game.Audio.Play(SoundCue.Coin, .82);
+                    if (prize.Kind == PickupKind.Bonus) game.Audio.Play(SoundCue.ShipBlast, .82);
                 }
             }
         }
@@ -163,7 +167,7 @@ internal sealed partial class CollisionService
                 {
                     game.Lives++;
                     game.ShowBanner("RESCUE +1 SHIP", 2);
-                    game.Audio.Play(SoundCue.Life);
+                    game.Audio.Play(SoundCue.RescueCelebration);
                 }
                 else
                 {
@@ -248,8 +252,8 @@ internal sealed partial class CollisionService
         game.LevelBonusCash = 0;
         game.Multiplier = 1;
         game.Explosion(impact.Position, 30, 0xffff6b64);
-        game.Shockwaves.Add(new Shockwave(impact.Position, .65, 0xffff745f, 155));
-        game.FloatingTexts.Add(new FloatingText(impact.Position, "BONUS FAILED  $0", 0xffff8175));
+        game.SpawnShockwave(impact.Position, .65, 0xffff745f, 155);
+        game.SpawnFloatingText(impact.Position, "BONUS FAILED  $0", 0xffff8175);
         game.Player.Velocity *= .35;
         game.ShowBanner("BONUS STAGE FAILED - $0", 2.2);
         game.Audio.Play(SoundCue.BonusFailed, .9);
@@ -272,7 +276,7 @@ internal sealed partial class CollisionService
 
         game.Player.Velocity += deflection * (65 + asteroid.Size * 22);
         game.Player.Invulnerable = .65;
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, .34, 0xff65e7ff, 72 + asteroid.Size * 10));
+        game.SpawnShockwave(game.Player.Position, .34, 0xff65e7ff, 72 + asteroid.Size * 10);
 
         if (asteroid.ExitsArena)
         {
@@ -297,8 +301,8 @@ internal sealed partial class CollisionService
     {
         game.ShieldImpactPoint = position;
         game.ShieldImpactTime = .42;
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, .48, 0xff73efff, 118));
-        game.Shockwaves.Add(new Shockwave(position, .32, 0xffe8ffff, 62));
+        game.SpawnShockwave(game.Player.Position, .48, 0xff73efff, 118);
+        game.SpawnShockwave(position, .32, 0xffe8ffff, 62);
         game.Spark(position, 0xffd9ffff, 18);
         game.Spark(game.Player.Position, 0xff55dfff, 10);
         game.Audio.Play(SoundCue.ShieldImpact, Math.Clamp(strength, 0, 1));
@@ -345,7 +349,7 @@ internal sealed partial class CollisionService
 
         asteroid.Alive = false;
         game.AddScore(asteroid.Size switch { 3 => 20, 2 => 50, _ => 100 });
-        game.Explosion(asteroid.Position, asteroid.Size == 3 ? 26 : 15, 0xffff9b4a);
+        game.AsteroidBreakup(asteroid.Position, asteroid.Size == 3 ? 26 : 15, 0xffff9b4a);
 
         if (asteroid.Size > 1)
         {
@@ -386,16 +390,17 @@ internal sealed partial class CollisionService
         game.AwardImmediateScore(fighter.Kind == FighterKind.Interceptor ? 1000 : 500, fighter.Position);
         game.Explosion(fighter.Position, 24, fighter.Kind == FighterKind.Interceptor ? 0xff58e9ff : 0xffff4f83);
         game.RollDrop(fighter.Position, .24);
-        game.Audio.Play(SoundCue.Explosion, .75);
+        game.Audio.Play(SoundCue.ShipBlast, .78);
     }
 
-    internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition)
+    internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition, bool playerBulletHit = false)
     {
         if (!boss.Alive || game.BossInvulnerability > 0)
         {
             return;
         }
 
+        bool playHitReaction = boss.HurtFlash <= 0;
         boss.HitPoints -= damage;
         boss.HurtFlash = .14;
         game.Spark(hitPosition, game.BossTint(boss.Kind), 7 + damage * 2);
@@ -406,9 +411,19 @@ internal sealed partial class CollisionService
         }
         else
         {
-            game.Audio.Play(SoundCue.SteelHit, .38);
+            if (playerBulletHit && playHitReaction) game.Audio.Play(BossHitCue(boss.Kind), .5);
         }
     }
+
+    private static SoundCue BossHitCue(AlienBossKind kind) => kind switch
+    {
+        AlienBossKind.SludgeMaw => SoundCue.SludgeMawHit,
+        AlienBossKind.EyeTyrant => SoundCue.EyeTyrantHit,
+        AlienBossKind.BoneBroodmother => SoundCue.BoneBroodmotherHit,
+        AlienBossKind.DreadHarvester => SoundCue.DreadHarvesterHit,
+        AlienBossKind.SolarWarden => SoundCue.SolarWardenHit,
+        _ => SoundCue.VoidLeechHit
+    };
 
     private void DestroyBoss(GameEngine game, AlienBoss boss)
     {
@@ -432,8 +447,8 @@ internal sealed partial class CollisionService
             game.Explosion(burst, 24, i == 1 ? 0xffffbd62 : game.BossTint(boss.Kind));
         }
 
-        game.Shockwaves.Add(new Shockwave(boss.Position, 1.05, game.BossTint(boss.Kind), 330));
-        game.FloatingTexts.Add(new FloatingText(boss.Position, $"BOSS BOUNTY  +${reward:N0}", 0xffffdc78));
+        game.SpawnShockwave(boss.Position, 1.05, game.BossTint(boss.Kind), 330);
+        game.SpawnFloatingText(boss.Position, $"BOSS BOUNTY  +${reward:N0}", 0xffffdc78);
         game.ShowBanner($"{game.BossName(boss.Kind)} DEFEATED", 2.8);
         game.Audio.Play(SoundCue.ShipBlast);
         game.Audio.Play(SoundCue.Explosion, .92);
@@ -466,9 +481,9 @@ internal sealed partial class CollisionService
             game.AddScore(2000);
         }
 
-        game.Shockwaves.Add(new Shockwave(vortex.Position, .8, 0xffb069ff, 230));
+        game.SpawnShockwave(vortex.Position, .8, 0xffb069ff, 230);
         game.Explosion(vortex.Position, 40, 0xff6ad7ff);
-        game.Audio.Play(SoundCue.Vortex);
+        game.Audio.Play(SoundCue.VortexHit);
     }
 
     internal void DamagePlayer(GameEngine game, bool bypassShield = false, V2? impactPosition = null)
@@ -514,15 +529,15 @@ internal sealed partial class CollisionService
         game.ClearEquippedPowerups();
         game.LastPowerupTime = 0;
         game.Explosion(game.Player.Position, 76, 0xff62e6ff);
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, 1.05, 0xffff6b5e, 265));
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, .68, 0xffffc06a, 145));
+        game.SpawnShockwave(game.Player.Position, 1.05, 0xffff6b5e, 265);
+        game.SpawnShockwave(game.Player.Position, .68, 0xffffc06a, 145);
         game.Spark(game.Player.Position, 0xffffffff, 28);
         game.Audio.Play(SoundCue.ShipCrash);
         game.Audio.Play(SoundCue.ShipBlast);
 
         if (noShipsRemaining)
         {
-            game.Audio.StopMusic(false);
+            game.Audio.StartGameOverMusic();
 
             game.PendingGameOverHighScore =
                 game is { BonusOnlyMode: false, BossOnlyMode: false } &&

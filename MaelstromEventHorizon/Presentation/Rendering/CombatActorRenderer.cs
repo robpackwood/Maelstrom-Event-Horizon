@@ -127,6 +127,8 @@ internal sealed class CombatActorRenderer
             case AlienBossKind.EyeTyrant: DrawEyeTyrant(view, dc, boss); break;
             case AlienBossKind.BoneBroodmother: DrawBoneBroodmother(view, dc, boss); break;
             case AlienBossKind.VoidLeech: DrawVoidLeech(view, dc, boss); break;
+            case AlienBossKind.DreadHarvester: DrawBoneBroodmother(view, dc, boss); break;
+            case AlienBossKind.SolarWarden: DrawEyeTyrant(view, dc, boss); break;
         }
     }
 
@@ -467,6 +469,8 @@ internal sealed class CombatActorRenderer
         AlienBossKind.SludgeMaw => Color.FromRgb(143, 232, 79),
         AlienBossKind.EyeTyrant => Color.FromRgb(217, 118, 255),
         AlienBossKind.BoneBroodmother => Color.FromRgb(255, 140, 77),
+        AlienBossKind.DreadHarvester => Color.FromRgb(213, 217, 74),
+        AlienBossKind.SolarWarden => Color.FromRgb(255, 207, 84),
         _ => Color.FromRgb(86, 241, 210)
     };
 }

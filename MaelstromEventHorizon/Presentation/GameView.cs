@@ -68,7 +68,10 @@ internal sealed class GameView : FrameworkElement
     internal readonly Dictionary<uint, BitmapSource> CometHeadSprites;
     internal readonly BitmapSource[][] BossSpriteFrames;
     internal double PreviousTime;
+    internal double NextFrameTime;
+    internal int SlowFrameCount;
     internal bool FastBonusSampling;
+    internal const double TargetFrameInterval = 1.0 / 60;
     internal const int BossSpriteFrameCount = 12;
     internal const double BossSpriteFrameRate = 12;
     internal static readonly Color[] WaveGrades = [Color.FromRgb(8, 26, 50), Color.FromRgb(45, 7, 13), Color.FromRgb(4, 38, 27), Color.FromRgb(24, 8, 43), Color.FromRgb(48, 26, 3), Color.FromRgb(5, 31, 42), Color.FromRgb(37, 7, 34), Color.FromRgb(35, 19, 8)];
@@ -306,8 +309,15 @@ internal sealed class GameView : FrameworkElement
     private void RenderFrame(object? sender, EventArgs e)
     {
         double now = Clock.Elapsed.TotalSeconds;
+        if (now < NextFrameTime)
+            return;
+
+        NextFrameTime = now + TargetFrameInterval;
         double dt = PreviousTime == 0 ? 1.0 / 60 : now - PreviousTime;
         PreviousTime = now;
+        SlowFrameCount = dt > .026 ? SlowFrameCount + 1 : Math.Max(0, SlowFrameCount - 2);
+        if (SlowFrameCount >= 24 && Game.LowerVisualQualityIfNeeded())
+            SlowFrameCount = 0;
         Game.Update(dt);
         bool useFastSampling = Game is { IsBonusStage: true, Mode: GameMode.Playing };
         if (useFastSampling != FastBonusSampling)

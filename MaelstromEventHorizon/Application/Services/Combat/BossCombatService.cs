@@ -32,7 +32,7 @@ internal sealed class BossCombatService
             boss.HurtFlash = Math.Max(0, boss.HurtFlash - dt);
 
             V2 toPlayer = game.ArenaDelta(boss.Position, game.Player.Position);
-            V2 direction = toPlayer.Normalized;
+            V2 direction = game.PlayerRespawning ? -toPlayer.Normalized : toPlayer.Normalized;
             V2 tangent = new(-direction.Y, direction.X);
             double scale = Math.Min(1.4, 1 + (boss.Encounter - 1) * .055);
             V2 desired;
@@ -65,6 +65,20 @@ internal sealed class BossCombatService
                     }
 
                     desired = direction * (58 * scale) + tangent * Math.Sin(boss.Age * .85) * 26;
+                    break;
+                case AlienBossKind.DreadHarvester:
+                    boss.SpecialTimer -= dt;
+                    if (boss.SpecialTimer <= 0)
+                    {
+                        boss.Velocity = tangent * (245 + boss.Encounter * 7);
+                        boss.SpecialTimer = Math.Max(3.2, 5.1 - boss.Encounter * .1);
+                        game.Spark(boss.Position, 0xffd5d94a, 16);
+                    }
+                    desired = direction * (36 * scale) + tangent * Math.Sin(boss.Age * 2.4) * 92;
+                    break;
+                case AlienBossKind.SolarWarden:
+                    double solarRange = Math.Clamp((toPlayer.Length - 290) * .48, -98, 98);
+                    desired = direction * solarRange - tangent * (95 * scale);
                     break;
                 default:
                     desired = direction * (70 * scale) + tangent * Math.Sin(boss.Age * 1.9) * 80;
@@ -125,6 +139,17 @@ internal sealed class BossCombatService
 
                 boss.AttackTimer = Math.Max(1.55, 2.75 - tempo);
                 break;
+            case AlienBossKind.DreadHarvester:
+                for (int i = 0; i < 10; i++)
+                    AddBossShot(game, boss, V2.FromAngle(boss.Phase * 1.7 + i * Math.PI * 2 / 10),
+                        245 + boss.Encounter * 7, 0xffd5d94a, 3.9);
+                boss.AttackTimer = Math.Max(1.15, 2.05 - tempo);
+                break;
+            case AlienBossKind.SolarWarden:
+                for (int i = -2; i <= 2; i++)
+                    AddBossShot(game, boss, game.Rotate(aim, i * .16), 360 + boss.Encounter * 8, 0xffffcf54, 3.1);
+                boss.AttackTimer = Math.Max(.85, 1.45 - tempo);
+                break;
             default:
 
                 for (int i = 0; i < 5; i++)
@@ -137,35 +162,34 @@ internal sealed class BossCombatService
                 break;
         }
 
-        game.Audio.Play(SoundCue.EnemyFire, .68);
+        game.Audio.Play(BossFireCue(boss.Kind), .66);
     }
+
+    private static SoundCue BossFireCue(AlienBossKind kind) => kind switch
+    {
+        AlienBossKind.SludgeMaw => SoundCue.SludgeMawFire,
+        AlienBossKind.EyeTyrant => SoundCue.EyeTyrantFire,
+        AlienBossKind.BoneBroodmother => SoundCue.BoneBroodmotherFire,
+        AlienBossKind.DreadHarvester => SoundCue.DreadHarvesterFire,
+        AlienBossKind.SolarWarden => SoundCue.SolarWardenFire,
+        _ => SoundCue.VoidLeechFire
+    };
 
     private void AddBossShot(GameEngine game, AlienBoss boss, V2 direction, double speed, uint tint, double lifetime)
     {
         direction = direction.Normalized;
 
-        game.Shots.Add(new Shot(boss.Position + direction * (boss.Radius * .72), direction * speed, true, lifetime)
-        {
-            Radius = 5.2,
-            BossShot = true,
-            Tint = tint
-        });
+        Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72), direction * speed, true, lifetime);
+        shot.Radius = 5.2; shot.BossShot = true; shot.Tint = tint;
     }
 
     private void AddSludgeGlob(GameEngine game, AlienBoss boss, V2 direction)
     {
         direction = direction.Normalized;
 
-        game.Shots.Add(new Shot(boss.Position + direction * (boss.Radius * .72),
-            direction * (155 + boss.Encounter * 3), true, 4.2)
-        {
-            Radius = 12.5,
-            BossShot = true,
-            Tint = 0xff86dc45,
-            Sludge = true,
-            SplitAge = .95 + game.Random.NextDouble() * .35,
-            Angle = game.Random.NextDouble() * Math.PI * 2
-        });
+        Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72), direction * (155 + boss.Encounter * 3), true, 4.2);
+        shot.Radius = 12.5; shot.BossShot = true; shot.Tint = 0xff86dc45; shot.Sludge = true;
+        shot.SplitAge = .95 + game.Random.NextDouble() * .35; shot.Angle = game.Random.NextDouble() * Math.PI * 2;
     }
 
     internal void SplitSludgeGlob(GameEngine game, Shot glob)
@@ -184,19 +208,14 @@ internal sealed class BossCombatService
             double spread = (i - (fragments - 1) / 2.0) * .17 + (game.Random.NextDouble() - .5) * .12;
             V2 direction = game.Rotate(forward, spread);
 
-            game.Shots.Add(new Shot(glob.Position + game.RandomDirection() * 5,
-                direction * (125 + game.Random.NextDouble() * 45), true, 2.5 + game.Random.NextDouble() * .5)
-            {
-                Radius = 4.5 + game.Random.NextDouble() * 1.8,
-                BossShot = true,
-                Tint = game.Random.Next(3) == 0 ? 0xff4f8f2d : 0xff8fe84f,
-                Sludge = true,
-                Angle = game.Random.NextDouble() * Math.PI * 2
-            });
+            Shot fragment = game.SpawnShot(glob.Position + game.RandomDirection() * 5, direction * (125 + game.Random.NextDouble() * 45), true, 2.5 + game.Random.NextDouble() * .5);
+            fragment.Radius = 4.5 + game.Random.NextDouble() * 1.8; fragment.BossShot = true;
+            fragment.Tint = game.Random.Next(3) == 0 ? 0xff4f8f2d : 0xff8fe84f; fragment.Sludge = true;
+            fragment.Angle = game.Random.NextDouble() * Math.PI * 2;
         }
 
         game.Spark(glob.Position, 0xff9bf25b, 14);
-        game.Shockwaves.Add(new Shockwave(glob.Position, .3, 0xff75cf3d, 38));
+        game.SpawnShockwave(glob.Position, .3, 0xff75cf3d, 38);
         game.Audio.Play(SoundCue.EnemyFire, .36);
     }
 
@@ -211,21 +230,10 @@ internal sealed class BossCombatService
             V2 direction = game.Rotate(aim, across * 1.35 + (game.Random.NextDouble() - .5) * .2);
             V2 origin = boss.Position + aim * (boss.Radius * .68) + tangent * ((game.Random.NextDouble() - .5) * 24);
 
-            game.Shots.Add(new Shot(origin, direction * (100 + game.Random.NextDouble() * 65), true,
-                2.8 + game.Random.NextDouble() * .7)
-            {
-                Radius = 3.8 + game.Random.NextDouble() * 3.2,
-                BossShot = true,
-                Tint = game.Random.Next(4) switch
-                {
-                    0 => 0xffb7f36a,
-                    1 => 0xff46762a,
-                    _ => 0xff77c93f
-                },
-                Sludge = true,
-                SludgeVomit = true,
-                Angle = game.Random.NextDouble() * Math.PI * 2
-            });
+            Shot droplet = game.SpawnShot(origin, direction * (100 + game.Random.NextDouble() * 65), true, 2.8 + game.Random.NextDouble() * .7);
+            droplet.Radius = 3.8 + game.Random.NextDouble() * 3.2; droplet.BossShot = true;
+            droplet.Tint = game.Random.Next(4) switch { 0 => 0xffb7f36a, 1 => 0xff46762a, _ => 0xff77c93f };
+            droplet.Sludge = true; droplet.SludgeVomit = true; droplet.Angle = game.Random.NextDouble() * Math.PI * 2;
         }
 
         game.Spark(boss.Position + aim * (boss.Radius * .7), 0xffa8ef62, 20);
@@ -234,18 +242,22 @@ internal sealed class BossCombatService
 
     internal void ApplyGravity(GameEngine game, Body body, double dt)
     {
-        foreach (GravityVortex vortex in game.Vortices.Where(v => v.Alive))
+        for (int i = 0; i < game.Vortices.Count; i++)
         {
+            GravityVortex vortex = game.Vortices[i];
+            if (!vortex.Alive) continue;
             V2 delta = game.ArenaDelta(body.Position, vortex.Position);
             double d2 = Math.Max(1800, delta.LengthSquared);
-            body.Velocity += delta.Normalized * (1_100_000 / d2 * dt);
+            body.Velocity += delta.Normalized * (1_450_000 / d2 * dt);
         }
     }
 
     internal void ApplyPlayerGravity(GameEngine game, double dt)
     {
-        foreach (GravityVortex vortex in game.Vortices.Where(v => v.Alive))
+        for (int i = 0; i < game.Vortices.Count; i++)
         {
+            GravityVortex vortex = game.Vortices[i];
+            if (!vortex.Alive) continue;
             V2 delta = game.ArenaDelta(game.Player.Position, vortex.Position);
             double d2 = Math.Max(3000, delta.LengthSquared);
             game.Player.Velocity += delta.Normalized * (GameEngine.PlayerVortexGravity / d2 * dt);

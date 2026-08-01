@@ -5,6 +5,7 @@ using System.IO;
 using System.Media;
 using System.Security.Cryptography;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace MaelstromEventHorizon.Infrastructure.Audio;
 
@@ -16,6 +17,7 @@ internal sealed class SynthAudio : IAudioService
         public bool Busy;
         public double RequestedVolume;
         public long StartedOrder;
+        public DispatcherTimer? CutoffTimer;
     }
 
     private const int LayeredEffectVoiceCount = 16;
@@ -27,6 +29,10 @@ internal sealed class SynthAudio : IAudioService
     private readonly List<LayeredEffectVoice> layeredEffectVoices = [];
     private readonly string normalMusicPath;
     private readonly string bonusMusicPath;
+    private readonly string bossMusicPath;
+    private readonly string calmSummaryMusicPath;
+    private readonly string celebrationSummaryMusicPath;
+    private readonly string gameOverMusicPath;
     private readonly string[] waveMusicPaths;
     private string? openedMusicPath;
     private string? requestedMusicPath;
@@ -45,6 +51,10 @@ internal sealed class SynthAudio : IAudioService
         clips = soundEffects.Clips;
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
         bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
+        bossMusicPath = assets.PathFor("Music", "boss-heavy-ominous.mp3");
+        calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
+        celebrationSummaryMusicPath = assets.PathFor("Music", "summary-celebration-our-expanse.mp3");
+        gameOverMusicPath = assets.PathFor("Music", "game-over-alone.mp3");
         waveMusicPaths =
         [
             assets.PathFor("Music", "wave-12-gsf-discovery.mp3"),
@@ -61,7 +71,7 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-18-robotic-soundtrack.mp3"),
             assets.PathFor("Music", "wave-19-anti-entity-original.mp3"), assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
-        PrepareLayeredEffects();
+        PrepareLayeredEffects(assets);
     }
 
     private void StartMusic()
@@ -78,6 +88,7 @@ internal sealed class SynthAudio : IAudioService
 
     public void StartWaveMusic(int wave, bool intense)
     {
+        StopActiveEffects();
         try
         {
             int trackIndex = (Math.Max(1, wave) - 1) % waveMusicPaths.Length;
@@ -90,6 +101,21 @@ internal sealed class SynthAudio : IAudioService
             if (intense) StartBonusMusic();
             else StartMusic();
         }
+    }
+
+    public void StartSummaryMusic(bool earnedCashBonus)
+    {
+        StopActiveEffects();
+        string preferred = earnedCashBonus ? celebrationSummaryMusicPath : calmSummaryMusicPath;
+        string fallback = earnedCashBonus ? bonusMusicPath : normalMusicPath;
+        StartTrack(File.Exists(preferred) ? preferred : fallback, true, earnedCashBonus ? .34 : .22);
+    }
+
+    public void StartGameOverMusic() => StartTrack(File.Exists(gameOverMusicPath) ? gameOverMusicPath : calmSummaryMusicPath, true, .26);
+
+    public void StartBossMusic()
+    {
+        StartTrack(File.Exists(bossMusicPath) ? bossMusicPath : bonusMusicPath, true, .38);
     }
 
     public void SetVolumes(double musicLevel, double effectsLevel)
@@ -244,7 +270,7 @@ internal sealed class SynthAudio : IAudioService
         }
     }
 
-    private void PrepareLayeredEffects()
+    private void PrepareLayeredEffects(IAssetProvider assets)
     {
         try
         {
@@ -253,13 +279,63 @@ internal sealed class SynthAudio : IAudioService
                 "MaelstromEventHorizon", "EffectCache");
             Directory.CreateDirectory(root);
             foreach (SoundCue cue in new[]
-                     { SoundCue.Explosion, SoundCue.AsteroidExplosion, SoundCue.GiantGrow, SoundCue.GiantShrink })
+                     {
+                         SoundCue.Explosion, SoundCue.AsteroidExplosion, SoundCue.GiantGrow, SoundCue.GiantShrink,
+                         SoundCue.EnemyWarning, SoundCue.BossAlarm, SoundCue.CashRegister, SoundCue.CashBonus,
+                         SoundCue.ChaChing, SoundCue.CometCelebration, SoundCue.MultiplierWoohoo, SoundCue.RescueCelebration
+                     })
             {
                 byte[] source = clips[cue];
                 string fingerprint = Convert.ToHexString(SHA256.HashData(source).AsSpan(0, 8));
                 string path = Path.Combine(root, $"{cue}-{fingerprint}.wav");
                 if (!File.Exists(path)) File.WriteAllBytes(path, source);
                 layeredEffectPaths[cue] = path;
+            }
+
+            foreach (var recorded in new Dictionary<SoundCue, string>
+                     {
+                         [SoundCue.Fire] = "sfx_01a.wav", [SoundCue.EnemyFire] = "sfx_01b.wav",
+                         [SoundCue.EnemyWarning] = "sfx_02a.wav", [SoundCue.BossAlarm] = "sfx_02d.wav",
+                         [SoundCue.MenuMove] = "sfx_03a.wav", [SoundCue.Thrust] = "sfx_04a.wav",
+                         [SoundCue.Explosion] = "sfx_05a.wav", [SoundCue.SteelHit] = "sfx_06.wav",
+                         [SoundCue.Pickup] = "sfx_07a.wav", [SoundCue.Shield] = "sfx_07b.wav",
+                         [SoundCue.ShieldImpact] = "sfx_08b.wav", [SoundCue.Nova] = "sfx_09a.wav",
+                         [SoundCue.Wave] = "sfx_10a.wav", [SoundCue.Life] = "sfx_11a.wav",
+                         [SoundCue.RescueCelebration] = "sfx_11b.wav", [SoundCue.Mine] = "sfx_12a.wav",
+                         [SoundCue.Vortex] = "sfx_13c.wav", [SoundCue.CashRegister] = "sfx_14a.wav",
+                         [SoundCue.Coin] = "sfx_14b.wav", [SoundCue.CashBonus] = "wave-bonus-crowd-cheer.wav",
+                         [SoundCue.ChaChing] = "sfx_15b.wav", [SoundCue.CometCelebration] = "sfx_16a.wav",
+                         [SoundCue.MultiplierWoohoo] = "sfx_16b.wav", [SoundCue.ShipBlast] = "sfx_17a.wav",
+                         [SoundCue.BonusFailed] = "sfx_18a.wav", [SoundCue.GiantGrow] = "sfx_19a.wav",
+                         [SoundCue.GiantShrink] = "sfx_19b.wav"
+                        ,[SoundCue.VortexHit] = "sfx_13b.wav", [SoundCue.NovaHit] = "sfx_09b.wav",
+                         [SoundCue.RicochetBounce] = "sfx_03b.wav"
+                        ,[SoundCue.EnemyHit] = "sfx_06b.wav", [SoundCue.EnemyDestroyed] = "sfx_05b.wav",
+                         [SoundCue.MineHit] = "sfx_12b.wav"
+                        ,[SoundCue.SludgeMawHit] = "sludge-maw-gastric-hit.wav", [SoundCue.EyeTyrantHit] = "sfx_20a.wav",
+                         [SoundCue.BoneBroodmotherHit] = "sfx_21a.wav", [SoundCue.VoidLeechHit] = "sfx_22a.wav",
+                         [SoundCue.DreadHarvesterHit] = "sfx_20b.wav", [SoundCue.SolarWardenHit] = "sfx_21b.wav"
+                        ,[SoundCue.CometSpawn] = "sfx_05c.wav"
+                        ,[SoundCue.SludgeMawFire] = "sfx_12c.wav", [SoundCue.EyeTyrantFire] = "sfx_01c.wav",
+                         [SoundCue.BoneBroodmotherFire] = "sfx_02b.wav", [SoundCue.VoidLeechFire] = "sfx_02c.wav",
+                         [SoundCue.DreadHarvesterFire] = "sfx_20c.wav", [SoundCue.SolarWardenFire] = "sfx_21b.wav"
+                     })
+            {
+                string path = assets.PathFor("SoundEffects", recorded.Value);
+                // Individually curated CC0 recordings: only the events that benefit from a real,
+                // distinctive sound replace their prior synthesized cue.
+                if (File.Exists(path) && recorded.Key is SoundCue.EnemyFire or
+                    SoundCue.EnemyWarning or SoundCue.BossAlarm or SoundCue.Pickup or SoundCue.Nova or
+                    SoundCue.Vortex or SoundCue.Life or SoundCue.RescueCelebration or SoundCue.CashBonus or
+                    SoundCue.ChaChing or SoundCue.CometCelebration or SoundCue.MultiplierWoohoo or
+                    SoundCue.BonusFailed or SoundCue.GiantGrow or SoundCue.GiantShrink or SoundCue.Shield or
+                    SoundCue.ShieldImpact or SoundCue.VortexHit or SoundCue.NovaHit or SoundCue.RicochetBounce or
+                    SoundCue.EnemyHit or SoundCue.EnemyDestroyed or SoundCue.MineHit or SoundCue.ShipBlast or
+                    SoundCue.Coin or SoundCue.SludgeMawHit or SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit or
+                    SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit or SoundCue.CometSpawn or
+                    SoundCue.SludgeMawFire or SoundCue.EyeTyrantFire or SoundCue.BoneBroodmotherFire or
+                    SoundCue.VoidLeechFire or SoundCue.DreadHarvesterFire or SoundCue.SolarWardenFire)
+                    layeredEffectPaths[recorded.Key] = path;
             }
 
             for (int i = 0; i < LayeredEffectVoiceCount; i++)
@@ -288,8 +364,13 @@ internal sealed class SynthAudio : IAudioService
             try
             {
                 if (audioPaused) return true;
-                voice = layeredEffectVoices.FirstOrDefault(candidate => !candidate.Busy)
-                    ?? layeredEffectVoices.MinBy(candidate => candidate.StartedOrder)!;
+                voice = layeredEffectVoices[0];
+                for (int i = 0; i < layeredEffectVoices.Count; i++)
+                {
+                    LayeredEffectVoice candidate = layeredEffectVoices[i];
+                    if (!candidate.Busy) { voice = candidate; break; }
+                    if (candidate.StartedOrder < voice.StartedOrder) voice = candidate;
+                }
                 voice.Player.Stop();
                 voice.Busy = true;
                 voice.RequestedVolume = Math.Clamp(volume, 0, 1);
@@ -298,6 +379,7 @@ internal sealed class SynthAudio : IAudioService
                 voice.Player.Position = TimeSpan.Zero;
                 RebalanceLayeredEffects();
                 voice.Player.Play();
+                ScheduleEffectCutoff(voice, cue);
                 return true;
             }
             catch
@@ -308,27 +390,51 @@ internal sealed class SynthAudio : IAudioService
         }
     }
 
+    private void ScheduleEffectCutoff(LayeredEffectVoice voice, SoundCue cue)
+    {
+        double seconds = cue is SoundCue.SludgeMawHit ? .19 : cue is SoundCue.EyeTyrantHit or
+            SoundCue.BoneBroodmotherHit or SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit ? .15 : 0;
+        if (seconds <= 0) return;
+
+        voice.CutoffTimer?.Stop();
+        long order = voice.StartedOrder;
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(seconds) };
+        voice.CutoffTimer = timer;
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (voice.StartedOrder != order) return;
+            voice.Player.Stop();
+            ReleaseLayeredVoice(voice);
+        };
+        timer.Start();
+    }
+
     private void ReleaseLayeredVoice(LayeredEffectVoice voice)
     {
         lock (playerGate)
         {
             voice.Busy = false;
+            voice.CutoffTimer?.Stop();
             RebalanceLayeredEffects();
         }
     }
 
     private void RebalanceLayeredEffects()
     {
-        int activeCount = layeredEffectVoices.Count(voice => voice.Busy);
+        int activeCount = 0;
+        for (int i = 0; i < layeredEffectVoices.Count; i++) if (layeredEffectVoices[i].Busy) activeCount++;
         double headroom = activeCount <= 1
             ? 1
             : Math.Max(.4, 1 / Math.Sqrt(1 + (activeCount - 1) * .38));
-        foreach (LayeredEffectVoice voice in layeredEffectVoices.Where(voice => voice.Busy))
-            voice.Player.Volume = voice.RequestedVolume * effectsVolume * headroom;
+        for (int i = 0; i < layeredEffectVoices.Count; i++)
+        {
+            LayeredEffectVoice voice = layeredEffectVoices[i];
+            if (voice.Busy) voice.Player.Volume = voice.RequestedVolume * effectsVolume * headroom;
+        }
     }
 
-    private static bool IsLayeredEffect(SoundCue cue)
-        => cue is SoundCue.Explosion or SoundCue.AsteroidExplosion or SoundCue.GiantGrow or SoundCue.GiantShrink;
+    private bool IsLayeredEffect(SoundCue cue) => layeredEffectPaths.ContainsKey(cue);
 
     private static void TraceAudioFailure(string operation, Exception exception)
         => Trace.TraceWarning("Unable to {0}: {1}", operation, exception.Message);

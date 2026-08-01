@@ -7,6 +7,11 @@ namespace MaelstromEventHorizon.Application.Services.Gameplay;
 
 internal sealed class EffectsPhysicsService
 {
+    private const int MaxParticles = 900;
+    private const int MaxShockwaves = 24;
+    private const int MaxDebris = 32;
+    private const int MaxShots = 240;
+    private const int MaxFloatingTexts = 24;
     internal void SpawnShipWreck(GameEngine game)
     {
         V2[] offsets = [new(15, 0), new(-4, -10), new(-4, 10), new(-12, 0), new(3, 0)];
@@ -20,12 +25,10 @@ internal sealed class EffectsPhysicsService
 
             double spin = (game.Random.NextDouble() * 2 - 1) * (2.8 + game.Random.NextDouble() * 5.2);
 
-            ShipDebris piece = new ShipDebris(
-                    game.Player.Position + outward * game.Player.VisualScale, velocity, i, game.Player.Angle, spin)
-                .Initialize();
+            ShipDebris piece = game.SpawnShipDebris(
+                game.Player.Position + outward * game.Player.VisualScale, velocity, i, game.Player.Angle, spin);
 
             piece.Position = MoveBody(game, piece, piece.Position, false);
-            game.ShipDebrisPieces.Add(piece);
         }
     }
 
@@ -44,7 +47,7 @@ internal sealed class EffectsPhysicsService
             }
         }
 
-        game.ShipDebrisPieces.RemoveAll(piece => !piece.Alive);
+        game.RecycleShipDebris();
     }
 
     internal void EmitThrust(GameEngine game)
@@ -53,10 +56,10 @@ internal sealed class EffectsPhysicsService
 
         for (int i = 0; i < 2; i++)
         {
-            game.Particles.Add(new Particle(
+            AddParticle(game, 
                 game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
                 game.Player.Velocity * .2 + back * game.Random.Next(120, 260) + RandomDirection(game) * 25,
-                .28 + game.Random.NextDouble() * .25, i == 0 ? 0xff5be8ff : 0xffff7b45, game.Random.Next(2, 6)));
+                .28 + game.Random.NextDouble() * .25, i == 0 ? 0xff5be8ff : 0xffff7b45, game.Random.Next(2, 6));
         }
     }
 
@@ -64,8 +67,8 @@ internal sealed class EffectsPhysicsService
     {
         for (int i = 0; i < count; i++)
         {
-            game.Particles.Add(new Particle(position, RandomDirection(game) * game.Random.Next(70, 260),
-                .2 + game.Random.NextDouble() * .45, color, 2 + game.Random.NextDouble() * 4));
+            AddParticle(game, position, RandomDirection(game) * game.Random.Next(70, 260),
+                .2 + game.Random.NextDouble() * .45, color, 2 + game.Random.NextDouble() * 4);
         }
     }
 
@@ -76,11 +79,36 @@ internal sealed class EffectsPhysicsService
             double speed = game.Random.NextDouble() * game.Random.Next(100, 390);
             uint c = i % 4 == 0 ? 0xffffffff : i % 3 == 0 ? 0xffff5a36 : color;
 
-            game.Particles.Add(new Particle(position, RandomDirection(game) * speed,
-                .35 + game.Random.NextDouble() * .85, c, 2 + game.Random.NextDouble() * 7));
+            AddParticle(game, position, RandomDirection(game) * speed,
+                .35 + game.Random.NextDouble() * .85, c, 2 + game.Random.NextDouble() * 7);
         }
 
-        game.Shockwaves.Add(new Shockwave(position, .38, color, 55 + count * 1.7));
+        AddShockwave(game, position, .38, color, 55 + count * 1.7);
+    }
+
+    internal void AsteroidBreakup(GameEngine game, V2 position, int count, uint color)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            double speed = game.Random.Next(150, 410);
+            uint fragmentColor = i % 5 == 0 ? 0xffffe1a4 : i % 3 == 0 ? 0xffd77542 : color;
+            AddParticle(game, position, RandomDirection(game) * speed,
+                .16 + game.Random.NextDouble() * .32, fragmentColor, 1.5 + game.Random.NextDouble() * 4.5);
+        }
+
+        AddShockwave(game, position, .22, color, 38 + count * 1.15);
+    }
+
+    private static void AddParticle(GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
+    {
+        if (game.Particles.Count >= MaxParticles) game.Particles[0].Alive = false;
+        game.SpawnParticle(position, velocity, lifetime, color, size);
+    }
+
+    private static void AddShockwave(GameEngine game, V2 position, double lifetime, uint color, double maxRadius)
+    {
+        if (game.Shockwaves.Count >= MaxShockwaves) game.Shockwaves[0].Alive = false;
+        game.SpawnShockwave(position, lifetime, color, maxRadius);
     }
 
     internal void RemoveDead(GameEngine game)
@@ -93,11 +121,16 @@ internal sealed class EffectsPhysicsService
         game.Novas.RemoveAll(x => !x.Alive);
         game.Pickups.RemoveAll(x => !x.Alive);
         game.Comets.RemoveAll(x => !x.Alive);
-        game.Shots.RemoveAll(x => !x.Alive);
-        game.Particles.RemoveAll(x => !x.Alive);
-        game.Shockwaves.RemoveAll(x => !x.Alive);
-        game.FloatingTexts.RemoveAll(x => !x.Alive);
-        game.ShipDebrisPieces.RemoveAll(x => !x.Alive);
+        game.RecycleEffects();
+        game.RecycleShipDebris();
+        TrimOldest(game.Shots, MaxShots);
+        TrimOldest(game.FloatingTexts, MaxFloatingTexts);
+    }
+
+    private static void TrimOldest<T>(List<T> items, int maximum)
+    {
+        int excess = items.Count - maximum;
+        if (excess > 0) items.RemoveRange(0, excess);
     }
 
     internal void ClearWorld(GameEngine game)
@@ -110,10 +143,7 @@ internal sealed class EffectsPhysicsService
         game.Novas.Clear();
         game.Pickups.Clear();
         game.Comets.Clear();
-        game.Shots.Clear();
-        game.Particles.Clear();
-        game.Shockwaves.Clear();
-        game.FloatingTexts.Clear();
+        game.RecycleAllEffects();
         game.ShipDebrisPieces.Clear();
         game.FreezeTime = 0;
         game.ScreenShakeTime = 0;
@@ -221,30 +251,40 @@ internal sealed class EffectsPhysicsService
         double y = nextPosition.Y;
         double vx = body.Velocity.X;
         double vy = body.Velocity.Y;
+        bool bounced = false;
 
         if (x < minX)
         {
             x = minX + (minX - x);
             vx = Math.Abs(vx);
+            bounced = true;
         }
         else if (x > maxX)
         {
             x = maxX - (x - maxX);
             vx = -Math.Abs(vx);
+            bounced = true;
         }
 
         if (y < minY)
         {
             y = minY + (minY - y);
             vy = Math.Abs(vy);
+            bounced = true;
         }
         else if (y > maxY)
         {
             y = maxY - (y - maxY);
             vy = -Math.Abs(vy);
+            bounced = true;
         }
 
         body.Velocity = new V2(vx, vy);
+        if (bounced && game.RicochetBounceSoundCooldown <= 0)
+        {
+            game.RicochetBounceSoundCooldown = .075;
+            game.Audio.Play(SoundCue.RicochetBounce, body is Shot ? .36 : .6);
+        }
         return new V2(Math.Clamp(x, minX, maxX), Math.Clamp(y, minY, maxY));
     }
 
@@ -306,6 +346,8 @@ internal sealed class EffectsPhysicsService
         AlienBossKind.EyeTyrant => "THE EYE TYRANT",
         AlienBossKind.BoneBroodmother => "THE BONE BROODMOTHER",
         AlienBossKind.VoidLeech => "THE VOID LEECH",
+        AlienBossKind.DreadHarvester => "THE DREAD HARVESTER",
+        AlienBossKind.SolarWarden => "THE SOLAR WARDEN",
         _ => "ALIEN ABOMINATION"
     };
 
@@ -314,6 +356,8 @@ internal sealed class EffectsPhysicsService
         AlienBossKind.SludgeMaw => 0xff8fe84f,
         AlienBossKind.EyeTyrant => 0xffd976ff,
         AlienBossKind.BoneBroodmother => 0xffff8c4d,
+        AlienBossKind.DreadHarvester => 0xffd5d94a,
+        AlienBossKind.SolarWarden => 0xffffcf54,
         _ => 0xff56f1d2
     };
 

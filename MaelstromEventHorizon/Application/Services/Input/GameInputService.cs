@@ -54,6 +54,12 @@ internal sealed class GameInputService
 
     internal bool HandleCommandKey(GameEngine game, Key key, bool isRepeat)
     {
+        if (key == Key.F8 && !isRepeat)
+        {
+            game.CycleVisualQuality();
+            return true;
+        }
+
         if (game.IsDemoMode)
         {
             ReturnToTitle(game);
@@ -181,6 +187,10 @@ internal sealed class GameInputService
             }
             else if (game.TitleMenuSelection == 4 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
             {
+                game.CycleVisualQuality();
+            }
+            else if (game.TitleMenuSelection == 5 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
+            {
                 ToggleFullScreen(game);
             }
             else if (key == Key.Enter && !isRepeat)
@@ -195,9 +205,13 @@ internal sealed class GameInputService
                 }
                 else if (game.TitleMenuSelection == 4)
                 {
-                    ToggleFullScreen(game);
+                    game.CycleVisualQuality();
                 }
                 else if (game.TitleMenuSelection == 5)
+                {
+                    ToggleFullScreen(game);
+                }
+                else if (game.TitleMenuSelection == 6)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }

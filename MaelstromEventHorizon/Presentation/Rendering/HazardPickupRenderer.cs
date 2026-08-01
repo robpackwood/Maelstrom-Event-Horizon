@@ -108,7 +108,10 @@ internal sealed class HazardPickupRenderer
     {
         foreach (var pickup in view.Game.Pickups)
         {
-            double pulse = 1 + Math.Sin(view.Game.TotalTime * 6 + pickup.Position.X) * .08;
+            bool urgentPickup = pickup.Kind is PickupKind.Canister or PickupKind.RescueShip;
+            double pulse = urgentPickup
+                ? 1 + (Math.Sin(view.Game.TotalTime * 8.5 + pickup.Position.X) + 1) * .115
+                : 1 + Math.Sin(view.Game.TotalTime * 6 + pickup.Position.X) * .08;
             Color color = pickup.Kind switch
             {
                 PickupKind.Canister => Color.FromRgb(80, 234, 255),
@@ -116,9 +119,10 @@ internal sealed class HazardPickupRenderer
                 PickupKind.Bonus => Color.FromRgb(255, 213, 75),
                 _ => Color.FromRgb(91, 255, 148)
             };
-            view.DrawGlowEllipse(dc, pickup.Position, pickup.Radius * pulse, color, 7, .55);
+            view.DrawGlowEllipse(dc, pickup.Position, pickup.Radius * pulse, color, urgentPickup ? 9 : 7, urgentPickup ? .8 : .55);
             dc.PushTransform(new TranslateTransform(pickup.Position.X, pickup.Position.Y));
             dc.PushTransform(new RotateTransform(pickup.Angle * 180 / Math.PI));
+            if (urgentPickup) dc.PushTransform(new ScaleTransform(pulse, pulse));
             if (pickup.Kind == PickupKind.Canister)
             {
                 if (view.CanisterSprite is not null)
@@ -153,6 +157,7 @@ internal sealed class HazardPickupRenderer
                 view.DrawCenteredText(dc, value, 1, 7.5, 11, new SolidColorBrush(Color.FromArgb(210, 0, 0, 0)), FontWeights.Black);
                 view.DrawCenteredText(dc, value, 0, 6.5, 11, Brushes.White, FontWeights.Black);
             }
+            if (urgentPickup) dc.Pop();
             dc.Pop();
             dc.Pop();
         }
@@ -179,6 +184,7 @@ internal sealed class HazardPickupRenderer
     private void DrawComet(GameView view, DrawingContext dc, Comet comet, V2 position)
     {
         Color color = view.FromArgb(comet.Tint);
+        double pulse = 1 + (Math.Sin(view.Game.TotalTime * 9 + comet.Position.X) + 1) * .09;
         V2 back = -comet.Velocity.Normalized;
         V2 side = new(-back.Y, back.X);
         Point head = view.Pt(position);
@@ -191,7 +197,9 @@ internal sealed class HazardPickupRenderer
         BitmapSource headSprite = view.CometHeadSprites.TryGetValue(comet.Tint, out BitmapSource? sprite)
             ? sprite
             : view.CometHeadSprites[0xffffc65b];
-        dc.DrawImage(headSprite, new Rect(position.X - 40, position.Y - 40, 80, 80));
+        view.DrawGlowEllipse(dc, position, 27 * pulse, color, 5, .58);
+        double headSize = 80 * pulse;
+        dc.DrawImage(headSprite, new Rect(position.X - headSize / 2, position.Y - headSize / 2, headSize, headSize));
         view.DrawCenteredText(dc, comet.Value >= 1000 ? $"${comet.Value / 1000.0:0.#}K" : $"${comet.Value}",
             position.X, position.Y + 4, 8.5, new SolidColorBrush(Color.FromRgb(30, 22, 28)), FontWeights.Black);
     }

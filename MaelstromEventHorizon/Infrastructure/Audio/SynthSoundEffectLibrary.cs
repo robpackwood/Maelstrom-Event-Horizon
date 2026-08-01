@@ -36,24 +36,24 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             [SoundCue.EnemyWarning] = Build(2.1, t =>
         {
             double e = Envelope(t, 2.1, .018, .24);
-            double sweepPhase = t % .68 / .68;
-            double triangle = 1 - Math.Abs(sweepPhase * 2 - 1);
-            double frequency = 410 + 330 * Smooth(triangle);
-            double pulse = .72 + .28 * Math.Sin(t * Math.PI * 2 / .68);
-            return e * pulse * (.28 * Osc(frequency, t) + .13 * Saw(frequency * .5, t) + .07 * Osc(frequency * 1.99, t));
-        }, .22, .84),
+            double phase = t % .52;
+            double hit = phase < .18 ? Envelope(phase, .18, .004, 1.45) : 0;
+            double drone = .12 * Osc(74, t) + .09 * Saw(111, t);
+            return e * (drone + hit * (.31 * Saw(310, t) + .19 * Osc(465, t) + .08 * Noise(t, 2600, 715)));
+        }, .3, .9),
 
             [SoundCue.BossAlarm] = Build(3.15, t =>
         {
             double envelope = Envelope(t, 3.15, .008, .16);
-            double cycle = t % .72;
-            double hornEnvelope = cycle < .42 ? Envelope(cycle, .42, .01, 1.15) : 0;
-            double pitch = cycle < .21 ? 146 : 110;
-            double brass = .37 * Saw(pitch, t) + .29 * Osc(pitch, t) +
-                           .16 * Osc(pitch * 2, t) + .08 * Osc(pitch * 3, t);
-            double air = .045 * Noise(t, 1900, 877);
-            return envelope * hornEnvelope * (brass + air);
-        }, .42, .94),
+            double cycle = t % .78;
+            double hornEnvelope = cycle < .58 ? Envelope(cycle, .58, .008, .72) : 0;
+            double pitch = cycle < .29 ? 82 : 62;
+            double horn = .48 * Saw(pitch, t) + .31 * Osc(pitch, t) + .19 * Osc(pitch * 2, t);
+            double dread = .17 * Osc(31, t) + .09 * Noise(t, 210, 877);
+            double alarm = .09 * Osc(520 + 95 * Math.Sin(t * Math.PI * 2 / .78), t);
+            double strike = cycle < .07 ? Envelope(cycle, .07, .002, 2.6) * (.22 * Noise(t, 3600, 881) + .17 * Osc(48, t)) : 0;
+            return envelope * (hornEnvelope * (horn + alarm) + dread + strike);
+        }, .55, .97),
 
             [SoundCue.MenuMove] = Build(.13, t =>
         {
@@ -78,23 +78,16 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 + crack * (.30 * Noise(t, 7200, 91) + .11 * Osc(190, t));
         }, .28, .65),
 
-            [SoundCue.AsteroidExplosion] = Build(1.35, t =>
+            [SoundCue.AsteroidExplosion] = Build(.78, t =>
         {
-            double fracture = Envelope(t, .24, .001, 2.7) *
-                (.37 * Noise(t, 5400, 733) + .24 * Noise(t, 1650, 737)
-                 + .13 * Osc(Math.Max(170, 610 - t * 1750), t));
-            double chunks = RockChip(t, .025, 743) + RockChip(t, .075, 751)
-                + RockChip(t, .145, 757) + RockChip(t, .235, 761);
-            double explosion = Envelope(t, 1.35, .009, 1.18) *
-                (.3 * Osc(Math.Max(31, 86 - t * 41), t)
-                 + .2 * Osc(Math.Max(25, 47 - t * 17), t)
-                 + .27 * Noise(t, Math.Max(145, 1450 - t * 920), 769));
-            double dustTime = Math.Max(0, t - .1);
-            double dust = Envelope(dustTime, 1.22, .025, 1.45) *
-                (.18 * Noise(dustTime, Math.Max(120, 720 - dustTime * 430), 773)
-                 + .08 * Noise(dustTime, Math.Max(260, 2400 - dustTime * 1550), 787));
-            return fracture + chunks + explosion + dust;
-        }, .46, .88),
+            double crack = Envelope(t, .12, .001, 3.25) *
+                (.46 * Noise(t, 4700, 733) + .26 * Noise(t, 1250, 737) + .1 * Osc(310 - t * 1150, t));
+            double chunks = RockChip(t, .018, 743) + RockChip(t, .055, 751) + RockChip(t, .108, 757) +
+                RockChip(t, .173, 761) + RockChip(t, .245, 769);
+            double rubble = Envelope(t, .78, .01, 1.65) *
+                (.18 * Noise(t, Math.Max(280, 1700 - t * 1300), 773) + .12 * Osc(Math.Max(46, 122 - t * 85), t));
+            return crack + chunks + rubble;
+        }, .32, .76),
 
             [SoundCue.SteelHit] = Build(.34, t =>
         {
@@ -152,6 +145,20 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             return Envelope(t % .12, .14, .004, .9) * (.25 * Osc(note, t) + .11 * Osc(note * 2.004, t));
         }, .4, .85),
 
+            [SoundCue.RescueCelebration] = Build(1.35, t =>
+        {
+            double[] notes = [523.25, 659.25, 783.99, 1046.5, 1318.51];
+            int step = Math.Min(notes.Length - 1, (int)(t / .16));
+            double local = t - step * .16;
+            double note = notes[step];
+            double chime = Envelope(local, .24, .004, 1.05) *
+                (.28 * Osc(note, local) + .16 * Osc(note * 2.002, local) + .08 * Osc(note * .5, local));
+            double finaleTime = Math.Max(0, t - .72);
+            double finale = Envelope(finaleTime, .58, .01, .8) *
+                (.16 * Osc(1046.5, finaleTime) + .12 * Osc(1318.51, finaleTime) + .09 * Osc(1567.98, finaleTime));
+            return chime + finale;
+        }, .45, .9),
+
             [SoundCue.Mine] = Build(.46, t =>
         {
             double e = Envelope(t, .46, .012, 1.15);
@@ -167,11 +174,13 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         }, .46, .92),
             [SoundCue.CashRegister] = Build(.24, t =>
         {
-            double click = Envelope(t, .055, .001, 2.8) * (.20 * Noise(t, 7600, 241) + .12 * Osc(920, t));
-            double bellTime = Math.Max(0, t - .035);
-            double bell = Envelope(bellTime, .205, .002, 1.45) * (.24 * Osc(1760, bellTime) + .13 * Osc(2637, bellTime));
-            return click + bell;
-        }, .26, .72),
+            double key = Envelope(t, .042, .001, 3.2) * (.32 * Noise(t, 6800, 241) + .16 * Osc(980, t));
+            double drawerTime = Math.Max(0, t - .028);
+            double drawer = Envelope(drawerTime, .14, .002, 1.65) * (.23 * Noise(drawerTime, 1550, 243) + .12 * Saw(138, drawerTime));
+            double bellTime = Math.Max(0, t - .095);
+            double bell = Envelope(bellTime, .25, .002, 1.5) * (.28 * Osc(1760, bellTime) + .16 * Osc(2637, bellTime));
+            return key + drawer + bell;
+        }, .3, .76),
             [SoundCue.Coin] = Build(.48, t =>
         {
             double strike = Envelope(t, .055, .001, 2.8) *
@@ -185,12 +194,12 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         }, .3, .82),
             [SoundCue.CashBonus] = Build(1.45, t =>
         {
-            int step = Math.Min(7, (int)(t / .15));
-            double local = t - step * .15;
-            double sparkle = Envelope(local, .22, .004, 1.15) * (.19 * Osc(CashBonusNotes[step], t) + .09 * Osc(CashBonusNotes[step] * 2.003, t));
-            double coins = Envelope(t, 1.35, .01, .85) * .055 * Noise(t, 6200 + 900 * Math.Sin(t * 17), 307);
-            return sparkle + coins;
-        }, .48, .92),
+            int clap = (int)(t / .115);
+            double local = t - clap * .115;
+            double applause = Envelope(local, .085, .001, 2.25) * (.28 * Noise(local, 3200 + (clap % 3) * 900, 307 + clap * 13) + .08 * Noise(local, 7600, 401));
+            double coins = Envelope(t, 1.4, .01, .92) * (.07 * Noise(t, 6100 + 1300 * Math.Sin(t * 21), 317) + .045 * Osc(2310, t));
+            return applause + coins;
+        }, .5, .94),
             [SoundCue.ChaChing] = Build(.72, t =>
         {
             double drawer = Envelope(t, .07, .001, 2.7) * (.18 * Noise(t, 7200, 419) + .11 * Osc(760, t));
@@ -204,22 +213,11 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         }, .38, .86),
             [SoundCue.CometCelebration] = Build(1.12, t =>
         {
-            int step = Math.Min(CelebrationNotes.Length - 1, (int)(t / .13));
-            double local = t - step * .13;
-            double note = CelebrationNotes[step];
-            double fanfare = Envelope(local, .21, .004, 1.15) *
-                (.25 * Osc(note, t) + .13 * Osc(note * 2.002, t) + .07 * Osc(note * .5, t));
-            double finaleTime = Math.Max(0, t - .62);
-            double finale = Envelope(finaleTime, .48, .008, .9) *
-                (.13 * Osc(1046.5, finaleTime) + .1 * Osc(1318.51, finaleTime) + .08 * Osc(1567.98, finaleTime));
-            double confetti = Envelope(t, 1.02, .001, 1.35) *
-                (.075 * Noise(t, 14800, 503) + .05 * Osc(2600 + 540 * Math.Sin(t * 31), t));
-            double popA = Envelope(Math.Max(0, t - .14), .15, .001, 2.2) *
-                (.11 * Noise(t, 17200, 509) + .07 * Osc(3520, t));
-            double popB = Envelope(Math.Max(0, t - .43), .18, .001, 2.0) *
-                (.1 * Noise(t, 15600, 521) + .065 * Osc(4186.01, t));
-            return fanfare + finale + confetti + popA + popB;
-        }, .46, .9),
+            double flare = Envelope(t, .16, .003, 2.1) * (.24 * Noise(t, 11800, 503) + .14 * Osc(2050, t));
+            double fizz = Envelope(t, 1.12, .004, 1.15) * (.18 * Noise(t, 9000 - t * 5200, 509) + .07 * Osc(1480 - t * 820, t));
+            double sparkle = Envelope(Math.Max(0, t - .3), .68, .003, 1.45) * (.09 * Noise(t, 14000, 521) + .045 * Osc(3040, t));
+            return flare + fizz + sparkle;
+        }, .42, .9),
             [SoundCue.MultiplierWoohoo] = Build(1.02, t =>
         {
             bool second = t >= .42;
@@ -281,6 +279,25 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             return drop + squeeze;
         }, .34, .86),
         };
+        clips[SoundCue.VortexHit] = clips[SoundCue.Vortex];
+        clips[SoundCue.NovaHit] = clips[SoundCue.Nova];
+        clips[SoundCue.RicochetBounce] = clips[SoundCue.MenuMove];
+        clips[SoundCue.EnemyHit] = clips[SoundCue.SteelHit];
+        clips[SoundCue.EnemyDestroyed] = clips[SoundCue.Explosion];
+        clips[SoundCue.MineHit] = clips[SoundCue.Mine];
+        clips[SoundCue.SludgeMawHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.EyeTyrantHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.BoneBroodmotherHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.VoidLeechHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.DreadHarvesterHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.SolarWardenHit] = clips[SoundCue.EnemyHit];
+        clips[SoundCue.CometSpawn] = clips[SoundCue.CometCelebration];
+        clips[SoundCue.SludgeMawFire] = clips[SoundCue.EnemyFire];
+        clips[SoundCue.EyeTyrantFire] = clips[SoundCue.EnemyFire];
+        clips[SoundCue.BoneBroodmotherFire] = clips[SoundCue.EnemyFire];
+        clips[SoundCue.VoidLeechFire] = clips[SoundCue.EnemyFire];
+        clips[SoundCue.DreadHarvesterFire] = clips[SoundCue.EnemyFire];
+        clips[SoundCue.SolarWardenFire] = clips[SoundCue.EnemyFire];
         Clips = clips;
     }
 

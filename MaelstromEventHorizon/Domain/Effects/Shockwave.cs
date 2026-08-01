@@ -6,7 +6,14 @@ namespace MaelstromEventHorizon.Domain.Effects;
 internal sealed class Shockwave(V2 position, double lifetime, uint color, double maxRadius)
     : Body(position, V2.Zero, 0)
 {
-    public readonly double Lifetime = lifetime;
-    public readonly uint Color = color;
-    public readonly double MaxRadius = maxRadius;
+    public double Lifetime = lifetime;
+    public uint Color = color;
+    public double MaxRadius = maxRadius;
+
+    internal Shockwave Reset(V2 position, double lifetime, uint color, double maxRadius)
+    {
+        Position = position; Lifetime = lifetime; Color = color; MaxRadius = maxRadius;
+        Age = 0; Angle = 0; Spin = 0; Alive = true;
+        return this;
+    }
 }

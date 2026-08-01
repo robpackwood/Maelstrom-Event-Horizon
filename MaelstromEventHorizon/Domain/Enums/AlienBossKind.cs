@@ -5,5 +5,7 @@ internal enum AlienBossKind
     SludgeMaw,
     EyeTyrant,
     BoneBroodmother,
-    VoidLeech
+    VoidLeech,
+    DreadHarvester,
+    SolarWarden
 }

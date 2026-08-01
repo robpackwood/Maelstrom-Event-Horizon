@@ -8,6 +8,40 @@ namespace MaelstromEventHorizon.Application.Services.Gameplay;
 
 internal sealed class PlayerSimulationService
 {
+    private static bool HasCanister(GameEngine game)
+    {
+        for (int i = 0; i < game.Pickups.Count; i++) if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister }) return true;
+        return false;
+    }
+
+    private static bool HasVortex(GameEngine game)
+    {
+        for (int i = 0; i < game.Vortices.Count; i++) if (game.Vortices[i].Alive) return true;
+        return false;
+    }
+    private static Body? FindDemoTarget(GameEngine game)
+    {
+        if (game.DemoStage == 0)
+            for (int i = 0; i < game.Pickups.Count; i++) if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister } pickup) return pickup;
+        if (game.DemoStage == 1)
+            for (int i = 0; i < game.Fighters.Count; i++) if (game.Fighters[i].Alive) return game.Fighters[i];
+        if (game.DemoStage == 2)
+            for (int i = 0; i < game.Vortices.Count; i++) if (game.Vortices[i].Alive) return game.Vortices[i];
+        Asteroid? nearest = null; double distance = double.MaxValue;
+        for (int i = 0; i < game.Asteroids.Count; i++) if (game.Asteroids[i].Alive)
+        {
+            double candidate = game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared;
+            if (candidate < distance) { distance = candidate; nearest = game.Asteroids[i]; }
+        }
+        return nearest;
+    }
+
+    private static bool HasNearbyThreat(GameEngine game)
+    {
+        for (int i = 0; i < game.Shots.Count; i++) if (game.Shots[i] is { Alive: true, Enemy: true } shot && game.ArenaDelta(game.Player.Position, shot.Position).LengthSquared < 21_025) return true;
+        for (int i = 0; i < game.Asteroids.Count; i++) if (game.Asteroids[i].Alive && game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared < 8_464) return true;
+        return false;
+    }
     internal void TickTimers(GameEngine game, double dt)
     {
         game.FireCooldown -= dt;
@@ -149,14 +183,7 @@ internal sealed class PlayerSimulationService
 
     internal void UpdateDemoPlayer(GameEngine game, double dt)
     {
-        Body? target = game.DemoStage switch
-        {
-            0 => game.Pickups.FirstOrDefault(p => p is { Alive: true, Kind: PickupKind.Canister }),
-            1 => game.Fighters.FirstOrDefault(f => f.Alive),
-            2 => game.Vortices.FirstOrDefault(v => v.Alive),
-            _ => game.Asteroids.Where(a => a.Alive)
-                .OrderBy(a => game.ArenaDelta(game.Player.Position, a.Position).LengthSquared).FirstOrDefault()
-        };
+        Body? target = FindDemoTarget(game);
 
         V2 targetDelta = target is null
             ? V2.FromAngle(game.Player.Angle)
@@ -203,16 +230,7 @@ internal sealed class PlayerSimulationService
             game.ThrustRamp = Math.Max(0, game.ThrustRamp - dt * 1.8);
         }
 
-        bool shieldWanted =
-            game.Shots
-                .Any(shot => shot is { Alive: true, Enemy: true } &&
-                             game.ArenaDelta(game.Player.Position, shot.Position).LengthSquared <
-                             145 * 145)
-            ||
-            game.Asteroids
-                .Any(asteroid => asteroid.Alive &&
-                                 game.ArenaDelta(game.Player.Position, asteroid.Position)
-                                     .LengthSquared < 92 * 92);
+        bool shieldWanted = HasNearbyThreat(game);
 
         if (shieldWanted && game.Player.Shield > 0)
         {
@@ -265,7 +283,7 @@ internal sealed class PlayerSimulationService
         {
             if (!game.DemoPowerupCollected)
             {
-                if (!game.Pickups.Any(p => p is { Alive: true, Kind: PickupKind.Canister }))
+                if (!HasCanister(game))
                 {
                     game.Pickups.Add(new Pickup(game.Wrap(game.Player.Position + V2.FromAngle(game.Player.Angle) * 230),
                         V2.Zero, PickupKind.Canister));
@@ -297,7 +315,7 @@ internal sealed class PlayerSimulationService
                 game.DemoStage = 3;
                 game.ShowBanner("AUTOPILOT COMBAT PATROL", 1.8);
             }
-            else if (!game.Vortices.Any(v => v.Alive))
+            else if (!HasVortex(game))
             {
                 SpawnDemoBlackHole(game);
             }
@@ -337,16 +355,11 @@ internal sealed class PlayerSimulationService
 
             V2 direction = V2.FromAngle(game.Player.Angle + offset);
 
-            Shot shot = new(game.Player.Position + direction * (22 * game.Player.VisualScale),
-                game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range)
-            {
-                Radius = 4.945,
-                Damage = 1,
-                PowerLevel = 0,
-                RiftDelay = game.RiftVolleyActive ? .18 : -1
-            };
+            Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
+                game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
+            shot.Radius = 4.945; shot.Damage = 1; shot.PowerLevel = 0;
+            shot.RiftDelay = game.RiftVolleyActive ? .18 : -1;
 
-            game.Shots.Add(shot);
             roundsFired++;
         }
 
@@ -434,7 +447,8 @@ internal sealed class PlayerSimulationService
             V2 tangent = new(-toShip.Y, toShip.X);
             double weave = Math.Sin(fighter.Age * (fighter.Kind == FighterKind.Interceptor ? 2.8 : 1.5));
 
-            V2 desired = toShip.Normalized * (fighter.Kind == FighterKind.Interceptor ? 118 : 72) +
+            V2 pursuit = game.PlayerRespawning ? -toShip.Normalized : toShip.Normalized;
+            V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 118 : 72) +
                          tangent.Normalized * weave * 68;
 
             fighter.Velocity += (desired - fighter.Velocity) * Math.Min(1, dt * 1.15);
@@ -451,7 +465,7 @@ internal sealed class PlayerSimulationService
 
                 double spread = fighter.Kind == FighterKind.Interceptor ? .23 : .32;
                 direction = game.Rotate(direction, (game.Random.NextDouble() * 2 - 1) * spread);
-                game.Shots.Add(new Shot(fighter.Position + direction * 22, direction * enemyShotSpeed, true, 2.35));
+                game.SpawnShot(fighter.Position + direction * 22, direction * enemyShotSpeed, true, 2.35);
 
                 fighter.FireDelay = fighter.Kind == FighterKind.Interceptor
                     ? 1.2 + game.Random.NextDouble() * .65
@@ -529,10 +543,10 @@ internal sealed class PlayerSimulationService
             {
                 V2 tail = -comet.Velocity.Normalized;
 
-                game.Particles.Add(new Particle(comet.Position + tail * 16 + game.RandomDirection() * 6,
+                game.SpawnParticle(comet.Position + tail * 16 + game.RandomDirection() * 6,
                     tail * game.Random.Next(90, 250) + game.RandomDirection() * 24,
                     .35 + game.Random.NextDouble() * .45,
-                    game.Random.Next(3) == 0 ? 0xffffffff : comet.Tint, 2 + game.Random.NextDouble() * 5));
+                    game.Random.Next(3) == 0 ? 0xffffffff : comet.Tint, 2 + game.Random.NextDouble() * 5);
             }
         }
 
@@ -599,8 +613,8 @@ internal sealed class PlayerSimulationService
                     Damage = shot.Damage,
                     PowerLevel = Math.Max(1, shot.PowerLevel)
                 });
-                game.Shockwaves.Add(new Shockwave(shot.Position - direction * 46 - offset, .18, 0xffa774ff, 28));
-                game.Shockwaves.Add(new Shockwave(shot.Position - direction * 46 + offset, .18, 0xffa774ff, 28));
+                game.SpawnShockwave(shot.Position - direction * 46 - offset, .18, 0xffa774ff, 28);
+                game.SpawnShockwave(shot.Position - direction * 46 + offset, .18, 0xffa774ff, 28);
             }
         }
 

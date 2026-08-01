@@ -13,45 +13,39 @@ internal sealed partial class CollisionService
         return null;
     }
 
-    private static Asteroid? FindHitAsteroid(GameEngine game, Shot shot)
+    private static Asteroid? FindHitAsteroid(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (Asteroid asteroid in game.Asteroids)
-            if (asteroid.Alive && game.Touching(shot, asteroid)) return asteroid;
+        foreach (Body body in hash.Nearby(shot)) if (body is Asteroid asteroid && game.Touching(shot, asteroid)) return asteroid;
         return null;
     }
 
-    private static Fighter? FindHitFighter(GameEngine game, Shot shot)
+    private static Fighter? FindHitFighter(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (Fighter fighter in game.Fighters)
-            if (fighter.Alive && game.Touching(shot, fighter)) return fighter;
+        foreach (Body body in hash.Nearby(shot)) if (body is Fighter fighter && game.Touching(shot, fighter)) return fighter;
         return null;
     }
 
-    private static AlienBoss? FindHitBoss(GameEngine game, Shot shot)
+    private static AlienBoss? FindHitBoss(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (AlienBoss boss in game.Bosses)
-            if (boss.Alive && game.Touching(shot, boss)) return boss;
+        foreach (Body body in hash.Nearby(shot)) if (body is AlienBoss boss && game.Touching(shot, boss)) return boss;
         return null;
     }
 
-    private static HomingMine? FindHitMine(GameEngine game, Shot shot)
+    private static HomingMine? FindHitMine(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (HomingMine mine in game.Mines)
-            if (mine.Alive && game.Touching(shot, mine)) return mine;
+        foreach (Body body in hash.Nearby(shot)) if (body is HomingMine mine && game.Touching(shot, mine)) return mine;
         return null;
     }
 
-    private static GravityVortex? FindHitVortex(GameEngine game, Shot shot)
+    private static GravityVortex? FindHitVortex(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (GravityVortex vortex in game.Vortices)
-            if (vortex.Alive && game.Touching(shot, vortex)) return vortex;
+        foreach (Body body in hash.Nearby(shot)) if (body is GravityVortex vortex && game.Touching(shot, vortex)) return vortex;
         return null;
     }
 
-    private static Nova? FindHitNova(GameEngine game, Shot shot)
+    private static Nova? FindHitNova(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
-        foreach (Nova nova in game.Novas)
-            if (nova is { Alive: true, Detonated: false } && game.Touching(shot, nova)) return nova;
+        foreach (Body body in hash.Nearby(shot)) if (body is Nova nova && !nova.Detonated && game.Touching(shot, nova)) return nova;
         return null;
     }
 

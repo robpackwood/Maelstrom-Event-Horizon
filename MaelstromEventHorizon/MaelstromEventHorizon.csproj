@@ -20,7 +20,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>true</SelfContained>
     <PublishSingleFile>true</PublishSingleFile>
-    <PublishDir>$(MSBuildProjectDirectory)\ExecutableBuilds\</PublishDir>
+    <PublishDir>$(MSBuildProjectDirectory)\..\ExecutableBuilds\win-x64\</PublishDir>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
@@ -36,6 +36,7 @@
     <EmbeddedResource Include="Assets\space-atlas-b.png" LogicalName="Assets/space-atlas-b.png" />
     <EmbeddedResource Include="Assets\through-the-universe.mp3" LogicalName="Assets/through-the-universe.mp3" />
     <EmbeddedResource Include="Assets\Music\*.mp3" LogicalName="Assets/Music/%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Assets\SoundEffects\*.wav" LogicalName="Assets/SoundEffects/%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets\ship-destruction.wav" LogicalName="Assets/ship-destruction.wav" />
     <EmbeddedResource Include="Assets\music-license.txt" LogicalName="Assets/music-license.txt" />
     <EmbeddedResource Include="Assets\MaelstromEventHorizon.ico" LogicalName="Assets/MaelstromEventHorizon.ico" />
@@ -44,5 +45,10 @@
   </ItemGroup>
   <Target Name="VerifySourceSize" BeforeTargets="CoreCompile">
     <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Build\VerifySourceSize.ps1&quot; -SourceRoot &quot;$(MSBuildProjectDirectory)&quot; -MaximumLines 500" />
+  </Target>
+  <Target Name="PublishReleaseExecutable" AfterTargets="Build"
+          Condition="'$(Configuration)' == 'Release' and '$(SkipReleaseExecutablePublish)' != 'true'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish"
+             Properties="SkipReleaseExecutablePublish=true" />
   </Target>
 </Project>

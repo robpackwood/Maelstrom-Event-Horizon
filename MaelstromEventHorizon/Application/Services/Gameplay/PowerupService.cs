@@ -32,7 +32,39 @@ internal sealed class PowerupService
     {
         game.CenterPlayerWithShield();
         game.Player.Shield = 67;
+        ClearRespawnZone(game);
         game.ShowBanner("SHIP RESTORED", 1.4);
+    }
+
+    private static void ClearRespawnZone(GameEngine game)
+    {
+        for (int i = 0; i < game.Fighters.Count; i++)
+        {
+            Fighter fighter = game.Fighters[i];
+            if (!fighter.Alive) continue;
+            V2 away = game.ArenaDelta(game.Player.Position, fighter.Position);
+            if (away.Length < 280)
+            {
+                away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
+                fighter.Position = game.Wrap(game.Player.Position + away * 330);
+                fighter.Velocity = away * 135;
+                fighter.FireDelay = Math.Max(fighter.FireDelay, 1.5);
+            }
+        }
+
+        for (int i = 0; i < game.Bosses.Count; i++)
+        {
+            AlienBoss boss = game.Bosses[i];
+            if (!boss.Alive) continue;
+            V2 away = game.ArenaDelta(game.Player.Position, boss.Position);
+            if (away.Length < 390)
+            {
+                away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
+                boss.Position = game.Wrap(game.Player.Position + away * 440);
+                boss.Velocity = away * 110;
+                boss.AttackTimer = Math.Max(boss.AttackTimer, 1.8);
+            }
+        }
     }
 
     internal void AwardCanister(GameEngine game)
@@ -61,7 +93,7 @@ internal sealed class PowerupService
             case PowerupKind.GiantShip:
                 game.Player.SetGiant(true);
                 game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, .65);
-                game.Shockwaves.Add(new Shockwave(game.Player.Position, .72, 0xffffd85a, 145));
+                game.SpawnShockwave(game.Player.Position, .72, 0xffffd85a, 145);
                 game.Spark(game.Player.Position, 0xffffef9c, 24);
                 break;
         }
@@ -74,10 +106,10 @@ internal sealed class PowerupService
         game.Player.SetGiant(false);
         game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, 1.2);
         game.Player.Velocity *= .58;
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, .7, 0xffffb44f, 155));
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, .44, 0xffffffff, 92));
+        game.SpawnShockwave(game.Player.Position, .7, 0xffffb44f, 155);
+        game.SpawnShockwave(game.Player.Position, .44, 0xffffffff, 92);
         game.Spark(impactPosition, 0xffffe8a3, 28);
-        game.FloatingTexts.Add(new FloatingText(game.Player.Position, "GIANT HULL ABSORBED HIT", 0xffffdc72));
+        game.SpawnFloatingText(game.Player.Position, "GIANT HULL ABSORBED HIT", 0xffffdc72);
         game.ShowBanner("GIANT SHIP SHRUNK - HULL INTACT", 2.1);
         game.Audio.Play(SoundCue.GiantShrink, .95);
     }
@@ -129,7 +161,7 @@ internal sealed class PowerupService
         foreach (var fighter in game.Fighters.Where(f => f.Alive).ToArray()) game.DestroyFighter(fighter);
         foreach (var mine in game.Mines.Where(m => m.Alive).ToArray()) game.DestroyMine(mine);
         foreach (var boss in game.Bosses.Where(b => b.Alive).ToArray()) game.DamageBoss(boss, 4, boss.Position);
-        game.Shockwaves.Add(new Shockwave(game.Player.Position, 1.1, 0xffffffff, 900));
+        game.SpawnShockwave(game.Player.Position, 1.1, 0xffffffff, 900);
         game.Audio.Play(SoundCue.Nova);
     }
 
@@ -137,14 +169,26 @@ internal sealed class PowerupService
     {
         nova.Detonated = true;
         nova.Alive = false;
-        foreach (var asteroid in game.Asteroids.Where(a => a is { Alive: true, Steel: false }).ToArray()) game.HitAsteroid(asteroid);
-        foreach (var fighter in game.Fighters.Where(f => f.Alive).ToArray()) game.DestroyFighter(fighter);
-        foreach (var mine in game.Mines.Where(m => m.Alive).ToArray()) game.DestroyMine(mine);
-        foreach (var boss in game.Bosses.Where(b => b.Alive).ToArray()) game.DamageBoss(boss, 6, boss.Position);
-        game.Shockwaves.Add(new Shockwave(nova.Position, 1.45, 0xffffe8a0, 1250));
+        int asteroidCount = game.Asteroids.Count;
+        for (int i = 0; i < asteroidCount; i++)
+        {
+            Asteroid asteroid = game.Asteroids[i];
+            if (!asteroid.Alive) continue;
+            if (asteroid.ExitsArena) { asteroid.Alive = false; game.AsteroidBreakup(asteroid.Position, 16, 0xffe8c17a); continue; }
+            asteroid.Steel = false;
+            asteroid.HitPoints = 1;
+            game.HitAsteroid(asteroid);
+        }
+
+        for (int i = 0; i < game.Fighters.Count; i++) if (game.Fighters[i].Alive) game.DestroyFighter(game.Fighters[i]);
+        for (int i = 0; i < game.Mines.Count; i++) if (game.Mines[i].Alive) game.DestroyMine(game.Mines[i]);
+        game.BossInvulnerability = 0;
+        for (int i = 0; i < game.Bosses.Count; i++) if (game.Bosses[i].Alive) game.DamageBoss(game.Bosses[i], game.Bosses[i].HitPoints, game.Bosses[i].Position);
+        for (int i = 0; i < game.Shots.Count; i++) if (game.Shots[i].Enemy) game.Shots[i].Alive = false;
+        game.SpawnShockwave(nova.Position, 1.45, 0xffffe8a0, 1250);
         game.Explosion(nova.Position, 80, 0xffffffff);
-        game.TriggerScreenShake(.9, 14);
-        if (!game.Player.Shielding) game.DamagePlayer();
+        game.TriggerScreenShake(1, 16);
+        game.Audio.Play(SoundCue.ShipBlast, 1);
         game.Audio.Play(SoundCue.Nova);
         game.ShowBanner("SUPERNOVA", 2.2);
     }
@@ -155,8 +199,8 @@ internal sealed class PowerupService
         nova.Alive = false;
         game.AddScore(500);
         game.Spark(nova.Position, 0xffa7efff, 16);
-        game.Shockwaves.Add(new Shockwave(nova.Position, .42, 0xffa7efff, 68));
+        game.SpawnShockwave(nova.Position, .42, 0xffa7efff, 68);
         game.ShowBanner("NOVA NEUTRALIZED", 1.8);
-        game.Audio.Play(SoundCue.Nova, .58);
+        game.Audio.Play(SoundCue.NovaHit, .58);
     }
 }

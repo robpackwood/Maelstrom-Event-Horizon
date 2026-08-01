@@ -6,6 +6,11 @@ namespace MaelstromEventHorizon.Application.Services.Waves;
 
 internal sealed class WaveSpawnService
 {
+    private static bool HasAlive<T>(List<T> bodies) where T : Body
+    {
+        for (int i = 0; i < bodies.Count; i++) if (bodies[i].Alive) return true;
+        return false;
+    }
     internal void BeginNextWave(GameEngine game)
     {
         game.Mode = GameMode.Playing;
@@ -53,13 +58,13 @@ internal sealed class WaveSpawnService
             game.BonusStageVariant = (BonusStageKind)((bonusStageNumber - 1) % Enum.GetValues<BonusStageKind>().Length);
             game.BonusAsteroidTotal = game.BonusStageVariant switch
             {
-                BonusStageKind.SlalomGates => Math.Min(44, 26 + bonusStageNumber * 3),
+                BonusStageKind.SlalomGates => Math.Min(54, 32 + bonusStageNumber * 4),
                 BonusStageKind.SpiralSwarm => Math.Min(34, 14 + bonusStageNumber * 2),
                 _ => Math.Min(40, 16 + bonusStageNumber * 2)
             };
             game.BonusAsteroidsRemaining = game.BonusAsteroidTotal;
             game.BonusPatternStep = 0;
-            game.BonusAsteroidSpawnTimer = game.BonusStageVariant == BonusStageKind.SlalomGates ? 1.35 : 1.25;
+            game.BonusAsteroidSpawnTimer = game.BonusStageVariant == BonusStageKind.SlalomGates ? 1.14 : 1.25;
             game.EventTimer = double.MaxValue;
             game.RescueTimer = -1;
             game.Player.Shielding = false;
@@ -92,7 +97,8 @@ internal sealed class WaveSpawnService
             game.RescueTimer = game.Random.NextDouble() < rescueChance ? 5 + game.Random.NextDouble() * 10 : -1;
         }
         game.NextWaveTimer = 0;
-        game.Audio.StartWaveMusic(game.Wave, game.IsBonusStage || game.IsBossStage);
+        if (game.IsBossStage) game.Audio.StartBossMusic();
+        else game.Audio.StartWaveMusic(game.Wave, game.IsBonusStage);
         if (game.IsBossStage)
         {
             AlienBoss boss = game.Bosses[0];
@@ -114,7 +120,7 @@ internal sealed class WaveSpawnService
     private void SpawnAlienBoss(GameEngine game)
     {
         int encounter = Math.Max(1, (game.Wave - 1) / 5);
-        AlienBossKind kind = (AlienBossKind)((encounter - 1) % 4);
+        AlienBossKind kind = (AlienBossKind)((encounter - 1) % 6);
         V2 position = new(GameEngine.Width * .78, GameEngine.Height * (.28 + game.Random.NextDouble() * .34));
         game.Bosses.Add(new AlienBoss(position, kind, encounter));
     }
@@ -179,23 +185,23 @@ internal sealed class WaveSpawnService
 
     private void SpawnSlalomGate(GameEngine game, int difficulty)
     {
-        int lanes = Math.Clamp(8 + (difficulty - 1) / 3, 8, 10);
+        int lanes = Math.Clamp(9 + difficulty / 2, 9, 12);
         int gapPositions = lanes - 1;
         int gapCycle = Math.Max(1, gapPositions * 2 - 2);
         int gapStep = (game.BonusPatternStep + difficulty) % gapCycle;
         int gap = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
         int spawned = 0;
-        double speed = 255 + difficulty * 13;
+        double speed = 275 + difficulty * 16;
         for (int lane = 0; lane < lanes && game.BonusAsteroidsRemaining > 0; lane++)
         {
-            if (lane == gap || lane == gap + 1) continue;
+            if (lane == gap) continue;
             double y = 48 + lane / (double)(lanes - 1) * (GameEngine.Height - 96);
             V2 origin = new(GameEngine.Width + 78 + spawned * 5, y);
             V2 target = new(-95, y + Math.Sin(game.BonusPatternStep * .86 + lane) * (18 + difficulty * 4));
             SpawnBonusRock(game, origin, target, speed + game.Random.NextDouble() * 30, 2);
             spawned++;
         }
-        game.BonusAsteroidSpawnTimer = Math.Max(1.12, 1.5 - difficulty * .045);
+        game.BonusAsteroidSpawnTimer = Math.Max(.82, 1.12 - difficulty * .035);
     }
 
     private void SpawnSpiralSwarm(GameEngine game, int difficulty)
@@ -226,7 +232,7 @@ internal sealed class WaveSpawnService
 
     internal void SpawnFighter(GameEngine game)
     {
-        if (game.Fighters.Any(f => f.Alive)) return;
+        if (HasAlive(game.Fighters)) return;
         if (game.FighterSpawnedThisWave) return;
         game.FighterSpawnedThisWave = true;
         FighterKind kind = game.Wave >= 3 && game.Random.Next(5 + game.Wave) > 6 ? FighterKind.Interceptor : FighterKind.Raider;
@@ -237,7 +243,7 @@ internal sealed class WaveSpawnService
 
     internal void SpawnFighterAssault(GameEngine game)
     {
-        if (game.Fighters.Any(f => f.Alive) || game.FighterSpawnedThisWave) return;
+        if (HasAlive(game.Fighters) || game.FighterSpawnedThisWave) return;
 
         game.FighterSpawnedThisWave = true;
         for (int i = 0; i < 3; i++)
@@ -247,8 +253,8 @@ internal sealed class WaveSpawnService
         }
 
         game.ShowBanner("ENEMY ASSAULT — 3 HOSTILES", 2.2);
-        game.Audio.Play(SoundCue.EnemyWarning, .9);
-        game.Audio.Play(SoundCue.BossAlarm, .7);
+        game.Audio.Play(SoundCue.EnemyWarning, 1);
+        game.Audio.Play(SoundCue.BossAlarm, .9);
     }
 
     internal void SpawnMine(GameEngine game)
@@ -273,8 +279,8 @@ internal sealed class WaveSpawnService
         game.BlackHoleTimer = -1;
         for (int i = 0; i < 3; i++) game.Vortices.Add(new GravityVortex(game.SafePosition(250)));
         game.ShowBanner("BLACK HOLE ASSAULT", 2.2);
-        game.Audio.Play(SoundCue.BossAlarm, .8);
-        game.Audio.Play(SoundCue.Vortex, .58);
+        game.Audio.Play(SoundCue.BossAlarm, 1);
+        game.Audio.Play(SoundCue.Vortex, .78);
     }
 
     internal void SpawnNova(GameEngine game)
@@ -288,8 +294,8 @@ internal sealed class WaveSpawnService
     {
         for (int i = 0; i < 3; i++) game.Novas.Add(new Nova(game.SafePosition(300)));
         game.ShowBanner("SUPERNOVA ASSAULT", 2.2);
-        game.Audio.Play(SoundCue.BossAlarm, .8);
-        game.Audio.Play(SoundCue.Nova, .5);
+        game.Audio.Play(SoundCue.BossAlarm, 1);
+        game.Audio.Play(SoundCue.Nova, .7);
     }
 
     internal void SpawnCanister(GameEngine game)
@@ -358,6 +364,7 @@ internal sealed class WaveSpawnService
             _ => 0xffffc65b
         };
         game.Comets.Add(new Comet(position, (target - position).Normalized * game.Random.Next(310, 430), value, tint));
+        game.Audio.Play(SoundCue.CometSpawn, .72);
     }
 
     internal void SpawnMultiplier(GameEngine game)
@@ -379,7 +386,7 @@ internal sealed class WaveSpawnService
     internal void SpawnRescueShip(GameEngine game)
     {
         if (game.BonusSpawnsDisabled) return;
-        if (game.Pickups.Any(p => p is { Alive: true, Kind: PickupKind.RescueShip })) return;
+        for (int i = 0; i < game.Pickups.Count; i++) if (game.Pickups[i] is { Alive: true, Kind: PickupKind.RescueShip }) return;
         V2 position = game.Random.Next(4) switch
         {
             0 => new V2(game.Random.NextDouble() * GameEngine.Width, -38),

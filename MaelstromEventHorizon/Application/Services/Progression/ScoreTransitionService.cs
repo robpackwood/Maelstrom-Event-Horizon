@@ -14,7 +14,7 @@ internal sealed class ScoreTransitionService
     internal void AwardImmediateScore(GameEngine game, int amount, V2 position)
     {
         BankScore(game, amount);
-        game.FloatingTexts.Add(new FloatingText(position, $"+${amount:N0}", 0xffffd76a));
+        game.SpawnFloatingText(position, $"+${amount:N0}", 0xffffd76a);
     }
 
     internal void AddCometCash(GameEngine game, int amount)
@@ -57,10 +57,12 @@ internal sealed class ScoreTransitionService
         game.SummaryElapsed = 0;
         game.SummaryScreenElapsed = 0;
         game.CashTickCooldown = 0;
-        game.CashConfettiTime = game.SummaryTotalCash > 10_000 ? 2.7 : 0;
+        bool earnedCashBonus = game.SummaryTotalCash > 10_000;
+        game.CashConfettiTime = earnedCashBonus ? 2.7 : 0;
         game.TransitionAlpha = 1;
         game.Mode = GameMode.WaveSummary;
-        if (game.CashConfettiTime > 0) game.Audio.Play(SoundCue.CashBonus, .9);
+        game.Audio.StartSummaryMusic(earnedCashBonus);
+        if (earnedCashBonus) game.Audio.Play(SoundCue.CashBonus, .9);
     }
 
     private void ClearCompletedWaveObjects(GameEngine game)
@@ -205,7 +207,7 @@ internal sealed class ScoreTransitionService
         game.Player.Velocity *= .25;
         game.Player.Invulnerable = 1.2;
         if (game.Random.NextDouble() < .08 && !game.LuckActive) game.DamagePlayer();
-        else game.Shockwaves.Add(new Shockwave(game.Player.Position, .35, 0xff82ddff, 75));
+        else game.SpawnShockwave(game.Player.Position, .35, 0xff82ddff, 75);
     }
 
     internal void CenterPlayerWithShield(GameEngine game)
