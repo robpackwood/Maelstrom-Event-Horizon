@@ -49,6 +49,7 @@ internal sealed class WaveSpawnService
         game.BonusStageFailed = false;
         game.RespawnTimer = 0;
         game.FighterSpawnedThisWave = false;
+        game.MineSpawnedThisWave = false;
         game.BonusTravelTime = 0;
         game.BonusAsteroidsDodged = 0;
         game.WaveBaseCash = 0;
@@ -258,15 +259,16 @@ internal sealed class WaveSpawnService
     private void SpawnSlalomGate(GameEngine game, int difficulty)
     {
         int lanes = Math.Clamp(9 + difficulty / 2, 9, 12);
-        int gapPositions = lanes - 1;
+        const int gapWidth = 2;
+        int gapPositions = lanes - gapWidth + 1;
         int gapCycle = Math.Max(1, gapPositions * 2 - 2);
         int gapStep = (game.BonusPatternStep + difficulty) % gapCycle;
-        int gap = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
+        int gapStart = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
         int spawned = 0;
         double speed = 275 + difficulty * 16;
         for (int lane = 0; lane < lanes && game.BonusAsteroidsRemaining > 0; lane++)
         {
-            if (lane == gap)
+            if (lane >= gapStart && lane < gapStart + gapWidth)
             {
                 continue;
             }
@@ -357,6 +359,12 @@ internal sealed class WaveSpawnService
 
     internal void SpawnMine(GameEngine game)
     {
+        if (game.MineSpawnedThisWave)
+        {
+            return;
+        }
+
+        game.MineSpawnedThisWave = true;
         game.Mines.Add(new HomingMine(game.SafeEdgePosition(), game.RandomDirection() * 75));
         game.Announce("HOMING MINE DETECTED", 1.4);
     }

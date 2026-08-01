@@ -164,6 +164,7 @@ internal sealed class EffectsPhysicsService
         game.BonusStageFailed = false;
         game.RespawnTimer = 0;
         game.FighterSpawnedThisWave = false;
+        game.MineSpawnedThisWave = false;
         game.BonusTravelTime = 0;
         game.BonusAsteroidTotal = 0;
         game.BonusAsteroidsDodged = 0;

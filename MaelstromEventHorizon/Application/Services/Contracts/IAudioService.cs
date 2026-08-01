@@ -14,4 +14,5 @@ internal interface IAudioService
     void PauseAll();
     void ResumeAll();
     void Play(SoundCue cue, double volume = 1);
+    void SetThrustIntensity(double intensity);
 }

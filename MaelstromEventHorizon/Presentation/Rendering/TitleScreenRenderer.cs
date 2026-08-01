@@ -54,7 +54,7 @@ internal sealed class TitleScreenRenderer
 
         dc.Pop();
 
-        FormattedText version = view.Format("1.1.0", 10,
+        FormattedText version = view.Format("1.3.0", 10,
             new SolidColorBrush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
         dc.DrawText(version, new Point(GameEngine.Width - version.Width - 12, 708 - version.Baseline));
     }

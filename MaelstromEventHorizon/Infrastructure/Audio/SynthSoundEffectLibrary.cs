@@ -61,12 +61,13 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                                                            + .055 * Noise(t, 4600, 883));
             }, .08, .3),
 
-            [SoundCue.Thrust] = Build(.22, t =>
+            [SoundCue.Thrust] = Build(.72, t =>
             {
-                double e = Envelope(t, .22, .018, .62);
-                double rumble = .22 * Noise(t, 260, 11) + .30 * Noise(t, 1900, 31);
-                return e * (rumble + .12 * Saw(67 + 8 * Math.Sin(t * 29), t) + .07 * Osc(134, t));
-            }, .05, .55),
+                double attack = Smooth(Math.Clamp(t / .035, 0, 1));
+                double release = Smooth(Math.Clamp((.72 - t) / .055, 0, 1));
+                double blow = .23 * Noise(t, 1450, 311) + .11 * Noise(t, 2800, 317);
+                return attack * release * blow;
+            }, .03, .22),
 
             [SoundCue.Explosion] = Build(.92, t =>
             {
@@ -216,20 +217,13 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                                  (.09 * Noise(t, 14000, 521) + .045 * Osc(3040, t));
                 return flare + fizz + sparkle;
             }, .42, .9),
-            [SoundCue.MultiplierWoohoo] = Build(1.02, t =>
+            [SoundCue.MultiplierWoohoo] = Build(.68, t =>
             {
-                bool second = t >= .42;
-                double local = second ? t - .42 : t;
-                double duration = second ? .58 : .4;
-                double progress = Math.Clamp(local / duration, 0, 1);
-                double pitch = second ? 220 + 125 * Math.Sin(progress * Math.PI) : 165 + 105 * progress;
-                double envelope = Envelope(local, duration, .025, second ? .72 : 1.0);
-                double roundedVowel = .31 * Saw(pitch, local) + .19 * Osc(pitch * 2.01, local) +
-                                      .1 * Osc(pitch * 3.02, local);
-                double formants = (.10 * Osc(second ? 520 : 390, local) + .07 * Osc(second ? 1080 : 820, local)) *
-                                  (.55 + .45 * Math.Max(0, Osc(pitch, local)));
-                return envelope * (roundedVowel + formants);
-            }, .34, .78),
+                double strike = Envelope(t, .04, .001, 2.5) * .13 * Noise(t, 8600, 529);
+                double bell = Envelope(t, .68, .002, 1.35) *
+                              (.25 * Osc(1760, t) + .16 * Osc(2640, t) + .09 * Osc(3520, t));
+                return strike + bell;
+            }, .32, .82),
             [SoundCue.ShipCrash] = BuildShipCrashFallback(),
             [SoundCue.ShipBlast] = Build(2.35, t =>
             {

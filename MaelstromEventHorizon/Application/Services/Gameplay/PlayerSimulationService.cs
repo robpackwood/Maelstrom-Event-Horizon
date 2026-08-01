@@ -184,7 +184,6 @@ internal sealed class PlayerSimulationService
         double targetTurnVelocity = turn * 3.48;
         game.TurnVelocity += (targetTurnVelocity - game.TurnVelocity) * Math.Min(1, dt * 12);
         game.Player.Angle += game.TurnVelocity * dt;
-        bool wasThrusting = game.Player.Thrusting;
         bool wasShielding = game.Player.Shielding;
         game.Player.Thrusting = Keyboard.IsKeyDown(game.Bindings[GameAction.Thrust]);
         bool shieldHeld = !game.IsBonusStage && Keyboard.IsKeyDown(game.Bindings[GameAction.Shield]);
@@ -214,14 +213,12 @@ internal sealed class PlayerSimulationService
             game.Player.Velocity += facing * (acceleration * dt);
             game.EmitThrust();
 
-            if (!wasThrusting)
-            {
-                game.Audio.Play(SoundCue.Thrust, .5);
-            }
+            SetThrustSound(game);
         }
         else
         {
             game.ThrustRamp = Math.Max(0, game.ThrustRamp - dt * 1.8);
+            game.Audio.SetThrustIntensity(0);
         }
 
         if (game.AirBrakesActive && !game.Player.Thrusting)
@@ -251,6 +248,12 @@ internal sealed class PlayerSimulationService
         game.Player.Position = game.MoveBody(game.Player, game.Player.Position + game.Player.Velocity * dt);
     }
 
+    private static void SetThrustSound(GameEngine game)
+    {
+        double speed = Math.Clamp(game.Player.Velocity.Length / 650, 0, 1);
+        game.Audio.SetThrustIntensity(.38 + speed * .35);
+    }
+
     internal void UpdateDemoPlayer(GameEngine game, double dt)
     {
         Body? target = FindDemoTarget(game);
@@ -275,7 +278,6 @@ internal sealed class PlayerSimulationService
         double targetTurnVelocity = Math.Clamp(angleError * 5.5, -3.75, 3.75);
         game.TurnVelocity += (targetTurnVelocity - game.TurnVelocity) * Math.Min(1, dt * 9);
         game.Player.Angle += game.TurnVelocity * dt;
-        bool wasThrusting = game.Player.Thrusting;
         bool wasShielding = game.Player.Shielding;
         double targetDistance = targetDelta.Length;
 
@@ -290,14 +292,12 @@ internal sealed class PlayerSimulationService
             game.Player.Velocity += V2.FromAngle(game.Player.Angle) * (acceleration * dt);
             game.EmitThrust();
 
-            if (!wasThrusting)
-            {
-                game.Audio.Play(SoundCue.Thrust, .45);
-            }
+            SetThrustSound(game);
         }
         else
         {
             game.ThrustRamp = Math.Max(0, game.ThrustRamp - dt * 1.8);
+            game.Audio.SetThrustIntensity(0);
         }
 
         bool shieldWanted = HasNearbyThreat(game);

@@ -30,8 +30,17 @@ internal sealed class BossCombatService
             boss.Age += dt;
             boss.HurtFlash = Math.Max(0, boss.HurtFlash - dt);
 
+            // Respawning relocates the ship to the center. Hold the boss's course until
+            // the shield window ends so it does not abruptly reverse toward that new position.
+            if (game.PlayerRespawning)
+            {
+                boss.Phase += dt * (.85 + boss.Encounter * .025);
+                boss.Position = game.MoveBody(boss, boss.Position + boss.Velocity * dt);
+                continue;
+            }
+
             V2 toPlayer = game.ArenaDelta(boss.Position, game.Player.Position);
-            V2 direction = game.PlayerRespawning ? -toPlayer.Normalized : toPlayer.Normalized;
+            V2 direction = toPlayer.Normalized;
             V2 tangent = new(-direction.Y, direction.X);
             double scale = Math.Min(1.4, 1 + (boss.Encounter - 1) * .055);
             V2 desired;

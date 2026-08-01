@@ -27,4 +27,4 @@ All newly added or enabled audio is commercially usable CC0/public-domain materi
 - **Applause in a large hall or church** by eXpl0it3r, CC0 — successful wave-bonus crowd celebration: https://opengameart.org/content/applause-in-a-large-hall-or-church
 - **Gastric Distress** by LFA, CC0 — Sludge Maw burp/fart hit reactions: https://opengameart.org/content/gastric-distress
 
-Attribution is not required; these references are retained for provenance.
+Attribution is not required for the CC0 works; the CC-BY 4.0 title track is credited above and in the asset manifest.

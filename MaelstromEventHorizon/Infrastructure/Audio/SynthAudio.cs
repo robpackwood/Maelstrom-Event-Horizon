@@ -11,7 +11,7 @@ namespace MaelstromEventHorizon.Infrastructure.Audio;
 
 internal sealed class SynthAudio : IAudioService
 {
-    private const int LayeredEffectVoiceCount = 16;
+    private const int LayeredEffectVoiceCount = 24;
     private readonly string bonusMusicPath;
     private readonly string bossMusicPath;
     private readonly string calmSummaryMusicPath;
@@ -26,6 +26,10 @@ internal sealed class SynthAudio : IAudioService
     private readonly List<LayeredEffectVoice> layeredEffectVoices = [];
     private readonly MediaPlayer music = new();
     private readonly string normalMusicPath;
+    private readonly MediaPlayer thrustLoop = new();
+    private readonly MediaPlayer thrustLoopSecondary = new();
+    private readonly DispatcherTimer thrustLoopTimer = new() { Interval = TimeSpan.FromSeconds(.66) };
+    private readonly string titleMusicPath;
     private readonly Lock playerGate = new();
     private readonly string[] waveMusicPaths;
     private bool audioPaused;
@@ -37,13 +41,19 @@ internal sealed class SynthAudio : IAudioService
     private double musicVolume = 1;
     private string? openedMusicPath;
     private TimeSpan pausedMusicPosition;
+    private TimeSpan requestedMusicLoopStart;
     private string? requestedMusicPath;
     private double requestedMusicVolume = .32;
+    private bool thrustLoopActive;
+    private bool thrustLoopInitialized;
+    private bool thrustLoopUsesSecondary;
+    private double thrustIntensity;
 
     public SynthAudio(IAssetProvider assets, ISoundEffectLibrary soundEffects)
     {
         clips = soundEffects.Clips;
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
+        titleMusicPath = assets.PathFor("Music", "wave-09-anti-entity.mp3");
         bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
         bossMusicPath = assets.PathFor("Music", "boss-heavy-ominous.mp3");
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
@@ -67,11 +77,13 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
         PrepareLayeredEffects(assets);
+        thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
     }
 
     public void StartTitleMusic()
     {
-        StartTrack(normalMusicPath, true, .30);
+        StartTrack(File.Exists(titleMusicPath) ? titleMusicPath : normalMusicPath, true, .30,
+            TimeSpan.FromSeconds(.2));
     }
 
     public void StartWaveMusic(int wave, bool intense)
@@ -132,6 +144,11 @@ internal sealed class SynthAudio : IAudioService
             catch (Exception exception) { TraceAudioFailure("set _music volume", exception); }
 
             RebalanceLayeredEffects();
+            if (thrustLoopActive)
+            {
+                thrustLoop.Volume = thrustIntensity * effectsVolume;
+                thrustLoopSecondary.Volume = thrustIntensity * effectsVolume;
+            }
         }
     }
 
@@ -191,6 +208,11 @@ internal sealed class SynthAudio : IAudioService
 
     public void Play(SoundCue cue, double volume = 1)
     {
+        if (cue is SoundCue.ShipCrash or SoundCue.EnemyDestroyed)
+        {
+            volume *= .75;
+        }
+
         double categoryVolume = effectsVolume;
         if (audioPaused || volume <= 0 || categoryVolume <= 0)
         {
@@ -243,6 +265,45 @@ internal sealed class SynthAudio : IAudioService
         }
     }
 
+    public void SetThrustIntensity(double intensity)
+    {
+        lock (playerGate)
+        {
+            thrustIntensity = Math.Clamp(intensity, 0, .73);
+            if (audioPaused || thrustIntensity <= 0 ||
+                !layeredEffectPaths.TryGetValue(SoundCue.Thrust, out string? path))
+            {
+                StopThrustLoop();
+                return;
+            }
+
+            try
+            {
+                if (!thrustLoopInitialized)
+                {
+                    thrustLoop.Open(new Uri(path, UriKind.Absolute));
+                    thrustLoopSecondary.Open(new Uri(path, UriKind.Absolute));
+                    thrustLoopInitialized = true;
+                }
+
+                thrustLoop.Volume = thrustIntensity * effectsVolume;
+                thrustLoopSecondary.Volume = thrustIntensity * effectsVolume;
+                if (!thrustLoopActive)
+                {
+                    thrustLoop.Position = TimeSpan.Zero;
+                    thrustLoop.Play();
+                    thrustLoopActive = true;
+                    thrustLoopUsesSecondary = false;
+                    thrustLoopTimer.Start();
+                }
+            }
+            catch
+            {
+                StopThrustLoop();
+            }
+        }
+    }
+
     private void StartMusic()
     {
         StartTrack(normalMusicPath, true);
@@ -253,12 +314,13 @@ internal sealed class SynthAudio : IAudioService
         StartTrack(File.Exists(bonusMusicPath) ? bonusMusicPath : normalMusicPath, true);
     }
 
-    private void StartTrack(string path, bool restart, double volume = .32)
+    private void StartTrack(string path, bool restart, double volume = .32, TimeSpan? loopStart = null)
     {
         bool wasRequested = musicRequested;
         bool trackChanged = !string.Equals(openedMusicPath, path, StringComparison.OrdinalIgnoreCase);
         requestedMusicPath = path;
         requestedMusicVolume = volume;
+        requestedMusicLoopStart = loopStart ?? TimeSpan.Zero;
         musicRequested = true;
         audioPaused = false;
         pausedMusicPosition = TimeSpan.Zero;
@@ -295,8 +357,16 @@ internal sealed class SynthAudio : IAudioService
                         return;
                     }
 
-                    music.Position = TimeSpan.Zero;
+                    music.Position = requestedMusicLoopStart;
                     music.Play();
+                };
+                music.MediaFailed += (_, _) =>
+                {
+                    if (string.Equals(requestedMusicPath, titleMusicPath, StringComparison.OrdinalIgnoreCase) &&
+                        File.Exists(normalMusicPath))
+                    {
+                        StartTrack(normalMusicPath, true, .30);
+                    }
                 };
                 musicEndedHandlerAttached = true;
             }
@@ -305,7 +375,7 @@ internal sealed class SynthAudio : IAudioService
             {
                 if (restart)
                 {
-                    music.Position = TimeSpan.Zero;
+                    music.Position = requestedMusicLoopStart;
                 }
 
                 music.Play();
@@ -340,7 +410,45 @@ internal sealed class SynthAudio : IAudioService
 
                 voice.Busy = false;
             }
+
+            StopThrustLoop();
         }
+    }
+
+    private void StartNextThrustSegment()
+    {
+        lock (playerGate)
+        {
+            if (!thrustLoopActive || audioPaused)
+            {
+                return;
+            }
+
+            MediaPlayer next = thrustLoopUsesSecondary ? thrustLoop : thrustLoopSecondary;
+            thrustLoopUsesSecondary = !thrustLoopUsesSecondary;
+            next.Stop();
+            next.Position = TimeSpan.Zero;
+            next.Volume = thrustIntensity * effectsVolume;
+            next.Play();
+        }
+    }
+
+    private void StopThrustLoop()
+    {
+        if (!thrustLoopActive)
+        {
+            return;
+        }
+
+        try
+        {
+            thrustLoopTimer.Stop();
+            thrustLoop.Stop();
+            thrustLoopSecondary.Stop();
+        }
+        catch (Exception exception) { TraceAudioFailure("stop thrust loop", exception); }
+
+        thrustLoopActive = false;
     }
 
     private void PrepareLayeredEffects(IAssetProvider assets)
@@ -351,15 +459,13 @@ internal sealed class SynthAudio : IAudioService
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "MaelstromEventHorizon", "EffectCache");
             Directory.CreateDirectory(root);
-            foreach (SoundCue cue in new[]
-                     {
-                         SoundCue.Explosion, SoundCue.AsteroidExplosion, SoundCue.GiantGrow, SoundCue.GiantShrink,
-                         SoundCue.EnemyWarning, SoundCue.BossAlarm, SoundCue.CashRegister,
-                         SoundCue.ChaChing, SoundCue.CometCelebration, SoundCue.MultiplierWoohoo,
-                         SoundCue.RescueCelebration
-                     })
+            foreach (SoundCue cue in Enum.GetValues<SoundCue>())
             {
-                byte[] source = clips[cue];
+                if (!clips.TryGetValue(cue, out byte[]? source))
+                {
+                    continue;
+                }
+
                 string fingerprint = Convert.ToHexString(SHA256.HashData(source).AsSpan(0, 8));
                 string path = Path.Combine(root, $"{cue}-{fingerprint}.wav");
                 if (!File.Exists(path))
@@ -377,7 +483,6 @@ internal sealed class SynthAudio : IAudioService
                          [SoundCue.EnemyWarning] = "enemy-arrival-danger-alarm.wav",
                          [SoundCue.BossAlarm] = "sfx_02d.wav",
                          [SoundCue.MenuMove] = "sfx_03a.wav",
-                         [SoundCue.Thrust] = "sfx_04a.wav",
                          [SoundCue.Explosion] = "sfx_05a.wav",
                          [SoundCue.SteelHit] = "sfx_06.wav",
                          [SoundCue.Pickup] = "powerup-celebration.wav",
@@ -418,7 +523,6 @@ internal sealed class SynthAudio : IAudioService
                          [SoundCue.Coin] = "bonus-coin-jingle.wav",
                          [SoundCue.ChaChing] = "sfx_15b.wav",
                          [SoundCue.CometCelebration] = "sfx_05c.wav",
-                         [SoundCue.MultiplierWoohoo] = "sfx_16b.wav",
                          [SoundCue.ShipCrash] = "player-ship-heavy-explosion.wav",
                          [SoundCue.ShipBlast] = "sfx_17a.wav",
                          [SoundCue.BonusFailed] = "sfx_18a.wav",

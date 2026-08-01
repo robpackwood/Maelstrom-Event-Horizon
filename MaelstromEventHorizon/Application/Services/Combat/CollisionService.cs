@@ -401,9 +401,10 @@ internal sealed partial class CollisionService
                     asteroid.HitPoints = 1;
                     game.ShowBanner("STEEL CORE FRACTURED", 1.4);
                 }
-                else if (game.Random.Next(5) == 0)
+                else if (game.Random.Next(5) == 0 && !game.MineSpawnedThisWave)
                 {
                     asteroid.Alive = false;
+                    game.MineSpawnedThisWave = true;
                     game.Mines.Add(new HomingMine(asteroid.Position, asteroid.Velocity));
                     game.Audio.Play(SoundCue.Mine);
                 }
@@ -607,6 +608,7 @@ internal sealed partial class CollisionService
 
         game.ClearEquippedPowerups();
         game.LastPowerupTime = 0;
+        game.Audio.SetThrustIntensity(0);
         game.Explosion(game.Player.Position, 76, 0xff62e6ff);
         game.SpawnShockwave(game.Player.Position, 1.05, 0xffff6b5e, 265);
         game.SpawnShockwave(game.Player.Position, .68, 0xffffc06a, 145);

@@ -68,6 +68,7 @@ internal sealed class GameEngine
     internal int DemoStage;
     internal double EventTimer;
     internal bool FighterSpawnedThisWave;
+    internal bool MineSpawnedThisWave;
     internal double FireCooldown;
     internal double GameOverDelayTimer;
     internal double GameOverFadeElapsed;
