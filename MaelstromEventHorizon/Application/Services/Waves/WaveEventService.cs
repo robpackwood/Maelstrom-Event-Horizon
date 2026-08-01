@@ -91,17 +91,6 @@ internal sealed class WaveEventService
             }
         }
 
-        if (game.CanisterStormRemaining > 0)
-        {
-            game.CanisterStormSpawnTimer -= dt;
-            if (game.CanisterStormSpawnTimer <= 0)
-            {
-                game.SpawnCanisterEntity();
-                game.CanisterStormRemaining--;
-                game.CanisterStormSpawnTimer = .42 + game.Random.NextDouble() * .34;
-            }
-        }
-
         if (game.CometStormRemaining > 0)
         {
             game.CometStormSpawnTimer -= dt;
@@ -136,9 +125,8 @@ internal sealed class WaveEventService
             }
         }
 
-        bool pendingStorm = game is { CanisterStormWave: true, CanisterSpawned: false } ||
-                            game is { CometStormWave: true, CometSpawned: false } ||
-                            game.CanisterStormRemaining > 0 || game.CometStormRemaining > 0;
+        bool pendingStorm = game is { CometStormWave: true, CometSpawned: false } ||
+                            game.CometStormRemaining > 0;
         bool waveClear = !game.PlayerRespawning && !HasAlive(game.Asteroids) && !HasAlive(game.Fighters) &&
                          !HasAlive(game.Vortices) && !pendingStorm && game.BlackHoleTimer <= 0;
         if (waveClear)

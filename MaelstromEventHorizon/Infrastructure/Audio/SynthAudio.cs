@@ -392,7 +392,6 @@ internal sealed class SynthAudio : IAudioService
                          [SoundCue.AnnouncerBlackHoleAlert] = "human-look-out.wav",
                          [SoundCue.AnnouncerNovaAlert] = "human-look-out.wav",
                          [SoundCue.AnnouncerItemBox] = "human-power-up.wav",
-                         [SoundCue.AnnouncerItemBoxStorm] = "human-go-go-go.wav",
                          [SoundCue.AnnouncerCometStorm] = "human-go-go-go.wav",
                          [SoundCue.AnnouncerBonusComet] = "human-go-go-go.wav",
                          [SoundCue.AnnouncerAirBrakes] = "human-power-up.wav",
@@ -456,7 +455,7 @@ internal sealed class SynthAudio : IAudioService
                         SoundCue.AnnouncerWaveStart or
                         SoundCue.AnnouncerEnemyInbound or SoundCue.AnnouncerEnemyAssault or SoundCue.AnnouncerMineAlert
                         or SoundCue.AnnouncerBlackHoleAlert or
-                        SoundCue.AnnouncerNovaAlert or SoundCue.AnnouncerItemBox or SoundCue.AnnouncerItemBoxStorm
+                        SoundCue.AnnouncerNovaAlert or SoundCue.AnnouncerItemBox
                         or SoundCue.AnnouncerCometStorm or
                         SoundCue.AnnouncerBonusComet or SoundCue.AnnouncerAirBrakes or SoundCue.AnnouncerLuck or
                         SoundCue.AnnouncerTripleFire or SoundCue.AnnouncerRiftVolley or SoundCue.AnnouncerLongRange

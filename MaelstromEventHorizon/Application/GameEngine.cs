@@ -53,9 +53,6 @@ internal sealed class GameEngine
     internal int BonusPatternStep;
     internal bool BonusSpawnsDisabled;
     internal bool CanisterSpawned;
-    internal int CanisterStormRemaining;
-    internal double CanisterStormSpawnTimer;
-    internal bool CanisterStormWave;
     internal double CanisterTimer = -1;
     internal double CashTickCooldown;
     internal bool CometSpawned;

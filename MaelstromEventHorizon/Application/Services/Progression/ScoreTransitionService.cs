@@ -157,9 +157,7 @@ internal sealed class ScoreTransitionService
         game.MultiplierTimer = -1;
         game.CometTimer = -1;
         game.RescueTimer = -1;
-        game.CanisterStormRemaining = 0;
         game.CometStormRemaining = 0;
-        game.CanisterStormWave = false;
         game.CometStormWave = false;
     }
 

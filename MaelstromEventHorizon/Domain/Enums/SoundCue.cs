@@ -23,7 +23,6 @@ internal enum SoundCue
     AnnouncerBlackHoleAlert,
     AnnouncerNovaAlert,
     AnnouncerItemBox,
-    AnnouncerItemBoxStorm,
     AnnouncerCometStorm,
     AnnouncerBonusComet,
     AnnouncerAirBrakes,

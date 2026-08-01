@@ -293,7 +293,6 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         clips[SoundCue.AnnouncerNovaAlert] = clips[SoundCue.Nova];
         clips[SoundCue.CometSpawn] = clips[SoundCue.CometCelebration];
         clips[SoundCue.AnnouncerItemBox] = clips[SoundCue.Pickup];
-        clips[SoundCue.AnnouncerItemBoxStorm] = clips[SoundCue.Pickup];
         clips[SoundCue.AnnouncerCometStorm] = clips[SoundCue.CometSpawn];
         clips[SoundCue.AnnouncerBonusComet] = clips[SoundCue.CometSpawn];
         clips[SoundCue.AnnouncerAirBrakes] = clips[SoundCue.Pickup];

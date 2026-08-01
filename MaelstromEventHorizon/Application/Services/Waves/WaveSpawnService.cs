@@ -61,12 +61,10 @@ internal sealed class WaveSpawnService
         game.BonusSpawnsDisabled = false;
         game.LevelBonusCash = 2_000;
         game.LevelBonusCountdown = 5;
-        game.CanisterStormRemaining = 0;
         game.CometStormRemaining = 0;
-        game.CanisterStormWave = standardWave && game.Random.NextDouble() < .075;
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
-        game.CanisterTimer = standardWave && (game.CanisterStormWave || lucky || game.Random.Next(3) == 0)
+        game.CanisterTimer = standardWave && (lucky || game.Random.Next(3) == 0)
             ? 2.5 + game.Random.NextDouble() * 7.5
             : -1;
         game.MultiplierTimer = standardWave && (lucky || game.Random.Next(3) == 0)
@@ -424,16 +422,6 @@ internal sealed class WaveSpawnService
 
         game.CanisterSpawned = true;
         game.CanisterTimer = -1;
-
-        if (game.CanisterStormWave)
-        {
-            game.CanisterStormRemaining = game.Random.Next(5, 11);
-            game.Announce("ITEM BOX STORM", 1.8);
-            SpawnCanisterEntity(game);
-            game.CanisterStormRemaining--;
-            game.CanisterStormSpawnTimer = .5;
-            return;
-        }
 
         SpawnCanisterEntity(game);
         game.Announce("UPGRADE AVAILABLE", 1.25);

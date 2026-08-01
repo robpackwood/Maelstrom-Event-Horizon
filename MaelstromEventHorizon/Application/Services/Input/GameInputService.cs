@@ -48,7 +48,6 @@ internal sealed class GameInputService
         game.CometTimer = -1;
         game.BlackHoleTimer = -1;
         game.RescueTimer = -1;
-        game.CanisterStormRemaining = 0;
         game.CometStormRemaining = 0;
         game.Pickups.Add(new Pickup(new V2(900, GameEngine.Height / 2), V2.Zero, PickupKind.Canister));
         game.ShowBanner("AUTOPILOT DEMONSTRATION", 2.2);
