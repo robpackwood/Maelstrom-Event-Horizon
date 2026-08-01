@@ -4,8 +4,8 @@ Audit date: 2026-07-23
 
 The game defines 28 sound cues. Twenty-seven are normally generated from
 mathematical oscillators, envelopes, deterministic noise, filters, and
-project-authored mixing code. `ShipCrash` normally loads the licensed
-`ship-destruction.wav`; it also has a synthesized fallback.
+project-authored mixing code. The bundled recording takes precedence at
+runtime when one is available.
 
 ## Sound cues
 

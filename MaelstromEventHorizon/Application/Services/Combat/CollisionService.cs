@@ -1,5 +1,4 @@
-using MaelstromEventHorizon.Domain.Effects;
-using MaelstromEventHorizon.Domain.Entities;
+﻿using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 
@@ -104,7 +103,7 @@ internal sealed partial class CollisionService
                 game.Explosion(hitPosition, 28, comet.Tint);
                 game.SpawnShockwave(hitPosition, .55, comet.Tint, 125);
                 game.SpawnFloatingText(hitPosition, $"+${comet.Value:N0}", comet.Tint);
-                game.Audio.Play(SoundCue.CometCelebration, 1);
+                game.Audio.Play(SoundCue.CometCelebration);
                 game.Audio.Play(SoundCue.ShipBlast, .78);
                 continue;
             }
@@ -126,7 +125,10 @@ internal sealed partial class CollisionService
                 {
                     game.AddScore(prize.Value);
                     game.Audio.Play(SoundCue.Coin, .82);
-                    if (prize.Kind == PickupKind.Bonus) game.Audio.Play(SoundCue.ShipBlast, .82);
+                    if (prize.Kind == PickupKind.Bonus)
+                    {
+                        game.Audio.Play(SoundCue.ShipBlast, .82);
+                    }
                 }
             }
         }
@@ -147,7 +149,11 @@ internal sealed partial class CollisionService
                     if (game.ReflectionShieldActive)
                     {
                         V2 direction = (game.Player.Position - shot.Position).Normalized;
-                        if (direction.Length <= 0) direction = V2.FromAngle(game.Player.Angle);
+                        if (direction.Length <= 0)
+                        {
+                            direction = V2.FromAngle(game.Player.Angle);
+                        }
+
                         double speed = Math.Max(420, shot.Velocity.Length * 1.2);
                         shot.Enemy = false;
                         shot.BossShot = false;
@@ -170,7 +176,8 @@ internal sealed partial class CollisionService
             for (int pickupIndex = 0; pickupIndex < pickupCount; pickupIndex++)
             {
                 Pickup pickup = game.Pickups[pickupIndex];
-                if (!pickup.Alive || pickup.Kind is not (PickupKind.Canister or PickupKind.RescueShip) ||
+                if (!pickup.Alive || pickup.Kind is not (PickupKind.Canister or PickupKind.RescueShip
+                        or PickupKind.TimeFreeze or PickupKind.SmartBomb or PickupKind.RicochetArena) ||
                     !game.Touching(pickup, game.Player))
                 {
                     continue;
@@ -184,13 +191,17 @@ internal sealed partial class CollisionService
                     game.ShowBanner("RESCUE +1 SHIP", 2);
                     game.Audio.Play(SoundCue.RescueCelebration, .95);
                 }
-                else
+                else if (pickup.Kind == PickupKind.Canister)
                 {
                     game.AwardCanister();
                     if (game.IsDemoMode)
                     {
                         game.DemoPowerupCollected = true;
                     }
+                }
+                else
+                {
+                    game.AwardRarePowerup(pickup.Kind);
                 }
             }
         }
@@ -351,6 +362,31 @@ internal sealed partial class CollisionService
             return;
         }
 
+        if (asteroid.Mega)
+        {
+            asteroid.HitPoints -= Math.Max(1, damage);
+            game.Spark(asteroid.Position, 0xffffb866, 14 + damage * 6);
+            game.Audio.Play(SoundCue.AsteroidExplosion, .72);
+            if (asteroid.HitPoints > 0)
+            {
+                return;
+            }
+
+            asteroid.Alive = false;
+            game.AddScore(60);
+            game.AsteroidBreakup(asteroid.Position, 44, 0xffff9b4a);
+            for (int i = 0; i < 3; i++)
+            {
+                V2 velocity = asteroid.Velocity * .32 + game.RandomDirection() * game.Random.Next(95, 205);
+                game.Asteroids.Add(new Asteroid(asteroid.Position + game.RandomDirection() * game.Random.Next(18, 45),
+                    velocity, 3, false, game.Random.Next()));
+            }
+
+            game.RollDrop(asteroid.Position);
+            game.Audio.Play(SoundCue.AsteroidExplosion);
+            return;
+        }
+
         if (asteroid.Steel)
         {
             asteroid.HitPoints -= Math.Max(1, damage);
@@ -423,7 +459,7 @@ internal sealed partial class CollisionService
         game.AwardImmediateScore(fighter.Kind == FighterKind.Interceptor ? 1000 : 500, fighter.Position);
         game.Explosion(fighter.Position, 24, fighter.Kind == FighterKind.Interceptor ? 0xff58e9ff : 0xffff4f83);
         game.RollDrop(fighter.Position, .24);
-        game.Audio.Play(SoundCue.EnemyDestroyed, 1);
+        game.Audio.Play(SoundCue.EnemyDestroyed);
         game.Audio.Play(SoundCue.Explosion, .55);
     }
 
@@ -445,19 +481,25 @@ internal sealed partial class CollisionService
         }
         else
         {
-            if (playerBulletHit && playHitReaction) game.Audio.Play(BossHitCue(boss.Kind), .9);
+            if (playerBulletHit && playHitReaction)
+            {
+                game.Audio.Play(BossHitCue(boss.Kind), .9);
+            }
         }
     }
 
-    private static SoundCue BossHitCue(AlienBossKind kind) => kind switch
+    private static SoundCue BossHitCue(AlienBossKind kind)
     {
-        AlienBossKind.SludgeMaw => SoundCue.SludgeMawHit,
-        AlienBossKind.EyeTyrant => SoundCue.EyeTyrantHit,
-        AlienBossKind.BoneBroodmother => SoundCue.BoneBroodmotherHit,
-        AlienBossKind.DreadHarvester => SoundCue.DreadHarvesterHit,
-        AlienBossKind.SolarWarden => SoundCue.SolarWardenHit,
-        _ => SoundCue.VoidLeechHit
-    };
+        return kind switch
+        {
+            AlienBossKind.SludgeMaw => SoundCue.SludgeMawHit,
+            AlienBossKind.EyeTyrant => SoundCue.EyeTyrantHit,
+            AlienBossKind.BoneBroodmother => SoundCue.BoneBroodmotherHit,
+            AlienBossKind.DreadHarvester => SoundCue.DreadHarvesterHit,
+            AlienBossKind.SolarWarden => SoundCue.SolarWardenHit,
+            _ => SoundCue.VoidLeechHit
+        };
+    }
 
     private void DestroyBoss(GameEngine game, AlienBoss boss)
     {
@@ -483,7 +525,7 @@ internal sealed partial class CollisionService
 
         game.SpawnShockwave(boss.Position, 1.05, game.BossTint(boss.Kind), 330);
         game.SpawnFloatingText(boss.Position, $"BOSS BOUNTY  +${reward:N0}", 0xffffdc78);
-        game.ShowBanner($"{game.BossName(boss.Kind)} DEFEATED", 2.8);
+        game.Announce("BOSS DESTROYED", 2.8);
         game.Audio.Play(SoundCue.ShipBlast);
         game.Audio.Play(SoundCue.Explosion, .92);
     }
@@ -494,7 +536,7 @@ internal sealed partial class CollisionService
         game.AddScore(500);
         game.Explosion(mine.Position, 28, 0xffffdf4d);
         game.SpawnShockwave(mine.Position, .48, 0xffffdf4d, 105);
-        game.Audio.Play(SoundCue.MineHit, 1);
+        game.Audio.Play(SoundCue.MineHit);
         game.Audio.Play(SoundCue.Explosion, .82);
     }
 
@@ -519,7 +561,7 @@ internal sealed partial class CollisionService
 
         game.SpawnShockwave(vortex.Position, 1.05, 0xffb069ff, 310);
         game.Explosion(vortex.Position, 58, 0xff6ad7ff);
-        game.Audio.Play(SoundCue.VortexHit, 1);
+        game.Audio.Play(SoundCue.VortexHit);
         game.Audio.Play(SoundCue.Explosion, .92);
     }
 
@@ -569,8 +611,8 @@ internal sealed partial class CollisionService
         game.SpawnShockwave(game.Player.Position, 1.05, 0xffff6b5e, 265);
         game.SpawnShockwave(game.Player.Position, .68, 0xffffc06a, 145);
         game.Spark(game.Player.Position, 0xffffffff, 28);
-        game.Audio.Play(SoundCue.ShipCrash, 1);
-        game.Audio.Play(SoundCue.ShipBlast, 1);
+        game.Audio.Play(SoundCue.ShipCrash);
+        game.Audio.Play(SoundCue.ShipBlast);
         game.Audio.Play(SoundCue.Explosion, .95);
 
         if (noShipsRemaining)

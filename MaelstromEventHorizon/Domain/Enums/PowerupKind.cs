@@ -1,8 +1,7 @@
-namespace MaelstromEventHorizon.Domain.Enums;
+﻿namespace MaelstromEventHorizon.Domain.Enums;
 
 internal enum PowerupKind
 {
-    RapidFire,
     AirBrakes,
     Luck,
     TripleFire,
@@ -11,7 +10,6 @@ internal enum PowerupKind
     Shields,
     ReflectionShield,
     Freeze,
-    SmartBomb,
     RicochetArena,
     GiantShip
 }

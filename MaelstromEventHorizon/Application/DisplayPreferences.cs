@@ -1,4 +1,4 @@
-namespace MaelstromEventHorizon.Application;
+﻿namespace MaelstromEventHorizon.Application;
 
 internal sealed class DisplayPreferences
 {

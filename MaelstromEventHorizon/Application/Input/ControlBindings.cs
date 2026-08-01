@@ -1,4 +1,4 @@
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using MaelstromEventHorizon.Application.Services.Contracts;
 using MaelstromEventHorizon.Domain.Enums;
 

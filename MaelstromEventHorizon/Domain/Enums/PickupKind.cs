@@ -1,9 +1,12 @@
-namespace MaelstromEventHorizon.Domain.Enums;
+﻿namespace MaelstromEventHorizon.Domain.Enums;
 
 internal enum PickupKind
 {
     Canister,
     Multiplier,
     Bonus,
-    RescueShip
+    RescueShip,
+    TimeFreeze,
+    SmartBomb,
+    RicochetArena
 }

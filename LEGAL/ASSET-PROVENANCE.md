@@ -46,7 +46,6 @@ The following local files exactly match their OpenGameArt downloads:
 | --- | --- | --- |
 | `Assets/through-the-universe.mp3` | `C93C8B5AF8FC7A4748F8321ABBCC8FCD7F1DF51BC260AF28CA1261E540886799` | Through The Universe |
 | `Assets/singularity-action.mp3` | `09C93408A9A4EF47B336D7009B8C8C85E6B8946A4BEBFF17BC43ECE8381DE310` | Singularity (Action) |
-| `Assets/ship-destruction.wav` | `13A0BF75AF94EC6D332BC71CBA489B573466E05C4B17288158B3D683B41DE39F` | Muffled Distant Explosion |
 | `Assets/Music/wave-01-our-expanse.mp3` | `A7345B52B309C8B77CC5F245559A60E5FF6A2AE3FF028B775CD2035A77D05DEC` | Our Expanse, loop version |
 | `Assets/Music/wave-04-star-on-the-horizon.mp3` | `4FD203B7DA64F5F40FBC965FA15AE9AC3BFA70E9253744379F0646470D219812` | Star On The Horizon |
 | `Assets/Music/wave-07-magic-space.mp3` | `4B64E483ED54FD2A35B90C47D79403AC72480116BB7C58C958A2A2E7A568DA81` | Magic Space |

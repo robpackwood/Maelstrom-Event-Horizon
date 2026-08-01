@@ -1,7 +1,7 @@
+﻿using System.IO;
+using System.Text.Json;
 using MaelstromEventHorizon.Application.Services.Contracts;
 using MaelstromEventHorizon.Domain.Scores;
-using System.IO;
-using System.Text.Json;
 
 namespace MaelstromEventHorizon.Infrastructure.Persistence;
 
@@ -12,12 +12,16 @@ internal sealed class JsonHighScoreRepository(IAppDataPathProvider paths) : IHig
         try
         {
             string path = paths.ReadPath("highscores.json");
-            if (!File.Exists(path)) return [];
-            return (JsonSerializer.Deserialize<List<HighScoreEntry>>(File.ReadAllText(path)) ?? [])
+            if (!File.Exists(path))
+            {
+                return [];
+            }
+
+            return [.. (JsonSerializer.Deserialize<List<HighScoreEntry>>(File.ReadAllText(path)) ?? [])
                 .OrderByDescending(entry => entry.Score)
                 .ThenBy(entry => entry.AchievedAt)
                 .Take(10)
-                .ToList();
+                ];
         }
         catch
         {
@@ -30,10 +34,10 @@ internal sealed class JsonHighScoreRepository(IAppDataPathProvider paths) : IHig
         try
         {
             Directory.CreateDirectory(paths.DirectoryPath);
-            var topTen = entries.OrderByDescending(entry => entry.Score)
+            List<HighScoreEntry> topTen = [.. entries.OrderByDescending(entry => entry.Score)
                 .ThenBy(entry => entry.AchievedAt)
                 .Take(10)
-                .ToList();
+                ];
             File.WriteAllText(paths.WritePath("highscores.json"),
                 JsonSerializer.Serialize(topTen, new JsonSerializerOptions { WriteIndented = true }));
         }

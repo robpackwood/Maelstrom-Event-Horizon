@@ -1,4 +1,4 @@
-using MaelstromEventHorizon.Domain.Scores;
+﻿using MaelstromEventHorizon.Domain.Scores;
 
 namespace MaelstromEventHorizon.Application.Services.Contracts;
 

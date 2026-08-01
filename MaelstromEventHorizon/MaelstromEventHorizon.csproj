@@ -9,10 +9,10 @@
     <RootNamespace>MaelstromEventHorizon</RootNamespace>
     <AssemblyTitle>Maelstrom - Event Horizon</AssemblyTitle>
     <Product>Maelstrom - Event Horizon</Product>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
-    <InformationalVersion>1.1.0</InformationalVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <InformationalVersion>1.2.0</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>Assets\MaelstromEventHorizon.ico</ApplicationIcon>
   </PropertyGroup>
@@ -37,7 +37,6 @@
     <EmbeddedResource Include="Assets\through-the-universe.mp3" LogicalName="Assets/through-the-universe.mp3" />
     <EmbeddedResource Include="Assets\Music\*.mp3" LogicalName="Assets/Music/%(Filename)%(Extension)" />
     <EmbeddedResource Include="Assets\SoundEffects\*.wav" LogicalName="Assets/SoundEffects/%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Assets\ship-destruction.wav" LogicalName="Assets/ship-destruction.wav" />
     <EmbeddedResource Include="Assets\music-license.txt" LogicalName="Assets/music-license.txt" />
     <EmbeddedResource Include="Assets\MaelstromEventHorizon.ico" LogicalName="Assets/MaelstromEventHorizon.ico" />
     <EmbeddedResource Include="Assets\maelstrom-icon.png" LogicalName="Assets/maelstrom-icon.png" />

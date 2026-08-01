@@ -1,10 +1,11 @@
+﻿using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using MaelstromEventHorizon.Application;
+using MaelstromEventHorizon.Domain.Effects;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 using MaelstromEventHorizon.Presentation.Drawing;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace MaelstromEventHorizon.Presentation.Rendering;
 
@@ -35,17 +36,28 @@ internal sealed class SceneRenderer
         view.DrawFloatingTexts(dc);
         view.DrawWaveCompletionFlyby(dc);
         dc.Pop();
-        if (waveCameraActive) dc.Pop();
+        if (waveCameraActive)
+        {
+            dc.Pop();
+        }
+
         view.DrawHud(dc);
         view.DrawOverlay(dc);
         dc.Pop();
-        if (view.Game.RicochetArenaActive) view.DrawArenaFrame(dc);
+        if (view.Game.RicochetArenaActive)
+        {
+            view.DrawArenaFrame(dc);
+        }
+
         view.DrawTransitionCurtain(dc);
     }
 
     private static bool TryPushWaveIntroCamera(GameView view, DrawingContext dc)
     {
-        if (view.Game.Mode != GameMode.WaveIntro) return false;
+        if (view.Game.Mode != GameMode.WaveIntro)
+        {
+            return false;
+        }
 
         double progress = Math.Clamp(view.Game.TransitionElapsed / GameEngine.WaveFadeInDuration, 0, 1);
         double easedProgress = progress * progress * (3 - 2 * progress);
@@ -79,67 +91,31 @@ internal sealed class SceneRenderer
                 dc.PushTransform(new ScaleTransform(cycle % 2 == 1 ? -1 : 1, cycle % 4 >= 2 ? -1 : 1,
                     GameEngine.Width / 2, GameEngine.Height / 2));
                 dc.DrawImage(selectedBackground,
-                    new Rect(-overscan + panX, -overscan + panY, GameEngine.Width + overscan * 2, GameEngine.Height + overscan * 2));
+                    new Rect(-overscan + panX, -overscan + panY, GameEngine.Width + overscan * 2,
+                        GameEngine.Height + overscan * 2));
                 dc.Pop();
             }
 
             Color grade = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
-            dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)), null,
+            dc.DrawRectangle(
+                new SolidColorBrush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)), null,
                 new Rect(0, 0, GameEngine.Width, GameEngine.Height));
             dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(titleScene ? (byte)30 : (byte)52, 0, 2, 8)), null,
                 new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
         else
         {
-            var fallback = new RadialGradientBrush(Color.FromRgb(12, 25, 57), Color.FromRgb(0, 2, 9))
-            { RadiusX = .82, RadiusY = .82 };
+            RadialGradientBrush fallback = new(Color.FromRgb(12, 25, 57), Color.FromRgb(0, 2, 9))
+                { RadiusX = .82, RadiusY = .82 };
             dc.DrawRectangle(fallback, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
 
         dc.DrawRectangle(GameView.VignetteBrush, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
     }
 
-    private static void DrawDeepSpace(GameView view, DrawingContext dc, int waveIndex, bool titleScene)
-    {
-        double time = view.Game.TotalTime;
-        Color nebulaA = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
-        Color nebulaB = Color.FromRgb((byte)(42 + waveIndex * 17 % 55), (byte)(38 + waveIndex * 29 % 70), 122);
-        var leftNebula = new RadialGradientBrush(nebulaA, Color.FromArgb(0, nebulaA.R, nebulaA.G, nebulaA.B))
-        {
-            RadiusX = .8,
-            RadiusY = .8,
-            Opacity = titleScene ? .14 : .2
-        };
-        var rightNebula = new RadialGradientBrush(nebulaB, Color.FromArgb(0, nebulaB.R, nebulaB.G, nebulaB.B))
-        {
-            RadiusX = .8,
-            RadiusY = .8,
-            Opacity = .15
-        };
-        dc.PushTransform(new RotateTransform(Math.Sin(time * .035 + waveIndex) * 8, 180, 150));
-        dc.DrawEllipse(leftNebula, null, new Point(170, 145), 300, 190);
-        dc.Pop();
-        dc.DrawEllipse(rightNebula, null, new Point(1080, 590), 350, 225);
-
-        double planetRadius = 92 + waveIndex % 4 * 16;
-        Point planet = new(1050 + Math.Sin(time * .02 + waveIndex) * 38, -36 + Math.Cos(time * .017 + waveIndex) * 18);
-        var planetBrush = new RadialGradientBrush
-        {
-            GradientOrigin = new Point(.28, .25),
-            Center = new Point(.42, .4),
-            RadiusX = .82,
-            RadiusY = .82,
-            Opacity = titleScene ? .2 : .3
-        };
-        planetBrush.GradientStops.Add(new GradientStop(view.Lighten(nebulaB, .38), 0));
-        planetBrush.GradientStops.Add(new GradientStop(nebulaB, .46));
-        planetBrush.GradientStops.Add(new GradientStop(Color.FromRgb(4, 9, 28), 1));
-        dc.DrawEllipse(planetBrush, new Pen(new SolidColorBrush(Color.FromArgb(42, 166, 210, 255)), 1), planet, planetRadius, planetRadius);
-    }
-
     private void DrawStars(GameView view, DrawingContext dc)
     {
-        foreach (var star in view.Game.Stars)
+        foreach (Star star in view.Game.Stars)
         {
             double depthSpeed = .45 + star.Depth * .72;
             double x = star.Position.X;
@@ -156,12 +132,13 @@ internal sealed class SceneRenderer
                 x = PositiveModulo(x + view.Game.BonusTravelTime * starDrift.X * depthSpeed, GameEngine.Width);
                 y = PositiveModulo(y + view.Game.BonusTravelTime * starDrift.Y * depthSpeed, GameEngine.Height);
             }
+
             double twinkle = .48 + .52 * Math.Sin(view.Game.TotalTime * (1.2 + star.Depth * 2.5) + star.Phase);
             double size = .65 + star.Depth * 1.55 + twinkle * .6;
             byte alpha = (byte)(85 + twinkle * 155);
-            var brush = view.Brush(Color.FromArgb(alpha,
+            SolidColorBrush brush = view.Brush(Color.FromArgb(alpha,
                 (byte)(180 + star.Depth * 70), (byte)(205 + star.Depth * 45), 255));
-            var position = new Point(x, y);
+            Point position = new(x, y);
             dc.DrawEllipse(brush, null, position, size, size);
             if (view.Game.Player.Thrusting && star.Depth > .56 && !view.Game.IsBonusStage)
             {
@@ -169,9 +146,10 @@ internal sealed class SceneRenderer
                 dc.DrawLine(view.Pen(Color.FromArgb((byte)(alpha * .38), 146, 212, 255), .55 + star.Depth * .6),
                     new Point(x - streak, y), new Point(x + size, y));
             }
+
             if (star.Depth > .82 && twinkle > .78)
             {
-                var pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);
+                Pen pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);
                 dc.DrawLine(pen, new Point(x - size * 3, y), new Point(x + size * 3, y));
                 dc.DrawLine(pen, new Point(x, y - size * 3), new Point(x, y + size * 3));
             }
@@ -180,7 +158,11 @@ internal sealed class SceneRenderer
 
     private void DrawBonusStageEnvironment(GameView view, DrawingContext dc)
     {
-        if (!view.Game.IsBonusStage) return;
+        if (!view.Game.IsBonusStage)
+        {
+            return;
+        }
+
         Color guide = view.Game.BonusStageVariant switch
         {
             BonusStageKind.Crossfire => Color.FromRgb(255, 104, 116),
@@ -191,14 +173,20 @@ internal sealed class SceneRenderer
         if (view.Game.BonusStageVariant == BonusStageKind.SlalomGates)
         {
             for (int i = 1; i < 9; i++)
+            {
                 dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(23, guide.R, guide.G, guide.B)), 1),
                     new Point(0, i * GameEngine.Height / 9), new Point(GameEngine.Width, i * GameEngine.Height / 9));
+            }
         }
         else if (view.Game.BonusStageVariant == BonusStageKind.SpiralSwarm)
         {
             for (int i = 0; i < 5; i++)
-                dc.DrawArc(new Pen(new SolidColorBrush(Color.FromArgb((byte)(25 + i * 7), guide.R, guide.G, guide.B)), 1.2),
-                    new Point(GameEngine.Width / 2, GameEngine.Height / 2), 130 + i * 105, view.Game.BonusTravelTime * (12 + i * 2) + i * 43, 215);
+            {
+                dc.DrawArc(
+                    new Pen(new SolidColorBrush(Color.FromArgb((byte)(25 + i * 7), guide.R, guide.G, guide.B)), 1.2),
+                    new Point(GameEngine.Width / 2, GameEngine.Height / 2), 130 + i * 105,
+                    view.Game.BonusTravelTime * (12 + i * 2) + i * 43, 215);
+            }
         }
         else
         {
@@ -212,5 +200,8 @@ internal sealed class SceneRenderer
         }
     }
 
-    internal double PositiveModulo(double value, double modulus) => (value % modulus + modulus) % modulus;
+    internal double PositiveModulo(double value, double modulus)
+    {
+        return (value % modulus + modulus) % modulus;
+    }
 }

@@ -1,4 +1,4 @@
-using MaelstromEventHorizon.Domain.Math;
+﻿using MaelstromEventHorizon.Domain.Math;
 
 namespace MaelstromEventHorizon.Domain.Entities;
 

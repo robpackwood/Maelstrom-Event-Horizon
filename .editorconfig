@@ -50,6 +50,18 @@ csharp_prefer_simple_using_statement = true:suggestion
 csharp_preserve_single_line_statements = false
 csharp_preserve_single_line_blocks = true
 
+# The game deliberately uses indexed update loops in hot paths to make the work
+# visible and predictable; ReSharper's equivalent syntax suggestions are disabled.
+resharper_for_can_be_converted_to_foreach_highlighting = none
+resharper_merge_into_pattern_highlighting = none
+resharper_use_collection_expression_highlighting = none
+resharper_use_with_expression_to_copy_struct_highlighting = none
+resharper_inconsistent_naming_highlighting = none
+resharper_member_can_be_private_global_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none
+resharper_collection_never_queried_global_highlighting = none
+resharper_field_can_be_made_readonly_global_highlighting = none
+
 # When a function, method, constructor, or invocation would exceed 120 characters,
 # move parameters to continuation lines, pack each line up to 120 characters, and keep the closing ')'
 # on the final parameter line.

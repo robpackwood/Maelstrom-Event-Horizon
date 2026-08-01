@@ -1,34 +1,48 @@
+﻿using System.Windows;
+using System.Windows.Media;
 using MaelstromEventHorizon.Application;
+using MaelstromEventHorizon.Domain.Effects;
 using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 using MaelstromEventHorizon.Presentation.Drawing;
-using System.Windows;
-using System.Windows.Media;
 
 namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class EffectsHudRenderer
 {
-    private readonly Dictionary<(Color Color, bool Enhanced), (Brush Glow, Brush Body, Pen Outline)> shotVisuals = [];
-    private readonly Dictionary<(Color Color, int Power), Pen> shotOrbitPens = [];
-    private readonly List<string> activePowerupLabels = new(9);
     private static readonly Brush ArenaShade = FrozenBrush(Color.FromArgb(185, 1, 8, 14));
-    private static readonly Pen ArenaRail = FrozenPen(new LinearGradientBrush(Color.FromRgb(21, 54, 64), Color.FromRgb(5, 21, 30), 90), 8);
+
+    private static readonly Pen ArenaRail =
+        FrozenPen(new LinearGradientBrush(Color.FromRgb(21, 54, 64), Color.FromRgb(5, 21, 30), 90), 8);
+
     private static readonly Pen ArenaGlow = FrozenPen(new SolidColorBrush(Color.FromRgb(104, 245, 203)), 1.7);
     private static readonly Pen ArenaAccent = FrozenPen(new SolidColorBrush(Color.FromArgb(100, 255, 218, 89)), .8);
     private static readonly Brush ArenaCorner = FrozenBrush(Color.FromRgb(255, 218, 91));
     private static readonly Pen ArenaCornerOutline = FrozenPen(new SolidColorBrush(Color.FromRgb(255, 250, 194)), .8);
     private static readonly Brush ArenaCornerCore = FrozenBrush(Color.FromRgb(30, 63, 68));
-    private static readonly Point[] ArenaCorners = [new(15, 15), new(GameEngine.Width - 15, 15), new(15, GameEngine.Height - 15), new(GameEngine.Width - 15, GameEngine.Height - 15)];
+
+    private static readonly Point[] ArenaCorners =
+    [
+        new(15, 15), new(GameEngine.Width - 15, 15), new(15, GameEngine.Height - 15),
+        new(GameEngine.Width - 15, GameEngine.Height - 15)
+    ];
+
+    private readonly List<string> activePowerupLabels = new(9);
+    private readonly Dictionary<(Color Color, int Power), Pen> shotOrbitPens = [];
+    private readonly Dictionary<(Color Color, bool Enhanced), (Brush Glow, Brush Body, Pen Outline)> shotVisuals = [];
 
     internal void DrawFloatingTexts(GameView view, DrawingContext dc)
     {
-        foreach (var text in view.Game.FloatingTexts)
+        foreach (FloatingText text in view.Game.FloatingTexts)
         {
             double life = Math.Clamp(1 - text.Age / text.Lifetime, 0, 1);
             double y = text.Position.Y - text.Age * 34;
-            if (!Visible(text.Position.X, y, 140)) continue;
+            if (!Visible(text.Position.X, y, 140))
+            {
+                continue;
+            }
+
             byte alpha = (byte)(255 * Math.Min(1, life * 2.4));
             Color color = view.FromArgb(text.Color, alpha);
             view.DrawCenteredText(dc, text.Text, text.Position.X + 1.5, y + 1.5, 18,
@@ -39,18 +53,20 @@ internal sealed class EffectsHudRenderer
 
     internal void DrawShots(GameView view, DrawingContext dc)
     {
-        foreach (var shot in view.Game.Shots)
+        foreach (Shot shot in view.Game.Shots)
         {
             if (view.Game.RicochetArenaActive)
             {
                 DrawBeachBallShot(view, dc, shot);
                 continue;
             }
+
             if (shot.Sludge)
             {
                 DrawSludgeShot(view, dc, shot);
                 continue;
             }
+
             double radius = shot.BossShot ? Math.Max(6.2, shot.Radius) : shot.Enemy ? 5.2 : Math.Max(4.3, shot.Radius);
             Color color = shot.BossShot ? view.FromArgb(shot.Tint) :
                 shot.Enemy ? Color.FromRgb(83, 119, 255) : shot.PowerLevel switch
@@ -61,47 +77,63 @@ internal sealed class EffectsHudRenderer
                     _ => Color.FromRgb(47, 201, 255)
                 };
             bool enhanced = shot.BossShot || shot is { Enemy: false, PowerLevel: > 0 };
-            var visual = GetShotVisual(view, color, enhanced, shot.PowerLevel);
+            (Brush Glow, Brush Body, Pen Outline) visual = GetShotVisual(view, color, enhanced, shot.PowerLevel);
             dc.DrawEllipse(visual.Glow, null, view.Pt(shot.Position), radius * 2.15, radius * 2.15);
             dc.DrawEllipse(visual.Body, visual.Outline, view.Pt(shot.Position), radius, radius);
             if (shot is { Enemy: false, PowerLevel: > 0 })
             {
                 double orbit = radius * (1.28 + .05 * Math.Sin(view.Game.TotalTime * 18 + shot.Age * 9));
-                dc.DrawArc(GetOrbitPen(color, shot.PowerLevel), view.Pt(shot.Position), orbit, shot.Angle * 180 / Math.PI, 155 + shot.PowerLevel * 28);
+                dc.DrawArc(GetOrbitPen(color, shot.PowerLevel), view.Pt(shot.Position), orbit,
+                    shot.Angle * 180 / Math.PI, 155 + shot.PowerLevel * 28);
             }
         }
     }
 
     private Pen GetOrbitPen(Color color, int power)
     {
-        var key = (color, power);
-        if (shotOrbitPens.TryGetValue(key, out Pen? pen)) return pen;
-        return shotOrbitPens[key] = FrozenPen(new SolidColorBrush(Color.FromArgb((byte)(95 + power * 35), color.R, color.G, color.B)), .7 + power * .28);
+        (Color color, int power) key = (color, power);
+        if (shotOrbitPens.TryGetValue(key, out Pen? pen))
+        {
+            return pen;
+        }
+
+        return shotOrbitPens[key] =
+            FrozenPen(new SolidColorBrush(Color.FromArgb((byte)(95 + power * 35), color.R, color.G, color.B)),
+                .7 + power * .28);
     }
 
     private (Brush Glow, Brush Body, Pen Outline) GetShotVisual(GameView view, Color color, bool enhanced, int power)
     {
-        var key = (color, enhanced);
-        if (shotVisuals.TryGetValue(key, out var cached)) return cached;
-        var glow = new RadialGradientBrush();
-            glow.GradientStops.Add(new GradientStop(Color.FromArgb(105, color.R, color.G, color.B), 0));
-            glow.GradientStops.Add(new GradientStop(Color.FromArgb(35, color.R, color.G, color.B), .48));
-            glow.GradientStops.Add(new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1));
-            var sphere = new RadialGradientBrush
-            {
-                GradientOrigin = new Point(.32, .27),
-                Center = new Point(.4, .36),
-                RadiusX = .7,
-                RadiusY = .7
-            };
-            sphere.GradientStops.Add(new GradientStop(Colors.White, 0));
-            sphere.GradientStops.Add(new GradientStop(enhanced
-                ? view.Lighten(color, .58) : Color.FromRgb(151, 226, 255), .24));
-            sphere.GradientStops.Add(new GradientStop(color, .6));
-            sphere.GradientStops.Add(new GradientStop(enhanced
-                ? view.Darken(color, .72) : Color.FromRgb(9, 31, 103), 1));
-        glow.Freeze(); sphere.Freeze();
-        var outline = new Pen(new SolidColorBrush(enhanced ? view.Lighten(color, .38) : Color.FromArgb(210, 174, 230, 255)), .65 + power * .18); outline.Freeze();
+        (Color color, bool enhanced) key = (color, enhanced);
+        if (shotVisuals.TryGetValue(key, out (Brush Glow, Brush Body, Pen Outline) cached))
+        {
+            return cached;
+        }
+
+        RadialGradientBrush glow = new();
+        glow.GradientStops.Add(new GradientStop(Color.FromArgb(105, color.R, color.G, color.B), 0));
+        glow.GradientStops.Add(new GradientStop(Color.FromArgb(35, color.R, color.G, color.B), .48));
+        glow.GradientStops.Add(new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1));
+        RadialGradientBrush sphere = new()
+        {
+            GradientOrigin = new Point(.32, .27),
+            Center = new Point(.4, .36),
+            RadiusX = .7,
+            RadiusY = .7
+        };
+        sphere.GradientStops.Add(new GradientStop(Colors.White, 0));
+        sphere.GradientStops.Add(new GradientStop(enhanced
+            ? view.Lighten(color, .58)
+            : Color.FromRgb(151, 226, 255), .24));
+        sphere.GradientStops.Add(new GradientStop(color, .6));
+        sphere.GradientStops.Add(new GradientStop(enhanced
+            ? view.Darken(color, .72)
+            : Color.FromRgb(9, 31, 103), 1));
+        glow.Freeze();
+        sphere.Freeze();
+        Pen outline = new(new SolidColorBrush(enhanced ? view.Lighten(color, .38) : Color.FromArgb(210, 174, 230, 255)),
+            .65 + power * .18);
+        outline.Freeze();
         return shotVisuals[key] = (glow, sphere, outline);
     }
 
@@ -116,7 +148,7 @@ internal sealed class EffectsHudRenderer
         {
             double size = radius * (.18 + i * .08);
             V2 position = shot.Position + trail * (radius * (.55 + i * .54)) +
-                new V2(-heading.Y, heading.X) * Math.Sin(shot.Angle + i * 1.9) * radius * .2;
+                          new V2(-heading.Y, heading.X) * Math.Sin(shot.Angle + i * 1.9) * radius * .2;
             dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(35 + i * 17), color.R, color.G, color.B)),
                 null, view.Pt(position), size, size * .8);
         }
@@ -125,9 +157,11 @@ internal sealed class EffectsHudRenderer
         dc.PushTransform(new TranslateTransform(shot.Position.X, shot.Position.Y));
         dc.PushTransform(new RotateTransform(Math.Atan2(heading.Y, heading.X) * 180 / Math.PI));
         if (shot.SludgeVomit)
+        {
             dc.PushTransform(new ScaleTransform(1.32, .82));
+        }
 
-        var body = new RadialGradientBrush
+        RadialGradientBrush body = new()
         {
             GradientOrigin = new Point(.28, .22),
             Center = new Point(.35, .3),
@@ -148,6 +182,7 @@ internal sealed class EffectsHudRenderer
             double lobe = radius * (.34 + .09 * Math.Sin(i * 3.7 + shot.Angle));
             dc.DrawEllipse(body, null, center, lobe, lobe * .9);
         }
+
         dc.DrawEllipse(body, new Pen(view.Brush(Color.FromArgb(205, 168, 235, 91)), .85),
             new Point(), radius, radius * .91);
         dc.DrawEllipse(view.Brush(Color.FromArgb(175, 230, 255, 161)), null,
@@ -155,7 +190,11 @@ internal sealed class EffectsHudRenderer
         dc.DrawEllipse(view.Brush(Color.FromArgb(145, 42, 83, 27)), null,
             new Point(radius * .27, radius * .21), radius * .15, radius * .19);
 
-        if (shot.SludgeVomit) dc.Pop();
+        if (shot.SludgeVomit)
+        {
+            dc.Pop();
+        }
+
         dc.Pop();
         dc.Pop();
     }
@@ -180,7 +219,8 @@ internal sealed class EffectsHudRenderer
                 view.Polygon((0, 0), (Math.Cos(a0) * radius * 1.35, Math.Sin(a0) * radius * 1.35),
                     (Math.Cos(a1) * radius * 1.35, Math.Sin(a1) * radius * 1.35)));
         }
-        var shade = new RadialGradientBrush
+
+        RadialGradientBrush shade = new()
         {
             GradientOrigin = new Point(.32, .25),
             Center = new Point(.42, .38),
@@ -193,7 +233,8 @@ internal sealed class EffectsHudRenderer
         dc.DrawEllipse(shade, null, new Point(), radius, radius);
         dc.Pop();
         dc.DrawEllipse(null, new Pen(view.Brush(Color.FromRgb(232, 251, 255)), 1.1), new Point(), radius, radius);
-        dc.DrawEllipse(Brushes.White, new Pen(view.Brush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22, radius * .22);
+        dc.DrawEllipse(Brushes.White, new Pen(view.Brush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22,
+            radius * .22);
         dc.Pop();
         dc.Pop();
     }
@@ -201,7 +242,7 @@ internal sealed class EffectsHudRenderer
     internal void DrawArenaFrame(DrawingContext dc)
     {
         const double inset = 10;
-        var inner = new Rect(inset, inset, GameEngine.Width - inset * 2, GameEngine.Height - inset * 2);
+        Rect inner = new(inset, inset, GameEngine.Width - inset * 2, GameEngine.Height - inset * 2);
         dc.DrawRectangle(ArenaShade, null, new Rect(0, 0, GameEngine.Width, inset));
         dc.DrawRectangle(ArenaShade, null, new Rect(0, GameEngine.Height - inset, GameEngine.Width, inset));
         dc.DrawRectangle(ArenaShade, null, new Rect(0, 0, inset, GameEngine.Height));
@@ -217,8 +258,20 @@ internal sealed class EffectsHudRenderer
         }
     }
 
-    private static SolidColorBrush FrozenBrush(Color color) { var brush = new SolidColorBrush(color); brush.Freeze(); return brush; }
-    private static Pen FrozenPen(Brush brush, double thickness) { brush.Freeze(); var pen = new Pen(brush, thickness); pen.Freeze(); return pen; }
+    private static SolidColorBrush FrozenBrush(Color color)
+    {
+        SolidColorBrush brush = new(color);
+        brush.Freeze();
+        return brush;
+    }
+
+    private static Pen FrozenPen(Brush brush, double thickness)
+    {
+        brush.Freeze();
+        Pen pen = new(brush, thickness);
+        pen.Freeze();
+        return pen;
+    }
 
     internal void DrawParticles(GameView view, DrawingContext dc)
     {
@@ -226,15 +279,20 @@ internal sealed class EffectsHudRenderer
         int stride = Math.Max(1, (view.Game.Particles.Count + maximum - 1) / maximum);
         for (int index = 0; index < view.Game.Particles.Count; index += stride)
         {
-            var p = view.Game.Particles[index];
-            if (!Visible(p.Position.X, p.Position.Y, 42)) continue;
+            Particle p = view.Game.Particles[index];
+            if (!Visible(p.Position.X, p.Position.Y, 42))
+            {
+                continue;
+            }
+
             double life = Math.Clamp(1 - p.Age / p.Lifetime, 0, 1);
             Color c = view.FromArgb(p.Color, (byte)(255 * life));
             double r = p.StartSize * (.35 + life * .8);
             dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
             if (r > 3 && view.Game.VisualQuality > 0)
             {
-                dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position), r * 2.8, r * 2.8);
+                dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position),
+                    r * 2.8, r * 2.8);
                 if (view.Game.VisualQuality > 1)
                 {
                     V2 trail = p.Velocity.Normalized * Math.Min(18, p.Velocity.Length * .045) * life;
@@ -247,59 +305,82 @@ internal sealed class EffectsHudRenderer
 
     internal void DrawShockwaves(GameView view, DrawingContext dc)
     {
-        foreach (var ring in view.Game.Shockwaves)
+        foreach (Shockwave ring in view.Game.Shockwaves)
         {
             double p = ring.Age / ring.Lifetime;
             double r = ring.MaxRadius * view.EaseOut(p);
             Color color = view.FromArgb(ring.Color, (byte)(220 * (1 - p)));
-            if (!Visible(ring.Position.X, ring.Position.Y, r + 12)) continue;
+            if (!Visible(ring.Position.X, ring.Position.Y, r + 12))
+            {
+                continue;
+            }
+
             dc.DrawEllipse(null, view.Pen(color, Math.Max(.7, 5 * (1 - p))), view.Pt(ring.Position), r, r);
         }
     }
 
-    private static bool Visible(double x, double y, double padding) =>
-        x >= -padding && x <= GameEngine.Width + padding && y >= -padding && y <= GameEngine.Height + padding;
+    private static bool Visible(double x, double y, double padding)
+    {
+        return x >= -padding && x <= GameEngine.Width + padding && y >= -padding && y <= GameEngine.Height + padding;
+    }
 
     internal void DrawHud(GameView view, DrawingContext dc)
     {
-        if (view.Game.Mode is GameMode.Title or GameMode.Controls) return;
-        var dim = new SolidColorBrush(Color.FromRgb(137, 168, 191));
+        if (view.Game.Mode is GameMode.Title or GameMode.Controls)
+        {
+            return;
+        }
+
+        SolidColorBrush dim = view.Brush(Color.FromRgb(137, 168, 191));
         view.DrawText(dc, "SCORE", 30, 29, 12, dim, FontWeights.SemiBold);
         view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
         view.DrawText(dc, "LEVEL", 274, 29, 12, dim, FontWeights.SemiBold);
-        Brush levelBrush = new SolidColorBrush(view.Game.LevelBonusCash > 1_000
+        Brush levelBrush = view.Brush(view.Game.LevelBonusCash > 1_000
             ? Color.FromRgb(255, 221, 113)
             : Color.FromRgb(142, 169, 181));
         view.DrawText(dc, view.Money(view.Game.LevelBonusCash), 332, 31, 20, levelBrush, FontWeights.Bold);
-        AlienBoss? activeBoss = view.Game.Bosses.FirstOrDefault(boss => boss.Alive);
+        AlienBoss? activeBoss = null;
+        for (int i = 0; i < view.Game.Bosses.Count; i++)
+        {
+            if (view.Game.Bosses[i].Alive)
+            {
+                activeBoss = view.Game.Bosses[i];
+                break;
+            }
+        }
+
         string stageLabel = activeBoss is not null
             ? view.Game.BossOnlyMode
                 ? $"BOSS ONLY {(view.Game.Wave - 1) / 5:00}  -  {view.Game.BossName(activeBoss.Kind)}  -  TOP 10 DISABLED"
                 : $"BOSS WAVE {view.Game.Wave:00}  -  {view.Game.BossName(activeBoss.Kind)}"
             : view.Game.BonusOnlyMode
-            ? $"BONUS ONLY {view.Game.Wave / 5:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
-            : view.Game.IsBonusStage
-            ? $"BONUS {view.Game.Wave:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
-            : $"WAVE {view.Game.Wave:00}";
+                ? $"BONUS ONLY {view.Game.Wave / 5:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
+                : view.Game.IsBonusStage
+                    ? $"BONUS {view.Game.Wave:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
+                    : $"WAVE {view.Game.Wave:00}";
         bool expandedTopHud = view.Game.IsBonusStage || activeBoss is not null;
         double stageBaseline = expandedTopHud ? 72 : 29;
         view.DrawCenteredText(dc, stageLabel, GameEngine.Width / 2, stageBaseline, expandedTopHud ? 15 : 18,
-            new SolidColorBrush(view.Game.IsBonusStage ? Color.FromRgb(255, 221, 113) :
-                activeBoss is not null ? view.BossColor(activeBoss.Kind) : Color.FromRgb(191, 224, 241)), FontWeights.Bold);
+            view.Brush(view.Game.IsBonusStage ? Color.FromRgb(255, 221, 113) :
+                activeBoss is not null ? view.BossColor(activeBoss.Kind) : Color.FromRgb(191, 224, 241)),
+            FontWeights.Bold);
         if (view.Game.IsBonusStage)
+        {
             view.DrawCenteredText(dc, $"{view.Game.BonusStageObjective}   /   WEAPONS + SHIELDS OFFLINE" +
-                (view.Game.BonusOnlyMode ? "   /   TOP 10 DISABLED" : ""),
-                GameEngine.Width / 2, 91, 9.5, new SolidColorBrush(Color.FromRgb(255, 177, 108)), FontWeights.Black);
+                                      (view.Game.BonusOnlyMode ? "   /   TOP 10 DISABLED" : ""),
+                GameEngine.Width / 2, 91, 9.5, view.Brush(Color.FromRgb(255, 177, 108)), FontWeights.Black);
+        }
+
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
 
         if (activeBoss is not null)
         {
             const double bossBarWidth = 390;
             double health = Math.Clamp(activeBoss.HitPoints / (double)activeBoss.MaxHitPoints, 0, 1);
-            var barRect = new Rect(GameEngine.Width / 2 - bossBarWidth / 2, 88, bossBarWidth, 12);
+            Rect barRect = new(GameEngine.Width / 2 - bossBarWidth / 2, 88, bossBarWidth, 12);
             dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 4, 9, 14)),
                 new Pen(new SolidColorBrush(Color.FromArgb(185, 202, 239, 245)), 1), barRect, 3, 3);
-            var healthBrush = new LinearGradientBrush(view.Lighten(view.BossColor(activeBoss.Kind), .35),
+            LinearGradientBrush healthBrush = new(view.Lighten(view.BossColor(activeBoss.Kind), .35),
                 view.Darken(view.BossColor(activeBoss.Kind), .42), 0);
             dc.DrawRoundedRectangle(healthBrush, null,
                 new Rect(barRect.X + 2, barRect.Y + 2, (bossBarWidth - 4) * health, 8), 2, 2);
@@ -309,23 +390,27 @@ internal sealed class EffectsHudRenderer
         {
             int seconds = Math.Max(1, (int)Math.Ceiling(view.Game.BossCountdown));
             Brush countdownBrush = seconds == 1 ? Brushes.OrangeRed : Brushes.Gold;
-            view.DrawCenteredText(dc, $"BOSS ENGAGES IN {seconds}", GameEngine.Width / 2, 330, 30, countdownBrush, FontWeights.Bold);
-            view.DrawCenteredText(dc, "SHIP SYSTEMS LOCKED", GameEngine.Width / 2, 368, 14, Brushes.White, FontWeights.Bold);
+            view.DrawCenteredText(dc, $"BOSS ENGAGES IN {seconds}", GameEngine.Width / 2, 330, 30, countdownBrush,
+                FontWeights.Bold);
+            view.DrawCenteredText(dc, "SHIP SYSTEMS LOCKED", GameEngine.Width / 2, 368, 14, Brushes.White,
+                FontWeights.Bold);
         }
 
         view.DrawText(dc, view.Game.IsBonusStage ? "SHIELD OFFLINE" : "SHIELD", 30, 682, 12,
-            view.Game.IsBonusStage ? new SolidColorBrush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
+            view.Game.IsBonusStage ? view.Brush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
         double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
         double shieldBarSpan = view.Game.IsBonusStage ? 132 : 180;
-        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(125, 5, 17, 29)), new Pen(new SolidColorBrush(Color.FromRgb(55, 91, 113)), 1), new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
+        dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)), view.Pen(Color.FromRgb(55, 91, 113), 1),
+            new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
         double shieldWidth = Math.Max(0, (shieldBarSpan - 4) * view.Game.Player.Shield / 100);
-        var shieldBrush = view.Game.IsBonusStage
+        LinearGradientBrush shieldBrush = view.Game.IsBonusStage
             ? new LinearGradientBrush(Color.FromRgb(82, 88, 94), Color.FromRgb(47, 53, 61), 0)
             : new LinearGradientBrush(Color.FromRgb(54, 215, 255), Color.FromRgb(90, 124, 255), 0);
         dc.DrawRoundedRectangle(shieldBrush, null, new Rect(shieldBarX + 2, 685, shieldWidth, 8), 2, 2);
         if (view.Game.Multiplier > 1)
         {
-            view.DrawText(dc, $"{view.Game.Multiplier}X", 1194, 674, 26, new SolidColorBrush(Color.FromRgb(220, 155, 255)), FontWeights.Bold);
+            view.DrawText(dc, $"{view.Game.Multiplier}X", 1194, 674, 26, view.Brush(Color.FromRgb(220, 155, 255)),
+                FontWeights.Bold);
         }
 
         if (view.Game.IsDemoMode)
@@ -338,18 +423,53 @@ internal sealed class EffectsHudRenderer
                 new SolidColorBrush(Color.FromArgb(alpha, 187, 239, 252)), FontWeights.Bold);
         }
 
-        var active = activePowerupLabels;
+        List<string> active = activePowerupLabels;
         active.Clear();
-        if (view.Game.RapidFireActive) active.Add("RAPID FIRE");
-        if (view.Game.ReflectionShieldActive) active.Add("REFLECTION SHIELD");
-        if (view.Game.AirBrakesActive) active.Add("AIR BRAKES");
-        if (view.Game.LuckActive) active.Add("LUCK");
-        if (view.Game.TripleFireActive) active.Add("TRIPLE FIRE");
-        if (view.Game.RiftVolleyActive) active.Add("RIFT VOLLEY");
-        if (view.Game.LongRangeActive) active.Add("LONG RANGE");
-        if (view.Game.RicochetArenaActive) active.Add("RICOCHET ARENA");
-        if (view.Game.Player.Giant) active.Add("GIANT SHIP");
-        if (view.Game.FreezeTime > 0) active.Add("TIME FREEZE");
+        if (view.Game.ReflectionShieldActive)
+        {
+            active.Add("REFLECTION SHIELD");
+        }
+
+        if (view.Game.AirBrakesActive)
+        {
+            active.Add("AIR BRAKES");
+        }
+
+        if (view.Game.LuckActive)
+        {
+            active.Add("LUCK");
+        }
+
+        if (view.Game.TripleFireActive)
+        {
+            active.Add("TRIPLE FIRE");
+        }
+
+        if (view.Game.RiftVolleyActive)
+        {
+            active.Add("RIFT VOLLEY");
+        }
+
+        if (view.Game.LongRangeActive)
+        {
+            active.Add("LONG RANGE");
+        }
+
+        if (view.Game.RicochetArenaActive)
+        {
+            active.Add("RICOCHET ARENA");
+        }
+
+        if (view.Game.Player.Giant)
+        {
+            active.Add("GIANT SHIP");
+        }
+
+        if (view.Game.FreezeTime > 0)
+        {
+            active.Add("TIME FREEZE");
+        }
+
         if (active.Count > 0)
         {
             string activeLabel = string.Join("   |   ", active);
@@ -360,21 +480,25 @@ internal sealed class EffectsHudRenderer
                 activeSize = Math.Max(7.5, activeSize * 730 / measured.Width);
                 measured = view.Format(activeLabel, activeSize, Brushes.White, FontWeights.SemiBold);
             }
+
             double panelWidth = Math.Min(760, measured.Width + 30);
             double panelPulse = .72 + .28 * Math.Sin(view.Game.TotalTime * 4.2);
             Color panelGlow = view.Game.FreezeTime > 0 ? Color.FromRgb(126, 240, 255) : Color.FromRgb(86, 193, 215);
             dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(150, 1, 10, 18)),
-                new Pen(new SolidColorBrush(Color.FromArgb((byte)(90 + panelPulse * 80), panelGlow.R, panelGlow.G, panelGlow.B)), 1 + panelPulse * .5),
+                new Pen(
+                    new SolidColorBrush(Color.FromArgb((byte)(90 + panelPulse * 80), panelGlow.R, panelGlow.G,
+                        panelGlow.B)), 1 + panelPulse * .5),
                 new Rect(GameEngine.Width / 2 - panelWidth / 2, 674, panelWidth, 29), 3, 3);
             view.DrawCenteredText(dc, activeLabel, GameEngine.Width / 2, 694, activeSize,
                 new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);
         }
 
-        if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing })
+        if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing or GameMode.WaveSummary })
         {
             double alpha = Math.Min(1, view.Game.BannerTime * 2);
-            var b = new SolidColorBrush(Color.FromArgb((byte)(230 * alpha), 230, 246, 255));
-            view.DrawCenteredText(dc, view.Game.Banner, GameEngine.Width / 2, expandedTopHud ? 133 : 105, 24, b, FontWeights.Bold);
+            SolidColorBrush b = new(Color.FromArgb((byte)(230 * alpha), 230, 246, 255));
+            view.DrawCenteredText(dc, view.Game.Banner, GameEngine.Width / 2, expandedTopHud ? 133 : 105, 24, b,
+                FontWeights.Bold);
         }
     }
 }

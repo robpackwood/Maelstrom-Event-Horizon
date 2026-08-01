@@ -1,5 +1,5 @@
+﻿using System.Windows.Input;
 using MaelstromEventHorizon.Domain.Enums;
-using System.Windows.Input;
 
 namespace MaelstromEventHorizon.Application.Services.Contracts;
 

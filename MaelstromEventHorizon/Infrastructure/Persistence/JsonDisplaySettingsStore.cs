@@ -1,7 +1,7 @@
+﻿using System.IO;
+using System.Text.Json;
 using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Application.Services.Contracts;
-using System.IO;
-using System.Text.Json;
 
 namespace MaelstromEventHorizon.Infrastructure.Persistence;
 
@@ -12,9 +12,13 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
         try
         {
             string path = paths.ReadPath("display.json");
-            if (!File.Exists(path)) return new DisplayPreferences();
+            if (!File.Exists(path))
+            {
+                return new DisplayPreferences();
+            }
+
             DisplayPreferences preferences = JsonSerializer.Deserialize<DisplayPreferences>(File.ReadAllText(path))
-                ?? new DisplayPreferences();
+                                             ?? new DisplayPreferences();
             return new DisplayPreferences
             {
                 FullScreen = preferences.FullScreen,

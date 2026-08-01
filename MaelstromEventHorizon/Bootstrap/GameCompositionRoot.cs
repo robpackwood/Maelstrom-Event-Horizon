@@ -1,4 +1,4 @@
-using MaelstromEventHorizon.Application;
+﻿using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Application.Input;
 using MaelstromEventHorizon.Application.Services.Combat;
 using MaelstromEventHorizon.Application.Services.Composition;
@@ -21,7 +21,7 @@ internal static class GameCompositionRoot
 {
     public static ServiceProvider BuildServices()
     {
-        var services = new ServiceCollection();
+        ServiceCollection services = new();
         services.AddSingleton<IAppDataPathProvider, AppDataPathProvider>();
         services.AddSingleton<IAssetProvider, BundledAssetProvider>();
         services.AddSingleton<IDisplaySettingsStore, JsonDisplaySettingsStore>();
@@ -39,7 +39,7 @@ internal static class GameCompositionRoot
         services.AddSingleton<WaveSpawnService>();
         services.AddSingleton<ScoreTransitionService>();
         services.AddSingleton<EffectsPhysicsService>();
-        services.AddSingleton<GameEngineServices>();
+        services.AddSingleton<IGameEngineServices, GameEngineServices>();
         services.AddSingleton<SceneRenderer>();
         services.AddSingleton<PlayerAsteroidRenderer>();
         services.AddSingleton<CombatActorRenderer>();
@@ -48,7 +48,7 @@ internal static class GameCompositionRoot
         services.AddSingleton<OverlayRenderer>();
         services.AddSingleton<TitleScreenRenderer>();
         services.AddSingleton<DrawingPrimitiveService>();
-        services.AddSingleton<GameRenderServices>();
+        services.AddSingleton<IGameRenderServices, GameRenderServices>();
         services.AddSingleton(provider => provider.GetRequiredService<IDisplaySettingsStore>().Load());
         services.AddSingleton<ControlBindings>();
         services.AddSingleton<GameEngine>();

@@ -25,14 +25,6 @@ $sources = @{
         Source = 'https://opengameart.org/content/singularity-0'
         Note = 'Exact SHA-256 match to source MP3.'
     }
-    'MaelstromEventHorizon\Assets\ship-destruction.wav' = @{
-        Status = 'VERIFIED_EXACT'
-        Work = 'Muffled Distant Explosion'
-        Author = 'NenadSimic'
-        License = 'CC0-1.0'
-        Source = 'https://opengameart.org/content/muffled-distant-explosion'
-        Note = 'Exact SHA-256 match to source WAV.'
-    }
     'MaelstromEventHorizon\Assets\Music\wave-01-our-expanse.mp3' = @{
         Status = 'VERIFIED_EXACT'
         Work = 'Our Expanse (loop version)'

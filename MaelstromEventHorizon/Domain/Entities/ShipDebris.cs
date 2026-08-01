@@ -1,4 +1,4 @@
-using MaelstromEventHorizon.Domain.Math;
+﻿using MaelstromEventHorizon.Domain.Math;
 
 namespace MaelstromEventHorizon.Domain.Entities;
 
@@ -6,7 +6,7 @@ internal sealed class ShipDebris(V2 position, V2 velocity, int kind, double angl
     : Body(position, velocity, 8)
 {
     public int Kind = kind;
-    public double Lifetime = 1.9;
+    public readonly double Lifetime = 1.9;
 
     public ShipDebris Initialize()
     {
@@ -15,9 +15,15 @@ internal sealed class ShipDebris(V2 position, V2 velocity, int kind, double angl
         return this;
     }
 
-    internal ShipDebris Reset(V2 position, V2 velocity, int kind, double angle, double spin)
+    internal ShipDebris Reset(V2 position, V2 velocity, int kind, double newAngle, double newSpin)
     {
-        Position = position; Velocity = velocity; Kind = kind; Angle = angle; Spin = spin; Age = 0; Alive = true;
+        Position = position;
+        Velocity = velocity;
+        Kind = kind;
+        Angle = newAngle;
+        Spin = newSpin;
+        Age = 0;
+        Alive = true;
         return this;
     }
 }

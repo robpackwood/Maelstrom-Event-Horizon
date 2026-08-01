@@ -1,10 +1,20 @@
-using MaelstromEventHorizon.Domain.Enums;
+﻿using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 
 namespace MaelstromEventHorizon.Domain.Entities;
 
 internal sealed class AlienBoss : Body
 {
+    public readonly int Encounter;
+
+    public readonly AlienBossKind Kind;
+    public readonly int MaxHitPoints;
+    public double AttackTimer;
+    public int HitPoints;
+    public double HurtFlash;
+    public double Phase;
+    public double SpecialTimer;
+
     public AlienBoss(V2 position, AlienBossKind kind, int encounter)
         : base(position, V2.Zero, kind switch
         {
@@ -31,13 +41,4 @@ internal sealed class AlienBoss : Body
         AttackTimer = 3.4;
         SpecialTimer = 5;
     }
-
-    public readonly AlienBossKind Kind;
-    public readonly int Encounter;
-    public int HitPoints;
-    public readonly int MaxHitPoints;
-    public double AttackTimer;
-    public double SpecialTimer;
-    public double HurtFlash;
-    public double Phase;
 }

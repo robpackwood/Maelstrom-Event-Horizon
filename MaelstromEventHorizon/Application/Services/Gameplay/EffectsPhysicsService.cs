@@ -1,5 +1,4 @@
-using MaelstromEventHorizon.Domain.Effects;
-using MaelstromEventHorizon.Domain.Entities;
+﻿using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 
@@ -9,9 +8,9 @@ internal sealed class EffectsPhysicsService
 {
     private const int MaxParticles = 900;
     private const int MaxShockwaves = 24;
-    private const int MaxDebris = 32;
     private const int MaxShots = 240;
     private const int MaxFloatingTexts = 24;
+
     internal void SpawnShipWreck(GameEngine game)
     {
         V2[] offsets = [new(15, 0), new(-4, -10), new(-4, 10), new(-12, 0), new(3, 0)];
@@ -56,7 +55,7 @@ internal sealed class EffectsPhysicsService
 
         for (int i = 0; i < 2; i++)
         {
-            AddParticle(game, 
+            AddParticle(game,
                 game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
                 game.Player.Velocity * .2 + back * game.Random.Next(120, 260) + RandomDirection(game) * 25,
                 .28 + game.Random.NextDouble() * .25, i == 0 ? 0xff5be8ff : 0xffff7b45, game.Random.Next(2, 6));
@@ -101,13 +100,21 @@ internal sealed class EffectsPhysicsService
 
     private static void AddParticle(GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
     {
-        if (game.Particles.Count >= MaxParticles) game.Particles[0].Alive = false;
+        if (game.Particles.Count >= MaxParticles)
+        {
+            game.Particles[0].Alive = false;
+        }
+
         game.SpawnParticle(position, velocity, lifetime, color, size);
     }
 
     private static void AddShockwave(GameEngine game, V2 position, double lifetime, uint color, double maxRadius)
     {
-        if (game.Shockwaves.Count >= MaxShockwaves) game.Shockwaves[0].Alive = false;
+        if (game.Shockwaves.Count >= MaxShockwaves)
+        {
+            game.Shockwaves[0].Alive = false;
+        }
+
         game.SpawnShockwave(position, lifetime, color, maxRadius);
     }
 
@@ -130,7 +137,10 @@ internal sealed class EffectsPhysicsService
     private static void TrimOldest<T>(List<T> items, int maximum)
     {
         int excess = items.Count - maximum;
-        if (excess > 0) items.RemoveRange(0, excess);
+        if (excess > 0)
+        {
+            items.RemoveRange(0, excess);
+        }
     }
 
     internal void ClearWorld(GameEngine game)
@@ -285,14 +295,20 @@ internal sealed class EffectsPhysicsService
             game.RicochetBounceSoundCooldown = .075;
             game.Audio.Play(SoundCue.RicochetBounce, body is Shot ? .36 : .6);
         }
+
         return new V2(Math.Clamp(x, minX, maxX), Math.Clamp(y, minY, maxY));
     }
 
-    internal V2 ArenaDelta(GameEngine game, V2 from, V2 to) =>
-        game.RicochetArenaActive ? to - from : WrappedDelta(from, to);
+    internal V2 ArenaDelta(GameEngine game, V2 from, V2 to)
+    {
+        return game.RicochetArenaActive ? to - from : WrappedDelta(from, to);
+    }
 
-    internal V2 Wrap(V2 p) => new((p.X % GameEngine.Width + GameEngine.Width) % GameEngine.Width,
-        (p.Y % GameEngine.Height + GameEngine.Height) % GameEngine.Height);
+    internal V2 Wrap(V2 p)
+    {
+        return new V2((p.X % GameEngine.Width + GameEngine.Width) % GameEngine.Width,
+            (p.Y % GameEngine.Height + GameEngine.Height) % GameEngine.Height);
+    }
 
     private V2 WrappedDelta(V2 from, V2 to)
     {
@@ -340,41 +356,53 @@ internal sealed class EffectsPhysicsService
         game.BannerTime = duration;
     }
 
-    internal string BossName(AlienBossKind kind) => kind switch
+    internal void Announce(GameEngine game, string text, double duration)
     {
-        AlienBossKind.SludgeMaw => "THE SLUDGE MAW",
-        AlienBossKind.EyeTyrant => "THE EYE TYRANT",
-        AlienBossKind.BoneBroodmother => "THE BONE BROODMOTHER",
-        AlienBossKind.VoidLeech => "THE VOID LEECH",
-        AlienBossKind.DreadHarvester => "THE DREAD HARVESTER",
-        AlienBossKind.SolarWarden => "THE SOLAR WARDEN",
-        _ => "ALIEN ABOMINATION"
-    };
+        ShowBanner(game, text, duration);
+    }
 
-    internal uint BossTint(AlienBossKind kind) => kind switch
+    internal string BossName(AlienBossKind kind)
     {
-        AlienBossKind.SludgeMaw => 0xff8fe84f,
-        AlienBossKind.EyeTyrant => 0xffd976ff,
-        AlienBossKind.BoneBroodmother => 0xffff8c4d,
-        AlienBossKind.DreadHarvester => 0xffd5d94a,
-        AlienBossKind.SolarWarden => 0xffffcf54,
-        _ => 0xff56f1d2
-    };
+        return kind switch
+        {
+            AlienBossKind.SludgeMaw => "THE SLUDGE MAW",
+            AlienBossKind.EyeTyrant => "THE EYE TYRANT",
+            AlienBossKind.BoneBroodmother => "THE BONE BROODMOTHER",
+            AlienBossKind.VoidLeech => "THE VOID LEECH",
+            AlienBossKind.DreadHarvester => "THE DREAD HARVESTER",
+            AlienBossKind.SolarWarden => "THE SOLAR WARDEN",
+            _ => "ALIEN ABOMINATION"
+        };
+    }
 
-    internal string PowerName(PowerupKind kind) => kind switch
+    internal uint BossTint(AlienBossKind kind)
     {
-        PowerupKind.RapidFire => "RAPID FIRE",
-        PowerupKind.AirBrakes => "AIR BRAKES",
-        PowerupKind.Luck => "LUCK OF THE IRISH",
-        PowerupKind.TripleFire => "TRIPLE FIRE",
-        PowerupKind.RiftVolley => "RIFT VOLLEY",
-        PowerupKind.LongRange => "LONG RANGE",
-        PowerupKind.Shields => "SHIELD ENERGY",
-        PowerupKind.ReflectionShield => "REFLECTION SHIELD",
-        PowerupKind.Freeze => "TIME FREEZE",
-        PowerupKind.SmartBomb => "SMART BOMB",
-        PowerupKind.RicochetArena => "RICOCHET ARENA",
-        PowerupKind.GiantShip => "GIANT SHIP",
-        _ => kind.ToString().ToUpperInvariant()
-    };
+        return kind switch
+        {
+            AlienBossKind.SludgeMaw => 0xff8fe84f,
+            AlienBossKind.EyeTyrant => 0xffd976ff,
+            AlienBossKind.BoneBroodmother => 0xffff8c4d,
+            AlienBossKind.DreadHarvester => 0xffd5d94a,
+            AlienBossKind.SolarWarden => 0xffffcf54,
+            _ => 0xff56f1d2
+        };
+    }
+
+    internal string PowerName(PowerupKind kind)
+    {
+        return kind switch
+        {
+            PowerupKind.AirBrakes => "AIR BRAKES",
+            PowerupKind.Luck => "LUCK OF THE IRISH",
+            PowerupKind.TripleFire => "TRIPLE FIRE",
+            PowerupKind.RiftVolley => "RIFT VOLLEY",
+            PowerupKind.LongRange => "LONG RANGE",
+            PowerupKind.Shields => "SHIELD ENERGY",
+            PowerupKind.ReflectionShield => "REFLECTION SHIELD",
+            PowerupKind.Freeze => "TIME FREEZE",
+            PowerupKind.RicochetArena => "RICOCHET ARENA",
+            PowerupKind.GiantShip => "GIANT SHIP",
+            _ => kind.ToString().ToUpperInvariant()
+        };
+    }
 }

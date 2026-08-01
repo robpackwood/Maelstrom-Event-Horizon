@@ -1,4 +1,4 @@
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using MaelstromEventHorizon.Domain.Effects;
 using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
@@ -10,7 +10,14 @@ internal sealed class PlayerSimulationService
 {
     private static bool HasCanister(GameEngine game)
     {
-        for (int i = 0; i < game.Pickups.Count; i++) if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister }) return true;
+        for (int i = 0; i < game.Pickups.Count; i++)
+        {
+            if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister })
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
@@ -25,7 +32,7 @@ internal sealed class PlayerSimulationService
         game.ShieldHumTimer -= dt;
         if (!wasShielding || game.ShieldHumTimer <= 0)
         {
-            game.Audio.Play(SoundCue.Shield, 1);
+            game.Audio.Play(SoundCue.Shield);
             // Reinforce the activation cue so it remains clear over the active music and combat mix.
             game.Audio.Play(SoundCue.Shield, .92);
             game.ShieldHumTimer = 2.25;
@@ -34,50 +41,106 @@ internal sealed class PlayerSimulationService
 
     private static bool HasVortex(GameEngine game)
     {
-        for (int i = 0; i < game.Vortices.Count; i++) if (game.Vortices[i].Alive) return true;
+        for (int i = 0; i < game.Vortices.Count; i++)
+        {
+            if (game.Vortices[i].Alive)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
+
     private static Body? FindDemoTarget(GameEngine game)
     {
         if (game.DemoStage == 0)
-            for (int i = 0; i < game.Pickups.Count; i++) if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister } pickup) return pickup;
-        if (game.DemoStage == 1)
-            for (int i = 0; i < game.Fighters.Count; i++) if (game.Fighters[i].Alive) return game.Fighters[i];
-        if (game.DemoStage == 2)
-            for (int i = 0; i < game.Vortices.Count; i++) if (game.Vortices[i].Alive) return game.Vortices[i];
-        Asteroid? nearest = null; double distance = double.MaxValue;
-        for (int i = 0; i < game.Asteroids.Count; i++) if (game.Asteroids[i].Alive)
         {
-            double candidate = game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared;
-            if (candidate < distance) { distance = candidate; nearest = game.Asteroids[i]; }
+            for (int i = 0; i < game.Pickups.Count; i++)
+            {
+                if (game.Pickups[i] is { Alive: true, Kind: PickupKind.Canister } pickup)
+                {
+                    return pickup;
+                }
+            }
         }
+
+        if (game.DemoStage == 1)
+        {
+            for (int i = 0; i < game.Fighters.Count; i++)
+            {
+                if (game.Fighters[i].Alive)
+                {
+                    return game.Fighters[i];
+                }
+            }
+        }
+
+        if (game.DemoStage == 2)
+        {
+            for (int i = 0; i < game.Vortices.Count; i++)
+            {
+                if (game.Vortices[i].Alive)
+                {
+                    return game.Vortices[i];
+                }
+            }
+        }
+
+        Asteroid? nearest = null;
+        double distance = double.MaxValue;
+        for (int i = 0; i < game.Asteroids.Count; i++)
+        {
+            if (game.Asteroids[i].Alive)
+            {
+                double candidate = game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared;
+                if (candidate < distance)
+                {
+                    distance = candidate;
+                    nearest = game.Asteroids[i];
+                }
+            }
+        }
+
         return nearest;
     }
 
     private static bool HasNearbyThreat(GameEngine game)
     {
-        for (int i = 0; i < game.Shots.Count; i++) if (game.Shots[i] is { Alive: true, Enemy: true } shot && game.ArenaDelta(game.Player.Position, shot.Position).LengthSquared < 21_025) return true;
-        for (int i = 0; i < game.Asteroids.Count; i++) if (game.Asteroids[i].Alive && game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared < 8_464) return true;
+        for (int i = 0; i < game.Shots.Count; i++)
+        {
+            if (game.Shots[i] is { Alive: true, Enemy: true } shot &&
+                game.ArenaDelta(game.Player.Position, shot.Position).LengthSquared < 21_025)
+            {
+                return true;
+            }
+        }
+
+        for (int i = 0; i < game.Asteroids.Count; i++)
+        {
+            if (game.Asteroids[i].Alive &&
+                game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared < 8_464)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
+
     internal void TickTimers(GameEngine game, double dt)
     {
         game.FireCooldown -= dt;
-
-        if (game.RapidFireReload > 0)
-        {
-            game.RapidFireReload -= dt;
-            if (game.RapidFireReload <= 0)
-            {
-                game.RapidFireRoundsFired = 0;
-            }
-        }
 
         game.BannerTime -= dt;
         bool bossCountdownWasActive = game.BossCountdown > 0;
         game.BossCountdown = Math.Max(0, game.BossCountdown - dt);
         game.BossInvulnerability = Math.Max(0, game.BossInvulnerability - dt);
-        if (bossCountdownWasActive && game.BossCountdown <= 0) game.BossInvulnerability = 2;
+        if (bossCountdownWasActive && game.BossCountdown <= 0)
+        {
+            game.BossInvulnerability = 2;
+        }
+
         game.LastPowerupTime -= dt;
         game.FreezeTime -= dt;
         game.Player.Invulnerable -= dt;
@@ -174,15 +237,8 @@ internal sealed class PlayerSimulationService
         {
             game.Player.Shield = Math.Max(0, game.Player.Shield - 22 * dt);
         }
+
         UpdateShieldHum(game, wasShielding, dt);
-
-        bool firing = Keyboard.IsKeyDown(game.Bindings[GameAction.Fire]);
-        bool rapidWeaponReady = game.FireCooldown <= 0;
-
-        if (game is { IsBonusStage: false, RapidFireActive: true } && firing && rapidWeaponReady)
-        {
-            FirePlayer(game);
-        }
 
         game.ApplyPlayerGravity(dt);
         double maxSpeed = GameEngine.PlayerMaxSpeed;
@@ -261,6 +317,7 @@ internal sealed class PlayerSimulationService
         {
             game.Player.Shield = Math.Max(0, game.Player.Shield - 22 * dt);
         }
+
         UpdateShieldHum(game, wasShielding, dt);
 
         game.DemoFireCooldown -= dt;
@@ -273,7 +330,7 @@ internal sealed class PlayerSimulationService
             weaponReady)
         {
             FirePlayer(game);
-            game.DemoFireCooldown = game.RapidFireActive ? .09 : .19;
+            game.DemoFireCooldown = .19;
         }
 
         game.ApplyPlayerGravity(dt);
@@ -342,60 +399,32 @@ internal sealed class PlayerSimulationService
 
     internal void FirePlayer(GameEngine game)
     {
-        bool firingRapidBurst = game.RapidFireActive && game.RapidFireReload <= 0;
-        int availableRounds = firingRapidBurst
-            ? Math.Min(GameEngine.RapidFireBurstSize - game.RapidFireRoundsFired,
-                GameEngine.RapidFireBurstSize - game.Shots.Count(shot => shot is { Alive: true, Enemy: false }))
-            : int.MaxValue;
-
-        if (availableRounds <= 0)
-        {
-            return;
-        }
-
         V2 facing = V2.FromAngle(game.Player.Angle);
         double range = game.LongRangeActive ? 1.45 : 1;
-        int roundsFired = 0;
 
-        void Add(double offset)
+        void Add(double offset, bool createRiftShots = true)
         {
-            if (roundsFired >= availableRounds)
-            {
-                return;
-            }
-
             V2 direction = V2.FromAngle(game.Player.Angle + offset);
 
             Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
-            shot.Radius = game.Player.Giant ? 7.42 : 4.945; shot.Damage = 1; shot.PowerLevel = 0;
-            shot.RiftDelay = game.RiftVolleyActive ? .18 : -1;
-
-            roundsFired++;
+            shot.Radius = game.Player.Giant ? 7.42 : 4.945;
+            shot.Damage = 1;
+            shot.PowerLevel = 0;
+            shot.RiftDelay = game.RiftVolleyActive && createRiftShots ? .18 : -1;
         }
 
         Add(0);
 
         if (game.TripleFireActive)
         {
-            Add(-.17);
-            Add(.17);
+            // Triple Fire supplements a Rift Volley with two plain diagonal shots,
+            // rather than producing a complete rift pair for every spread shot.
+            Add(-.17, !game.RiftVolleyActive);
+            Add(.17, !game.RiftVolleyActive);
         }
 
-        if (firingRapidBurst)
-        {
-            game.RapidFireRoundsFired += roundsFired;
-            game.FireCooldown = GameEngine.RapidFireShotInterval;
-
-            if (game.RapidFireRoundsFired >= GameEngine.RapidFireBurstSize)
-            {
-                game.RapidFireReload = GameEngine.RapidFireReloadDuration;
-            }
-        }
-        else
-        {
-            game.FireCooldown = game.RapidFireActive ? GameEngine.RapidFireFallbackShotInterval : 0;
-        }
+        game.FireCooldown = 0;
 
         game.Player.Velocity -= facing * .8;
         game.Audio.Play(SoundCue.Fire, .58);
@@ -405,7 +434,7 @@ internal sealed class PlayerSimulationService
     {
         if (game.FreezeTime > 0)
         {
-            UpdateShots(game, dt, playerShotsOnly: true);
+            UpdateShots(game, dt, true);
             UpdateVisualEffects(game, dt);
             return;
         }
@@ -561,7 +590,7 @@ internal sealed class PlayerSimulationService
             }
         }
 
-        UpdateShots(game, dt, playerShotsOnly: false);
+        UpdateShots(game, dt, false);
 
         UpdateVisualEffects(game, dt);
 
@@ -575,7 +604,10 @@ internal sealed class PlayerSimulationService
 
         foreach (Shot shot in game.Shots)
         {
-            if (playerShotsOnly && shot.Enemy) continue;
+            if (playerShotsOnly && shot.Enemy)
+            {
+                continue;
+            }
 
             shot.Age += dt;
             shot.Angle += dt * (shot.Enemy ? -5.4 : 6.8);
@@ -631,10 +663,16 @@ internal sealed class PlayerSimulationService
 
         if (splittingSludge is not null)
         {
-            foreach (Shot glob in splittingSludge) game.SplitSludgeGlob(glob);
+            foreach (Shot glob in splittingSludge)
+            {
+                game.SplitSludgeGlob(glob);
+            }
         }
 
-        if (riftShots is not null) game.Shots.AddRange(riftShots);
+        if (riftShots is not null)
+        {
+            game.Shots.AddRange(riftShots);
+        }
     }
 
     private static void UpdateVisualEffects(GameEngine game, double dt)
@@ -644,15 +682,24 @@ internal sealed class PlayerSimulationService
             particle.Age += dt;
             particle.Position = game.MoveBody(particle, particle.Position + particle.Velocity * dt, false);
             particle.Velocity *= Math.Pow(.96, dt * 60);
-            if (particle.Age >= particle.Lifetime) particle.Alive = false;
+            if (particle.Age >= particle.Lifetime)
+            {
+                particle.Alive = false;
+            }
         }
 
         foreach (Shockwave ring in game.Shockwaves)
         {
             ring.Age += dt;
-            if (ring.Age >= ring.Lifetime) ring.Alive = false;
+            if (ring.Age >= ring.Lifetime)
+            {
+                ring.Alive = false;
+            }
         }
 
-        foreach (FloatingText text in game.FloatingTexts) text.Age += dt;
+        foreach (FloatingText text in game.FloatingTexts)
+        {
+            text.Age += dt;
+        }
     }
 }

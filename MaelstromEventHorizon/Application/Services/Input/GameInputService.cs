@@ -1,4 +1,4 @@
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using MaelstromEventHorizon.Application.Input;
 using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
@@ -56,12 +56,6 @@ internal sealed class GameInputService
 
     internal bool HandleCommandKey(GameEngine game, Key key, bool isRepeat)
     {
-        if (key == Key.F8 && !isRepeat)
-        {
-            game.CycleVisualQuality();
-            return true;
-        }
-
         if (game.IsDemoMode)
         {
             ReturnToTitle(game);
@@ -184,14 +178,10 @@ internal sealed class GameInputService
             }
             else if (game.TitleMenuSelection is 2 or 3 && key is Key.Left or Key.Right)
             {
-                AdjustTitleVolume(game, game.TitleMenuSelection == 2,
+                AdjustTitleVolume(game, game.TitleMenuSelection,
                     key == Key.Right ? GameEngine.VolumeStep : -GameEngine.VolumeStep);
             }
             else if (game.TitleMenuSelection == 4 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
-            {
-                game.CycleVisualQuality();
-            }
-            else if (game.TitleMenuSelection == 5 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
             {
                 ToggleFullScreen(game);
             }
@@ -207,13 +197,9 @@ internal sealed class GameInputService
                 }
                 else if (game.TitleMenuSelection == 4)
                 {
-                    game.CycleVisualQuality();
-                }
-                else if (game.TitleMenuSelection == 5)
-                {
                     ToggleFullScreen(game);
                 }
-                else if (game.TitleMenuSelection == 6)
+                else if (game.TitleMenuSelection == 5)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
@@ -302,13 +288,13 @@ internal sealed class GameInputService
         game.RaiseFullScreenChanged(game.FullScreenEnabled);
     }
 
-    private void AdjustTitleVolume(GameEngine game, bool music, double amount)
+    private void AdjustTitleVolume(GameEngine game, int selection, double amount)
     {
-        if (music)
+        if (selection == 2)
         {
             game.MusicVolume = Math.Round(Math.Clamp(game.MusicVolume + amount, 0, 1), 2);
         }
-        else
+        else if (selection == 3)
         {
             game.EffectsVolume = Math.Round(Math.Clamp(game.EffectsVolume + amount, 0, 1), 2);
         }
@@ -316,7 +302,7 @@ internal sealed class GameInputService
         game.Audio.SetVolumes(game.MusicVolume, game.EffectsVolume);
         SavePreferences(game);
 
-        if (!music)
+        if (selection == 3)
         {
             game.Audio.Play(SoundCue.Pickup, .55);
         }
@@ -449,11 +435,11 @@ internal sealed class GameInputService
             HighScoreEntry playerEntry = new(name, game.Score, game.Wave, DateTime.Now);
             game.HighScores.Add(playerEntry);
 
-            List<HighScoreEntry> ordered = game.HighScores
+            List<HighScoreEntry> ordered = [.. game.HighScores
                 .OrderByDescending(entry => entry.Score)
                 .ThenBy(entry => entry.AchievedAt)
                 .Take(10)
-                .ToList();
+                ];
 
             game.HighScores.Clear();
             game.HighScores.AddRange(ordered);

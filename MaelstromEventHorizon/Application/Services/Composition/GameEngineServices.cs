@@ -1,10 +1,23 @@
-using MaelstromEventHorizon.Application.Services.Combat;
+﻿using MaelstromEventHorizon.Application.Services.Combat;
 using MaelstromEventHorizon.Application.Services.Gameplay;
 using MaelstromEventHorizon.Application.Services.Input;
 using MaelstromEventHorizon.Application.Services.Progression;
 using MaelstromEventHorizon.Application.Services.Waves;
 
 namespace MaelstromEventHorizon.Application.Services.Composition;
+
+internal interface IGameEngineServices
+{
+    GameInputService GameInputService { get; }
+    PlayerSimulationService PlayerSimulationService { get; }
+    BossCombatService BossCombatService { get; }
+    CollisionService CollisionService { get; }
+    PowerupService PowerupService { get; }
+    WaveEventService WaveEventService { get; }
+    WaveSpawnService WaveSpawnService { get; }
+    ScoreTransitionService ScoreTransitionService { get; }
+    EffectsPhysicsService EffectsPhysicsService { get; }
+}
 
 internal sealed class GameEngineServices(
     GameInputService gameInputService,
@@ -15,7 +28,7 @@ internal sealed class GameEngineServices(
     WaveEventService waveEventService,
     WaveSpawnService waveSpawnService,
     ScoreTransitionService scoreTransitionService,
-    EffectsPhysicsService effectsPhysicsService)
+    EffectsPhysicsService effectsPhysicsService) : IGameEngineServices
 {
     public GameInputService GameInputService { get; } = gameInputService;
     public PlayerSimulationService PlayerSimulationService { get; } = playerSimulationService;

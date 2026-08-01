@@ -1,22 +1,22 @@
-using MaelstromEventHorizon.Application;
-using MaelstromEventHorizon.Application.Services.Contracts;
-using Microsoft.Win32;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using MaelstromEventHorizon.Application;
+using MaelstromEventHorizon.Application.Services.Contracts;
+using Microsoft.Win32;
 
 namespace MaelstromEventHorizon.Presentation;
 
 internal sealed class GameWindow : Window
 {
-    private readonly GameEngine game;
     private readonly IAssetProvider assets;
-    private Rect windowedBounds;
+    private readonly GameEngine game;
     private bool fullScreen;
+    private Rect windowedBounds;
 
     public GameWindow(GameView view, GameEngine game, DisplayPreferences display, IAssetProvider assets)
     {
@@ -53,7 +53,10 @@ internal sealed class GameWindow : Window
             if (IsLoaded && WindowStyle != WindowStyle.None)
             {
                 Rect bounds = RestoreBounds;
-                if (bounds.Width >= MinWidth && bounds.Height >= MinHeight) windowedBounds = bounds;
+                if (bounds.Width >= MinWidth && bounds.Height >= MinHeight)
+                {
+                    windowedBounds = bounds;
+                }
             }
 
             WindowState = WindowState.Normal;
@@ -74,8 +77,10 @@ internal sealed class GameWindow : Window
                 Width = windowedBounds.Width;
                 Height = windowedBounds.Height;
             }
+
             ApplySystemTitleBarTheme();
         }
+
         Cursor = enabled ? Cursors.None : Cursors.Arrow;
         Mouse.OverrideCursor = enabled ? Cursors.None : null;
     }
@@ -85,8 +90,13 @@ internal sealed class GameWindow : Window
         try
         {
             string path = assets.PathFor("MaelstromEventHorizon.ico");
-            if (!File.Exists(path)) return;
-            Icon = BitmapFrame.Create(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
+            Icon = BitmapFrame.Create(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat,
+                BitmapCacheOption.OnLoad);
         }
         catch
         {
@@ -96,14 +106,24 @@ internal sealed class GameWindow : Window
 
     private void ApplySystemTitleBarTheme()
     {
-        if (fullScreen || WindowStyle == WindowStyle.None) return;
+        if (fullScreen || WindowStyle == WindowStyle.None)
+        {
+            return;
+        }
+
         try
         {
             nint handle = new WindowInteropHelper(this).Handle;
-            if (handle == 0) return;
+            if (handle == 0)
+            {
+                return;
+            }
+
             int darkMode = SystemUsesDarkAppTheme() ? 1 : 0;
             if (DwmSetWindowAttribute(handle, 20, ref darkMode, sizeof(int)) != 0)
+            {
                 DwmSetWindowAttribute(handle, 19, ref darkMode, sizeof(int));
+            }
         }
         catch
         {

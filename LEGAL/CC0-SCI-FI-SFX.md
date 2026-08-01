@@ -6,4 +6,4 @@
 - License: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)
 - Package file: `60-sci-fi-sfx_0.zip`
 
-The WPF audio service maps its effects to WAV conversions of these recordings for reliable native Windows playback. The asteroid breakup cue remains project-authored synthesis by design; the existing `ship-destruction.wav` retains its separate CC0 provenance entry in `asset-manifest.csv`.
+The WPF audio service maps its effects to WAV conversions of these recordings for reliable native Windows playback. The asteroid breakup cue remains project-authored synthesis by design.

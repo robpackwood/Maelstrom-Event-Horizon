@@ -1,4 +1,4 @@
-namespace MaelstromEventHorizon.Application.Services.Contracts;
+﻿namespace MaelstromEventHorizon.Application.Services.Contracts;
 
 internal interface IAppDataPathProvider
 {

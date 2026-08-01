@@ -1,4 +1,4 @@
-using MaelstromEventHorizon.Domain.Enums;
+﻿using MaelstromEventHorizon.Domain.Enums;
 
 namespace MaelstromEventHorizon.Application.Services.Contracts;
 

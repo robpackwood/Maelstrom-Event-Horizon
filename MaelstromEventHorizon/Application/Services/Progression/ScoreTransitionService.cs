@@ -1,5 +1,4 @@
-using MaelstromEventHorizon.Domain.Effects;
-using MaelstromEventHorizon.Domain.Enums;
+﻿using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
 
 namespace MaelstromEventHorizon.Application.Services.Progression;
@@ -24,28 +23,51 @@ internal sealed class ScoreTransitionService
 
     private void BankScore(GameEngine game, int amount)
     {
-        if (amount <= 0) return;
+        if (amount <= 0)
+        {
+            return;
+        }
+
         game.Score += amount;
         while (game.Score >= game.NextLifeScore)
         {
             game.Lives++;
             game.NextLifeScore += 50_000;
-            game.ShowBanner("EXTRA SHIP", 2);
+            game.Announce("EXTRA SHIP", 2);
             game.Audio.Play(SoundCue.Life);
         }
     }
 
     internal void EnsureLuckyWaveEvents(GameEngine game)
     {
-        if (game.BonusSpawnsDisabled) return;
-        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 }) game.CanisterTimer = .8 + game.Random.NextDouble() * 2.8;
-        if (game is { MultiplierSpawned: false, MultiplierTimer: <= 0 }) game.MultiplierTimer = 1.1 + game.Random.NextDouble() * 3.0;
-        if (game is { CometSpawned: false, CometTimer: <= 0 }) game.CometTimer = 1.4 + game.Random.NextDouble() * 3.2;
+        if (game.BonusSpawnsDisabled)
+        {
+            return;
+        }
+
+        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 })
+        {
+            game.CanisterTimer = .8 + game.Random.NextDouble() * 2.8;
+        }
+
+        if (game is { MultiplierSpawned: false, MultiplierTimer: <= 0 })
+        {
+            game.MultiplierTimer = 1.1 + game.Random.NextDouble() * 3.0;
+        }
+
+        if (game is { CometSpawned: false, CometTimer: <= 0 })
+        {
+            game.CometTimer = 1.4 + game.Random.NextDouble() * 3.2;
+        }
     }
 
     private void BeginWaveSummary(GameEngine game)
     {
-        if (game.Mode != GameMode.WaveOutro) return;
+        if (game.Mode != GameMode.WaveOutro)
+        {
+            return;
+        }
+
         ClearCompletedWaveObjects(game);
         game.SummaryBaseCash = game.WaveBaseCash;
         game.SummaryCometCash = game.WaveCometCash;
@@ -62,7 +84,6 @@ internal sealed class ScoreTransitionService
         game.TransitionAlpha = 1;
         game.Mode = GameMode.WaveSummary;
         game.Audio.StartSummaryMusic(earnedCashBonus);
-        if (earnedCashBonus) game.Audio.Play(SoundCue.CashBonus, .9);
     }
 
     private void ClearCompletedWaveObjects(GameEngine game)
@@ -81,9 +102,15 @@ internal sealed class ScoreTransitionService
     {
         game.SummaryScreenElapsed += dt;
         game.TransitionAlpha = Math.Clamp(1 - game.SummaryScreenElapsed / GameEngine.SummaryFadeInDuration, 0, 1);
-        if (game.SummaryScreenElapsed < GameEngine.SummaryFadeInDuration) return;
+        if (game.SummaryScreenElapsed < GameEngine.SummaryFadeInDuration)
+        {
+            return;
+        }
 
-        if (game.SummaryComplete) return;
+        if (game.SummaryComplete)
+        {
+            return;
+        }
 
         game.SummaryElapsed += dt;
         game.CashTickCooldown -= dt;
@@ -106,13 +133,20 @@ internal sealed class ScoreTransitionService
 
     internal void UpdateLevelBonus(GameEngine game, double dt)
     {
-        if (game.LevelBonusCash <= 0) return;
+        if (game.LevelBonusCash <= 0)
+        {
+            return;
+        }
+
         game.LevelBonusCountdown -= dt;
         while (game is { LevelBonusCountdown: <= 0, LevelBonusCash: > 0 })
         {
             game.LevelBonusCash = Math.Max(0, game.LevelBonusCash - 50);
             game.LevelBonusCountdown += 5;
-            if (game is { LevelBonusCash: <= 1_000, BonusSpawnsDisabled: false }) DisableBonusSpawns(game);
+            if (game is { LevelBonusCash: <= 1_000, BonusSpawnsDisabled: false })
+            {
+                DisableBonusSpawns(game);
+            }
         }
     }
 
@@ -142,8 +176,16 @@ internal sealed class ScoreTransitionService
 
     internal void BeginWaveOutro(GameEngine game)
     {
-        if (game.Mode != GameMode.Playing) return;
-        if (game.IsBonusStage || game.IsBossStage) game.Audio.StopMusic(false);
+        if (game.Mode != GameMode.Playing)
+        {
+            return;
+        }
+
+        if (game.IsBonusStage || game.IsBossStage)
+        {
+            game.Audio.StopMusic(false);
+        }
+
         game.Mode = GameMode.WaveOutro;
         game.TransitionElapsed = 0;
         game.TransitionAlpha = 0;
@@ -155,7 +197,10 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(game.TransitionElapsed / GameEngine.FadeToSummaryDuration, 0, 1);
-        if (game.TransitionElapsed < GameEngine.FadeToSummaryDuration) return;
+        if (game.TransitionElapsed < GameEngine.FadeToSummaryDuration)
+        {
+            return;
+        }
 
         if (game.BonusOnlyMode || game.BossOnlyMode)
         {
@@ -181,7 +226,10 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(game.TransitionElapsed / GameEngine.FadeToWaveDuration, 0, 1);
-        if (game.TransitionElapsed < GameEngine.FadeToWaveDuration) return;
+        if (game.TransitionElapsed < GameEngine.FadeToWaveDuration)
+        {
+            return;
+        }
 
         game.BeginNextWave();
         game.Mode = GameMode.WaveIntro;
@@ -193,7 +241,10 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(1 - game.TransitionElapsed / GameEngine.WaveFadeInDuration, 0, 1);
-        if (game.TransitionElapsed < GameEngine.WaveFadeInDuration) return;
+        if (game.TransitionElapsed < GameEngine.WaveFadeInDuration)
+        {
+            return;
+        }
 
         game.TransitionAlpha = 0;
         game.Mode = GameMode.Playing;
@@ -201,13 +252,23 @@ internal sealed class ScoreTransitionService
 
     internal void Hyperspace(GameEngine game)
     {
-        if (game.PlayerRespawning || game.Player.Invulnerable > 1) return;
+        if (game.PlayerRespawning || game.Player.Invulnerable > 1)
+        {
+            return;
+        }
+
         game.Explosion(game.Player.Position, 10, 0xff68d9ff);
         game.Player.Position = game.SafePosition(0);
         game.Player.Velocity *= .25;
         game.Player.Invulnerable = 1.2;
-        if (game.Random.NextDouble() < .08 && !game.LuckActive) game.DamagePlayer();
-        else game.SpawnShockwave(game.Player.Position, .35, 0xff82ddff, 75);
+        if (game.Random.NextDouble() < .08 && !game.LuckActive)
+        {
+            game.DamagePlayer();
+        }
+        else
+        {
+            game.SpawnShockwave(game.Player.Position, .35, 0xff82ddff, 75);
+        }
     }
 
     internal void CenterPlayerWithShield(GameEngine game)

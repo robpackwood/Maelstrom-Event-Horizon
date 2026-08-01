@@ -1,4 +1,4 @@
-namespace MaelstromEventHorizon.Domain.Enums;
+﻿namespace MaelstromEventHorizon.Domain.Enums;
 
 internal enum FighterKind
 {

@@ -1,4 +1,16 @@
-namespace MaelstromEventHorizon.Presentation.Rendering;
+﻿namespace MaelstromEventHorizon.Presentation.Rendering;
+
+internal interface IGameRenderServices
+{
+    SceneRenderer SceneRenderer { get; }
+    PlayerAsteroidRenderer PlayerAsteroidRenderer { get; }
+    CombatActorRenderer CombatActorRenderer { get; }
+    HazardPickupRenderer HazardPickupRenderer { get; }
+    EffectsHudRenderer EffectsHudRenderer { get; }
+    OverlayRenderer OverlayRenderer { get; }
+    TitleScreenRenderer TitleScreenRenderer { get; }
+    DrawingPrimitiveService DrawingPrimitiveService { get; }
+}
 
 internal sealed class GameRenderServices(
     SceneRenderer sceneRenderer,
@@ -8,7 +20,7 @@ internal sealed class GameRenderServices(
     EffectsHudRenderer effectsHudRenderer,
     OverlayRenderer overlayRenderer,
     TitleScreenRenderer titleScreenRenderer,
-    DrawingPrimitiveService drawingPrimitiveService)
+    DrawingPrimitiveService drawingPrimitiveService) : IGameRenderServices
 {
     public SceneRenderer SceneRenderer { get; } = sceneRenderer;
     public PlayerAsteroidRenderer PlayerAsteroidRenderer { get; } = playerAsteroidRenderer;
