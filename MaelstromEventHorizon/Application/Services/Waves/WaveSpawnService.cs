@@ -364,7 +364,7 @@ internal sealed class WaveSpawnService
             _ => 0xffffc65b
         };
         game.Comets.Add(new Comet(position, (target - position).Normalized * game.Random.Next(310, 430), value, tint));
-        game.Audio.Play(SoundCue.CometSpawn, .72);
+        game.Audio.Play(SoundCue.CometSpawn, .96);
     }
 
     internal void SpawnMultiplier(GameEngine game)
@@ -379,7 +379,7 @@ internal sealed class WaveSpawnService
     internal void SpawnBonusPickup(GameEngine game, V2? at = null)
     {
         if (game.BonusSpawnsDisabled) return;
-        int value = game.Random.Next(6) == 0 ? 500 : game.Random.Next(1, 6) * 1000;
+        int value = game.Random.Next(1, 6) * 1000;
         game.Pickups.Add(new Pickup(at ?? game.SafeEdgePosition(), game.RandomDirection() * 45, PickupKind.Bonus, value));
     }
 

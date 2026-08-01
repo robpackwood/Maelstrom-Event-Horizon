@@ -26,8 +26,10 @@ internal sealed class GameInputService
         game.Player = new Ship(new V2(GameEngine.Width / 2, GameEngine.Height / 2));
         game.TurnVelocity = 0;
         game.ThrustRamp = 0;
-        game.Mode = GameMode.Playing;
         game.BeginNextWave();
+        game.Mode = GameMode.WaveIntro;
+        game.TransitionElapsed = 0;
+        game.TransitionAlpha = 1;
     }
 
     internal void StartDemo(GameEngine game)
@@ -238,7 +240,7 @@ internal sealed class GameInputService
         if (game.Mode == GameMode.Playing && !game.BossCountdownActive && key == game.Bindings[GameAction.Fire])
         {
             if (game is { IsBonusStage: false, PlayerRespawning: false } &&
-                (!game.RapidFireActive || game is { FireCooldown: <= 0, RapidFireReload: <= 0 }))
+                game.FireCooldown <= 0)
             {
                 game.FirePlayer();
             }

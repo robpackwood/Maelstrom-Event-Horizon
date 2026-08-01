@@ -9,6 +9,7 @@ internal enum PowerupKind
     RiftVolley,
     LongRange,
     Shields,
+    ReflectionShield,
     Freeze,
     SmartBomb,
     RicochetArena,

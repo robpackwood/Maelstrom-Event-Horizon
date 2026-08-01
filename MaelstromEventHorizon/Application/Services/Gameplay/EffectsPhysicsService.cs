@@ -370,6 +370,7 @@ internal sealed class EffectsPhysicsService
         PowerupKind.RiftVolley => "RIFT VOLLEY",
         PowerupKind.LongRange => "LONG RANGE",
         PowerupKind.Shields => "SHIELD ENERGY",
+        PowerupKind.ReflectionShield => "REFLECTION SHIELD",
         PowerupKind.Freeze => "TIME FREEZE",
         PowerupKind.SmartBomb => "SMART BOMB",
         PowerupKind.RicochetArena => "RICOCHET ARENA",

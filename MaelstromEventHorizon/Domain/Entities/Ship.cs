@@ -12,11 +12,12 @@ internal sealed class Ship(V2 position) : Body(position, V2.Zero, BaseRadius)
     public bool Shielding;
     public bool Thrusting;
     public bool Giant;
-    public double VisualScale => BaseVisualScale * (Giant ? 2 : 1);
+    private const double GiantScale = 1.5;
+    public double VisualScale => BaseVisualScale * (Giant ? GiantScale : 1);
 
     public void SetGiant(bool giant)
     {
         Giant = giant;
-        Radius = BaseRadius * (giant ? 2 : 1);
+        Radius = BaseRadius * (giant ? GiantScale : 1);
     }
 }

@@ -104,7 +104,8 @@ internal sealed partial class CollisionService
                 game.Explosion(hitPosition, 28, comet.Tint);
                 game.SpawnShockwave(hitPosition, .55, comet.Tint, 125);
                 game.SpawnFloatingText(hitPosition, $"+${comet.Value:N0}", comet.Tint);
-                game.Audio.Play(SoundCue.CometCelebration, .9);
+                game.Audio.Play(SoundCue.CometCelebration, 1);
+                game.Audio.Play(SoundCue.ShipBlast, .78);
                 continue;
             }
 
@@ -143,6 +144,20 @@ internal sealed partial class CollisionService
 
                 if (game.Touching(shot, game.Player))
                 {
+                    if (game.ReflectionShieldActive)
+                    {
+                        V2 direction = (game.Player.Position - shot.Position).Normalized;
+                        if (direction.Length <= 0) direction = V2.FromAngle(game.Player.Angle);
+                        double speed = Math.Max(420, shot.Velocity.Length * 1.2);
+                        shot.Enemy = false;
+                        shot.BossShot = false;
+                        shot.Damage = Math.Max(2, shot.Damage);
+                        shot.Position = game.Wrap(game.Player.Position + direction * (game.Player.Radius + 10));
+                        shot.Velocity = direction * speed + game.Player.Velocity * .25;
+                        BreakReflectionShield(game, shot.Position);
+                        continue;
+                    }
+
                     shot.Alive = false;
                     DamagePlayer(game, false, shot.Position);
                 }
@@ -167,7 +182,7 @@ internal sealed partial class CollisionService
                 {
                     game.Lives++;
                     game.ShowBanner("RESCUE +1 SHIP", 2);
-                    game.Audio.Play(SoundCue.RescueCelebration);
+                    game.Audio.Play(SoundCue.RescueCelebration, .95);
                 }
                 else
                 {
@@ -194,6 +209,13 @@ internal sealed partial class CollisionService
 
             if (danger is not null)
             {
+                if (game.ReflectionShieldActive)
+                {
+                    BreakReflectionShield(game, danger.Position);
+                    game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, .22);
+                    return;
+                }
+
                 if (danger is GravityVortex blackHole)
                 {
                     CollapseVortex(game, blackHole, false);
@@ -308,6 +330,17 @@ internal sealed partial class CollisionService
         game.Audio.Play(SoundCue.ShieldImpact, Math.Clamp(strength, 0, 1));
     }
 
+    private static void BreakReflectionShield(GameEngine game, V2 position)
+    {
+        game.ReflectionShieldActive = false;
+        game.ShieldImpactPoint = position;
+        game.ShieldImpactTime = .5;
+        game.SpawnShockwave(game.Player.Position, .6, 0xffffc95b, 148);
+        game.Spark(position, 0xffffea9c, 22);
+        game.ShowBanner("REFLECTION SHIELD BROKEN", 1.35);
+        game.Audio.Play(SoundCue.ReflectionBreak, .92);
+    }
+
 
     internal void HitAsteroid(GameEngine game, Asteroid asteroid, int damage = 1)
     {
@@ -390,7 +423,8 @@ internal sealed partial class CollisionService
         game.AwardImmediateScore(fighter.Kind == FighterKind.Interceptor ? 1000 : 500, fighter.Position);
         game.Explosion(fighter.Position, 24, fighter.Kind == FighterKind.Interceptor ? 0xff58e9ff : 0xffff4f83);
         game.RollDrop(fighter.Position, .24);
-        game.Audio.Play(SoundCue.ShipBlast, .78);
+        game.Audio.Play(SoundCue.EnemyDestroyed, 1);
+        game.Audio.Play(SoundCue.Explosion, .55);
     }
 
     internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition, bool playerBulletHit = false)
@@ -411,7 +445,7 @@ internal sealed partial class CollisionService
         }
         else
         {
-            if (playerBulletHit && playHitReaction) game.Audio.Play(BossHitCue(boss.Kind), .5);
+            if (playerBulletHit && playHitReaction) game.Audio.Play(BossHitCue(boss.Kind), .9);
         }
     }
 
@@ -458,8 +492,10 @@ internal sealed partial class CollisionService
     {
         mine.Alive = false;
         game.AddScore(500);
-        game.Explosion(mine.Position, 18, 0xffffdf4d);
-        game.Audio.Play(SoundCue.Explosion, .55);
+        game.Explosion(mine.Position, 28, 0xffffdf4d);
+        game.SpawnShockwave(mine.Position, .48, 0xffffdf4d, 105);
+        game.Audio.Play(SoundCue.MineHit, 1);
+        game.Audio.Play(SoundCue.Explosion, .82);
     }
 
     private void DestroyVortex(GameEngine game, GravityVortex vortex)
@@ -478,12 +514,13 @@ internal sealed partial class CollisionService
 
         if (awardScore)
         {
-            game.AddScore(2000);
+            game.AddScore(500);
         }
 
-        game.SpawnShockwave(vortex.Position, .8, 0xffb069ff, 230);
-        game.Explosion(vortex.Position, 40, 0xff6ad7ff);
-        game.Audio.Play(SoundCue.VortexHit);
+        game.SpawnShockwave(vortex.Position, 1.05, 0xffb069ff, 310);
+        game.Explosion(vortex.Position, 58, 0xff6ad7ff);
+        game.Audio.Play(SoundCue.VortexHit, 1);
+        game.Audio.Play(SoundCue.Explosion, .92);
     }
 
     internal void DamagePlayer(GameEngine game, bool bypassShield = false, V2? impactPosition = null)
@@ -532,8 +569,9 @@ internal sealed partial class CollisionService
         game.SpawnShockwave(game.Player.Position, 1.05, 0xffff6b5e, 265);
         game.SpawnShockwave(game.Player.Position, .68, 0xffffc06a, 145);
         game.Spark(game.Player.Position, 0xffffffff, 28);
-        game.Audio.Play(SoundCue.ShipCrash);
-        game.Audio.Play(SoundCue.ShipBlast);
+        game.Audio.Play(SoundCue.ShipCrash, 1);
+        game.Audio.Play(SoundCue.ShipBlast, 1);
+        game.Audio.Play(SoundCue.Explosion, .95);
 
         if (noShipsRemaining)
         {

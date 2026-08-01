@@ -264,11 +264,8 @@ internal sealed class EffectsHudRenderer
     {
         if (view.Game.Mode is GameMode.Title or GameMode.Controls) return;
         var dim = new SolidColorBrush(Color.FromRgb(137, 168, 191));
-        dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(118, 2, 12, 25)),
-            new Pen(new SolidColorBrush(Color.FromArgb(72, 102, 203, 237)), 1), new Rect(18, 10, 436, 34), 5, 5);
         view.DrawText(dc, "SCORE", 30, 29, 12, dim, FontWeights.SemiBold);
         view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
-        dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(90, 92, 149, 177)), 1), new Point(251, 12), new Point(251, 39));
         view.DrawText(dc, "LEVEL", 274, 29, 12, dim, FontWeights.SemiBold);
         Brush levelBrush = new SolidColorBrush(view.Game.LevelBonusCash > 1_000
             ? Color.FromRgb(255, 221, 113)
@@ -344,6 +341,7 @@ internal sealed class EffectsHudRenderer
         var active = activePowerupLabels;
         active.Clear();
         if (view.Game.RapidFireActive) active.Add("RAPID FIRE");
+        if (view.Game.ReflectionShieldActive) active.Add("REFLECTION SHIELD");
         if (view.Game.AirBrakesActive) active.Add("AIR BRAKES");
         if (view.Game.LuckActive) active.Add("LUCK");
         if (view.Game.TripleFireActive) active.Add("TRIPLE FIRE");

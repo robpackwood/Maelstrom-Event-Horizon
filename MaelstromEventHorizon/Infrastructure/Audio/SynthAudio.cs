@@ -295,27 +295,28 @@ internal sealed class SynthAudio : IAudioService
             foreach (var recorded in new Dictionary<SoundCue, string>
                      {
                          [SoundCue.Fire] = "sfx_01a.wav", [SoundCue.EnemyFire] = "sfx_01b.wav",
-                         [SoundCue.EnemyWarning] = "sfx_02a.wav", [SoundCue.BossAlarm] = "sfx_02d.wav",
+                         [SoundCue.EnemyWarning] = "enemy-arrival-danger-alarm.wav", [SoundCue.BossAlarm] = "sfx_02d.wav",
                          [SoundCue.MenuMove] = "sfx_03a.wav", [SoundCue.Thrust] = "sfx_04a.wav",
                          [SoundCue.Explosion] = "sfx_05a.wav", [SoundCue.SteelHit] = "sfx_06.wav",
-                         [SoundCue.Pickup] = "sfx_07a.wav", [SoundCue.Shield] = "sfx_07b.wav",
-                         [SoundCue.ShieldImpact] = "sfx_08b.wav", [SoundCue.Nova] = "sfx_09a.wav",
-                         [SoundCue.Wave] = "sfx_10a.wav", [SoundCue.Life] = "sfx_11a.wav",
-                         [SoundCue.RescueCelebration] = "sfx_11b.wav", [SoundCue.Mine] = "sfx_12a.wav",
+                         [SoundCue.Pickup] = "powerup-celebration.wav", [SoundCue.PowerupGotcha] = "powerup-male-victory.wav", [SoundCue.BonusVoice] = "bonus-male-voice.wav",
+                         [SoundCue.Shield] = "shield-activation.wav",
+                         [SoundCue.ShieldImpact] = "shield-impact.wav", [SoundCue.ReflectionBreak] = "sfx_05b.wav", [SoundCue.Nova] = "sfx_09a.wav",
+                         [SoundCue.Wave] = "sfx_10a.wav", [SoundCue.Life] = "extra-ship-fanfare.wav",
+                         [SoundCue.RescueCelebration] = "rescue-thank-you.wav", [SoundCue.Mine] = "sfx_12a.wav",
                          [SoundCue.Vortex] = "sfx_13c.wav", [SoundCue.CashRegister] = "sfx_14a.wav",
-                         [SoundCue.Coin] = "sfx_14b.wav", [SoundCue.CashBonus] = "wave-bonus-crowd-cheer.wav",
-                         [SoundCue.ChaChing] = "sfx_15b.wav", [SoundCue.CometCelebration] = "sfx_16a.wav",
-                         [SoundCue.MultiplierWoohoo] = "sfx_16b.wav", [SoundCue.ShipBlast] = "sfx_17a.wav",
+                         [SoundCue.Coin] = "bonus-coin-jingle.wav", [SoundCue.CashBonus] = "wave-bonus-yes-shout.wav",
+                         [SoundCue.ChaChing] = "sfx_15b.wav", [SoundCue.CometCelebration] = "sfx_05c.wav",
+                         [SoundCue.MultiplierWoohoo] = "sfx_16b.wav", [SoundCue.ShipCrash] = "player-death-dynamite.wav", [SoundCue.ShipBlast] = "sfx_17a.wav",
                          [SoundCue.BonusFailed] = "sfx_18a.wav", [SoundCue.GiantGrow] = "sfx_19a.wav",
                          [SoundCue.GiantShrink] = "sfx_19b.wav"
                         ,[SoundCue.VortexHit] = "sfx_13b.wav", [SoundCue.NovaHit] = "sfx_09b.wav",
                          [SoundCue.RicochetBounce] = "sfx_03b.wav"
-                        ,[SoundCue.EnemyHit] = "sfx_06b.wav", [SoundCue.EnemyDestroyed] = "sfx_05b.wav",
+                        ,[SoundCue.EnemyHit] = "sfx_06b.wav", [SoundCue.EnemyDestroyed] = "enemy-mechanical-explosion.wav",
                          [SoundCue.MineHit] = "sfx_12b.wav"
                         ,[SoundCue.SludgeMawHit] = "sludge-maw-gastric-hit.wav", [SoundCue.EyeTyrantHit] = "sfx_20a.wav",
                          [SoundCue.BoneBroodmotherHit] = "sfx_21a.wav", [SoundCue.VoidLeechHit] = "sfx_22a.wav",
                          [SoundCue.DreadHarvesterHit] = "sfx_20b.wav", [SoundCue.SolarWardenHit] = "sfx_21b.wav"
-                        ,[SoundCue.CometSpawn] = "sfx_05c.wav"
+                        ,[SoundCue.CometSpawn] = "comet-arrival-fire-crackle.wav"
                         ,[SoundCue.SludgeMawFire] = "sfx_12c.wav", [SoundCue.EyeTyrantFire] = "sfx_01c.wav",
                          [SoundCue.BoneBroodmotherFire] = "sfx_02b.wav", [SoundCue.VoidLeechFire] = "sfx_02c.wav",
                          [SoundCue.DreadHarvesterFire] = "sfx_20c.wav", [SoundCue.SolarWardenFire] = "sfx_21b.wav"
@@ -325,12 +326,12 @@ internal sealed class SynthAudio : IAudioService
                 // Individually curated CC0 recordings: only the events that benefit from a real,
                 // distinctive sound replace their prior synthesized cue.
                 if (File.Exists(path) && recorded.Key is SoundCue.EnemyFire or
-                    SoundCue.EnemyWarning or SoundCue.BossAlarm or SoundCue.Pickup or SoundCue.Nova or
+                    SoundCue.EnemyWarning or SoundCue.BossAlarm or SoundCue.Pickup or SoundCue.PowerupGotcha or SoundCue.BonusVoice or SoundCue.Shield or SoundCue.Nova or
                     SoundCue.Vortex or SoundCue.Life or SoundCue.RescueCelebration or SoundCue.CashBonus or
-                    SoundCue.ChaChing or SoundCue.CometCelebration or SoundCue.MultiplierWoohoo or
+                    SoundCue.ChaChing or SoundCue.CometCelebration or SoundCue.CometSpawn or SoundCue.MultiplierWoohoo or
                     SoundCue.BonusFailed or SoundCue.GiantGrow or SoundCue.GiantShrink or SoundCue.Shield or
-                    SoundCue.ShieldImpact or SoundCue.VortexHit or SoundCue.NovaHit or SoundCue.RicochetBounce or
-                    SoundCue.EnemyHit or SoundCue.EnemyDestroyed or SoundCue.MineHit or SoundCue.ShipBlast or
+                    SoundCue.ShieldImpact or SoundCue.ReflectionBreak or SoundCue.VortexHit or SoundCue.NovaHit or SoundCue.RicochetBounce or
+                    SoundCue.EnemyHit or SoundCue.EnemyDestroyed or SoundCue.MineHit or SoundCue.ShipCrash or SoundCue.ShipBlast or
                     SoundCue.Coin or SoundCue.SludgeMawHit or SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit or
                     SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit or SoundCue.CometSpawn or
                     SoundCue.SludgeMawFire or SoundCue.EyeTyrantFire or SoundCue.BoneBroodmotherFire or
@@ -392,7 +393,7 @@ internal sealed class SynthAudio : IAudioService
 
     private void ScheduleEffectCutoff(LayeredEffectVoice voice, SoundCue cue)
     {
-        double seconds = cue is SoundCue.SludgeMawHit ? .19 : cue is SoundCue.EyeTyrantHit or
+        double seconds = cue is SoundCue.Pickup ? .75 : cue is SoundCue.PowerupGotcha or SoundCue.BonusVoice ? 1.1 : cue is SoundCue.ShieldImpact ? .55 : cue is SoundCue.RescueCelebration ? .9 : cue is SoundCue.SludgeMawHit ? .19 : cue is SoundCue.EyeTyrantHit or
             SoundCue.BoneBroodmotherHit or SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit ? .15 : 0;
         if (seconds <= 0) return;
 

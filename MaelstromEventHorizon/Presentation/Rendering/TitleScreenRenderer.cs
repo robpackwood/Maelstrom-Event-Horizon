@@ -53,7 +53,7 @@ internal sealed class TitleScreenRenderer
         }
         dc.Pop();
 
-        FormattedText version = view.Format("1.0.0", 10,
+        FormattedText version = view.Format("1.1.0", 10,
             new SolidColorBrush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
         dc.DrawText(version, new Point(GameEngine.Width - version.Width - 12, 708 - version.Baseline));
     }
@@ -160,6 +160,15 @@ internal sealed class TitleScreenRenderer
                     new Point(0, 0), 12, 12);
                 dc.DrawArc(new Pen(pale, 2.4), new Point(0, 0), 9, -60, 150);
                 dc.DrawArc(new Pen(pale, 2.4), new Point(0, 0), 9, 130, 95);
+                break;
+            case GameView.TickerIcon.ReflectionShield:
+                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(48, tint.R, tint.G, tint.B)), pen,
+                    new Point(0, 0), 12, 12);
+                dc.DrawArc(new Pen(pale, 2.5), new Point(0, 0), 10, -48, 116);
+                dc.DrawArc(new Pen(pale, 2.5), new Point(0, 0), 10, 132, 116);
+                dc.DrawLine(pen, new Point(-4, 0), new Point(5, 0));
+                dc.DrawLine(pen, new Point(1, -4), new Point(5, 0));
+                dc.DrawLine(pen, new Point(1, 4), new Point(5, 0));
                 break;
             case GameView.TickerIcon.Freeze:
                 for (int i = 0; i < 3; i++)

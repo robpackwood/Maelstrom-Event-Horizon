@@ -280,6 +280,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         }, .34, .86),
         };
         clips[SoundCue.VortexHit] = clips[SoundCue.Vortex];
+        clips[SoundCue.PowerupGotcha] = clips[SoundCue.Pickup];
+        clips[SoundCue.BonusVoice] = clips[SoundCue.PowerupGotcha];
+        clips[SoundCue.ReflectionBreak] = clips[SoundCue.AsteroidExplosion];
         clips[SoundCue.NovaHit] = clips[SoundCue.Nova];
         clips[SoundCue.RicochetBounce] = clips[SoundCue.MenuMove];
         clips[SoundCue.EnemyHit] = clips[SoundCue.SteelHit];

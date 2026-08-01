@@ -69,7 +69,31 @@ internal sealed class PowerupService
 
     internal void AwardCanister(GameEngine game)
     {
-        PowerupKind power = (PowerupKind)game.Random.Next(Enum.GetValues<PowerupKind>().Length);
+        if (HasEveryEquipablePowerup(game))
+        {
+            game.LastPowerupTime = 4;
+            game.AwardImmediateScore(5_000, game.Player.Position);
+            game.ShowBanner("ALL UPGRADES — $5,000 BONUS", 2.2);
+            game.Audio.Play(SoundCue.BonusVoice, .96);
+            return;
+        }
+
+        var available = new List<PowerupKind>();
+        foreach (PowerupKind candidate in Enum.GetValues<PowerupKind>())
+        {
+            if (CanAwardPowerup(game, candidate)) available.Add(candidate);
+        }
+
+        if (available.Count == 0)
+        {
+            game.LastPowerupTime = 4;
+            game.AwardImmediateScore(5_000, game.Player.Position);
+            game.ShowBanner("$5,000 BONUS", 2.2);
+            game.Audio.Play(SoundCue.BonusVoice, .96);
+            return;
+        }
+
+        PowerupKind power = available[game.Random.Next(available.Count)];
         game.LastPowerupTime = 4;
         switch (power)
         {
@@ -87,6 +111,7 @@ internal sealed class PowerupService
             case PowerupKind.RiftVolley: game.RiftVolleyActive = true; break;
             case PowerupKind.LongRange: game.LongRangeActive = true; break;
             case PowerupKind.Shields: game.Player.Shield = Math.Min(100, game.Player.Shield + 65); break;
+            case PowerupKind.ReflectionShield: game.ReflectionShieldActive = true; break;
             case PowerupKind.Freeze: game.FreezeTime = 8; break;
             case PowerupKind.SmartBomb: SmartBomb(game); break;
             case PowerupKind.RicochetArena: game.RicochetArenaActive = true; break;
@@ -98,8 +123,30 @@ internal sealed class PowerupService
                 break;
         }
         game.ShowBanner(game.PowerName(power), 2.2);
-        game.Audio.Play(power == PowerupKind.GiantShip ? SoundCue.GiantGrow : SoundCue.ChaChing, .9);
+        game.Audio.Play(power == PowerupKind.GiantShip ? SoundCue.GiantGrow : SoundCue.PowerupGotcha, .96);
     }
+
+    private static bool CanAwardPowerup(GameEngine game, PowerupKind power) => power switch
+    {
+        PowerupKind.RapidFire => !game.RapidFireActive,
+        PowerupKind.AirBrakes => !game.AirBrakesActive,
+        PowerupKind.Luck => !game.LuckActive,
+        PowerupKind.TripleFire => !game.TripleFireActive,
+        PowerupKind.RiftVolley => !game.RiftVolleyActive,
+        PowerupKind.LongRange => !game.LongRangeActive,
+        PowerupKind.Shields => game.Player.Shield < 100,
+        PowerupKind.ReflectionShield => !game.ReflectionShieldActive,
+        PowerupKind.Freeze => game.FreezeTime <= 0,
+        PowerupKind.SmartBomb => true,
+        PowerupKind.RicochetArena => !game.RicochetArenaActive,
+        PowerupKind.GiantShip => !game.Player.Giant,
+        _ => false
+    };
+
+    private static bool HasEveryEquipablePowerup(GameEngine game) =>
+        game.RapidFireActive && game.AirBrakesActive && game.LuckActive && game.TripleFireActive &&
+        game.RiftVolleyActive && game.LongRangeActive && game.Player.Shield >= 100 &&
+        game.ReflectionShieldActive && game.FreezeTime > 0 && game.RicochetArenaActive && game.Player.Giant;
 
     internal void ShrinkGiantShip(GameEngine game, V2 impactPosition)
     {
@@ -119,6 +166,7 @@ internal sealed class PowerupService
         game.RapidFireActive = false;
         game.RapidFireRoundsFired = 0;
         game.RapidFireReload = 0;
+        game.ReflectionShieldActive = false;
         game.AirBrakesActive = false;
         game.LuckActive = false;
         game.TripleFireActive = false;
@@ -201,6 +249,7 @@ internal sealed class PowerupService
         game.Spark(nova.Position, 0xffa7efff, 16);
         game.SpawnShockwave(nova.Position, .42, 0xffa7efff, 68);
         game.ShowBanner("NOVA NEUTRALIZED", 1.8);
-        game.Audio.Play(SoundCue.NovaHit, .58);
+        game.Audio.Play(SoundCue.NovaHit, 1);
+        game.Audio.Play(SoundCue.Explosion, .9);
     }
 }

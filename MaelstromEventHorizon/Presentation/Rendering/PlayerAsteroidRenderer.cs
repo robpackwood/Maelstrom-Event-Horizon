@@ -1,3 +1,4 @@
+using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Presentation.Drawing;
@@ -9,11 +10,52 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class PlayerAsteroidRenderer
 {
+    internal void DrawWaveCompletionFlyby(GameView view, DrawingContext dc)
+    {
+        GameMode mode = view.Game.Mode;
+        if (mode != GameMode.WaveOutro) return;
+
+        double progress = mode switch
+        {
+            GameMode.WaveOutro => Math.Clamp(view.Game.TransitionElapsed / GameEngine.FadeToSummaryDuration, 0, 1),
+            _ => 0
+        };
+
+        double scale = mode switch
+        {
+            GameMode.WaveOutro => .38 + progress * 1.35,
+            _ => .82
+        };
+        double opacity = mode switch
+        {
+            GameMode.WaveOutro => .18 + progress * .22,
+            _ => .12,
+        };
+        double wobble = Math.Sin(view.Game.TotalTime * 2.8) * 16 * Math.Min(1, scale / 3);
+        Point center = new(GameEngine.Width / 2 + wobble, GameEngine.Height * .59 - scale * 7);
+        double width = 72 * scale;
+        double height = 72 * scale;
+        Color trailColor = Color.FromRgb(70, 217, 255);
+
+        dc.PushOpacity(Math.Clamp(opacity, 0, .4));
+        dc.DrawEllipse(new RadialGradientBrush(Color.FromArgb(135, 72, 219, 255), Color.FromArgb(0, 4, 20, 42)), null,
+            center, width * .74, height * .58);
+
+        var trail = new LinearGradientBrush(Color.FromArgb(0, 60, 210, 255), Color.FromArgb(168, 220, 250, 255),
+            new Point(0, .5), new Point(1, .5));
+        dc.DrawEllipse(trail, null, new Point(center.X - width * .42, center.Y), width * .62, height * .15);
+        dc.DrawImage(view.PlayerShipSprite, new Rect(center.X - width / 2, center.Y - height / 2, width, height));
+
+        var rim = new Pen(new SolidColorBrush(Color.FromArgb(120, trailColor.R, trailColor.G, trailColor.B)), Math.Max(1, scale * .55));
+        dc.DrawArc(rim, center, width * .58, view.Game.TotalTime * 44, 112);
+        dc.Pop();
+    }
+
     internal void DrawShip(GameView view, DrawingContext dc)
     {
         Ship ship = view.Game.Player;
         if (view.Game.PlayerRespawning) return;
-        if (view.Game.Mode is GameMode.Title or GameMode.Controls or GameMode.Paused) return;
+        if (view.Game.Mode is GameMode.Title or GameMode.Controls or GameMode.Paused or GameMode.WaveSummary or GameMode.WaveSummaryExit) return;
         if (view.Game is { Lives: <= 0, Mode: GameMode.GameOverDelay or GameMode.NameEntry or GameMode.GameOver }) return;
         if (view.Game.Mode == GameMode.Playing && ship is { Invulnerable: > 0, SpawnShieldTime: <= 0 } &&
             ((int)(view.Game.TotalTime * 12) & 1) == 0) return;
@@ -57,6 +99,17 @@ internal sealed class PlayerAsteroidRenderer
             var shieldPen = new Pen(new SolidColorBrush(Color.FromArgb(220, shieldColor.R, shieldColor.G, shieldColor.B)), 1.9);
             dc.DrawEllipse(null, shieldPen, view.Pt(ship.Position), 29 * ship.VisualScale + pulse, 29 * ship.VisualScale + pulse);
             dc.DrawArc(shieldPen, view.Pt(ship.Position), 34 * ship.VisualScale + pulse, view.Game.TotalTime * 95, 122);
+        }
+
+        if (view.Game.ReflectionShieldActive)
+        {
+            double pulse = 3 + Math.Sin(view.Game.TotalTime * 9) * 2.5;
+            Color reflectionColor = Color.FromRgb(255, 194, 82);
+            view.DrawGlowEllipse(dc, ship.Position, 34 * ship.VisualScale + pulse, reflectionColor, 5, .72);
+            var reflectionPen = new Pen(new SolidColorBrush(Color.FromArgb(238, 255, 230, 146)), 2.4);
+            double radius = 35 * ship.VisualScale + pulse;
+            dc.DrawArc(reflectionPen, view.Pt(ship.Position), radius, view.Game.TotalTime * -115, 135);
+            dc.DrawArc(reflectionPen, view.Pt(ship.Position), radius, view.Game.TotalTime * -115 + 180, 120);
         }
 
         if (view.Game.ShieldImpactTime > 0)

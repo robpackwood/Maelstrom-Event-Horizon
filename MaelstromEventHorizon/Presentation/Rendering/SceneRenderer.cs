@@ -12,6 +12,8 @@ internal sealed class SceneRenderer
 {
     internal void DrawGameCanvas(GameView view, DrawingContext dc)
     {
+        dc.PushClip(new RectangleGeometry(new Rect(0, 0, GameEngine.Width, GameEngine.Height)));
+        bool waveCameraActive = TryPushWaveIntroCamera(view, dc);
         DrawBackdrop(view, dc);
         V2 shake = view.Game.ScreenShakeOffset;
         dc.PushTransform(new TranslateTransform(shake.X, shake.Y));
@@ -31,11 +33,28 @@ internal sealed class SceneRenderer
         view.DrawParticles(dc);
         view.DrawShockwaves(dc);
         view.DrawFloatingTexts(dc);
+        view.DrawWaveCompletionFlyby(dc);
+        dc.Pop();
+        if (waveCameraActive) dc.Pop();
         view.DrawHud(dc);
         view.DrawOverlay(dc);
         dc.Pop();
         if (view.Game.RicochetArenaActive) view.DrawArenaFrame(dc);
         view.DrawTransitionCurtain(dc);
+    }
+
+    private static bool TryPushWaveIntroCamera(GameView view, DrawingContext dc)
+    {
+        if (view.Game.Mode != GameMode.WaveIntro) return false;
+
+        double progress = Math.Clamp(view.Game.TransitionElapsed / GameEngine.WaveFadeInDuration, 0, 1);
+        double easedProgress = progress * progress * (3 - 2 * progress);
+        double zoom = 3.1 - 2.1 * easedProgress;
+        V2 ship = view.Game.Player.Position;
+        dc.PushTransform(new MatrixTransform(new Matrix(zoom, 0, 0, zoom,
+            GameEngine.Width * .5 - ship.X * zoom,
+            GameEngine.Height * .5 - ship.Y * zoom)));
+        return true;
     }
 
     private void DrawBackdrop(GameView view, DrawingContext dc)
@@ -77,7 +96,6 @@ internal sealed class SceneRenderer
             dc.DrawRectangle(fallback, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
 
-        DrawDeepSpace(view, dc, waveIndex, titleScene);
         dc.DrawRectangle(GameView.VignetteBrush, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
     }
 

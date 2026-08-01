@@ -14,6 +14,24 @@ internal sealed class PlayerSimulationService
         return false;
     }
 
+    private static void UpdateShieldHum(GameEngine game, bool wasShielding, double dt)
+    {
+        if (!game.Player.Shielding)
+        {
+            game.ShieldHumTimer = 0;
+            return;
+        }
+
+        game.ShieldHumTimer -= dt;
+        if (!wasShielding || game.ShieldHumTimer <= 0)
+        {
+            game.Audio.Play(SoundCue.Shield, 1);
+            // Reinforce the activation cue so it remains clear over the active music and combat mix.
+            game.Audio.Play(SoundCue.Shield, .92);
+            game.ShieldHumTimer = 2.25;
+        }
+    }
+
     private static bool HasVortex(GameEngine game)
     {
         for (int i = 0; i < game.Vortices.Count; i++) if (game.Vortices[i].Alive) return true;
@@ -155,15 +173,11 @@ internal sealed class PlayerSimulationService
         if (game.Player.Shielding)
         {
             game.Player.Shield = Math.Max(0, game.Player.Shield - 22 * dt);
-
-            if (!wasShielding)
-            {
-                game.Audio.Play(SoundCue.Shield, .45);
-            }
         }
+        UpdateShieldHum(game, wasShielding, dt);
 
         bool firing = Keyboard.IsKeyDown(game.Bindings[GameAction.Fire]);
-        bool rapidWeaponReady = game is { FireCooldown: <= 0, RapidFireReload: <= 0 };
+        bool rapidWeaponReady = game.FireCooldown <= 0;
 
         if (game is { IsBonusStage: false, RapidFireActive: true } && firing && rapidWeaponReady)
         {
@@ -246,15 +260,11 @@ internal sealed class PlayerSimulationService
         if (game.Player.Shielding)
         {
             game.Player.Shield = Math.Max(0, game.Player.Shield - 22 * dt);
-
-            if (!wasShielding)
-            {
-                game.Audio.Play(SoundCue.Shield, .42);
-            }
         }
+        UpdateShieldHum(game, wasShielding, dt);
 
         game.DemoFireCooldown -= dt;
-        bool weaponReady = !game.RapidFireActive || game is { FireCooldown: <= 0, RapidFireReload: <= 0 };
+        bool weaponReady = game.FireCooldown <= 0;
 
         if (combatTarget &&
             Math.Abs(angleError) < .11 &&
@@ -332,7 +342,8 @@ internal sealed class PlayerSimulationService
 
     internal void FirePlayer(GameEngine game)
     {
-        int availableRounds = game.RapidFireActive
+        bool firingRapidBurst = game.RapidFireActive && game.RapidFireReload <= 0;
+        int availableRounds = firingRapidBurst
             ? Math.Min(GameEngine.RapidFireBurstSize - game.RapidFireRoundsFired,
                 GameEngine.RapidFireBurstSize - game.Shots.Count(shot => shot is { Alive: true, Enemy: false }))
             : int.MaxValue;
@@ -357,7 +368,7 @@ internal sealed class PlayerSimulationService
 
             Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
-            shot.Radius = 4.945; shot.Damage = 1; shot.PowerLevel = 0;
+            shot.Radius = game.Player.Giant ? 7.42 : 4.945; shot.Damage = 1; shot.PowerLevel = 0;
             shot.RiftDelay = game.RiftVolleyActive ? .18 : -1;
 
             roundsFired++;
@@ -371,7 +382,7 @@ internal sealed class PlayerSimulationService
             Add(.17);
         }
 
-        if (game.RapidFireActive)
+        if (firingRapidBurst)
         {
             game.RapidFireRoundsFired += roundsFired;
             game.FireCooldown = GameEngine.RapidFireShotInterval;
@@ -383,7 +394,7 @@ internal sealed class PlayerSimulationService
         }
         else
         {
-            game.FireCooldown = 0;
+            game.FireCooldown = game.RapidFireActive ? GameEngine.RapidFireFallbackShotInterval : 0;
         }
 
         game.Player.Velocity -= facing * .8;

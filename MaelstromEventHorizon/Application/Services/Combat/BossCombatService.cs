@@ -162,7 +162,7 @@ internal sealed class BossCombatService
                 break;
         }
 
-        game.Audio.Play(BossFireCue(boss.Kind), .66);
+        game.Audio.Play(BossFireCue(boss.Kind), 1);
     }
 
     private static SoundCue BossFireCue(AlienBossKind kind) => kind switch
@@ -216,7 +216,7 @@ internal sealed class BossCombatService
 
         game.Spark(glob.Position, 0xff9bf25b, 14);
         game.SpawnShockwave(glob.Position, .3, 0xff75cf3d, 38);
-        game.Audio.Play(SoundCue.EnemyFire, .36);
+        game.Audio.Play(SoundCue.SludgeMawFire, .7);
     }
 
     private void FireSludgeVomit(GameEngine game, AlienBoss boss, V2 aim)
@@ -237,7 +237,7 @@ internal sealed class BossCombatService
         }
 
         game.Spark(boss.Position + aim * (boss.Radius * .7), 0xffa8ef62, 20);
-        game.Audio.Play(SoundCue.EnemyFire, .78);
+        game.Audio.Play(SoundCue.SludgeMawFire, 1);
     }
 
     internal void ApplyGravity(GameEngine game, Body body, double dt)

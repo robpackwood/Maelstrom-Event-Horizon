@@ -22,9 +22,10 @@ internal sealed class GameEngine
     internal const double ArenaWallInset = 12;
     internal const int TitleMenuItemCount = 7;
     internal const double VolumeStep = .05;
-    internal const int RapidFireBurstSize = 15;
-    internal const double RapidFireShotInterval = .068;
-    internal const double RapidFireReloadDuration = .5;
+    internal const int RapidFireBurstSize = 24;
+    internal const double RapidFireShotInterval = .045;
+    internal const double RapidFireReloadDuration = .42;
+    internal const double RapidFireFallbackShotInterval = .15;
     private const int MaxPooledShots = 240;
     private const int MaxPooledParticles = 900;
     private const int MaxPooledShockwaves = 24;
@@ -51,6 +52,7 @@ internal sealed class GameEngine
     internal double ThrustRamp;
     internal double RespawnTimer;
     internal double ShieldReleaseTimer;
+    internal double ShieldHumTimer;
     internal GameMode ModeBeforeQuitConfirmation;
     internal double SummaryElapsed;
     internal double SummaryScreenElapsed;
@@ -73,7 +75,7 @@ internal sealed class GameEngine
     internal int BonusAsteroidsRemaining;
     internal int BonusPatternStep;
     internal int NextLifeScore = 50_000;
-    internal static readonly int[] CometValues = [500, 1000, 2000, 3000, 4000, 5000];
+    internal static readonly int[] CometValues = [1000, 2000, 3000, 4000, 5000];
     internal const double FadeToSummaryDuration = .7;
     internal const double SummaryFadeInDuration = .55;
     private const double SummaryInputDelay = 2;
@@ -145,6 +147,7 @@ internal sealed class GameEngine
     public double LastPowerupTime { get; internal set; }
     public double FreezeTime { get; internal set; }
     public bool RapidFireActive { get; internal set; }
+    public bool ReflectionShieldActive { get; internal set; }
     public bool AirBrakesActive { get; internal set; }
     public bool LuckActive { get; internal set; }
     public bool TripleFireActive { get; internal set; }
