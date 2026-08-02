@@ -100,7 +100,6 @@ internal sealed class OverlayRenderer
         }
         else if (view.Game.Mode == GameMode.WaveSummary || view.Game.Mode == GameMode.WaveSummaryExit)
         {
-            DrawCashConfetti(view, dc);
             DrawWaveSummary(view, dc);
         }
         else if (view.Game.Mode == GameMode.NameEntry)
@@ -299,37 +298,6 @@ internal sealed class OverlayRenderer
         byte alpha = (byte)(255 * Math.Clamp(view.Game.TransitionAlpha, 0, 1));
         dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(alpha, 0, 1, 5)), null,
             new Rect(0, 0, GameEngine.Width, GameEngine.Height));
-    }
-
-    private void DrawCashConfetti(GameView view, DrawingContext dc)
-    {
-        if (view.Game.CashConfettiTime <= 0)
-        {
-            return;
-        }
-
-        double elapsed = view.Game.TotalTime;
-        for (int i = 0; i < 46; i++)
-        {
-            double speed = 125 + view.Hash(701, i) * 210;
-            double x = (view.Hash(177, i) * GameEngine.Width + Math.Sin(elapsed * (1.4 + view.Hash(911, i)) + i) * 42 +
-                        GameEngine.Width) % GameEngine.Width;
-            double y = (view.Hash(337, i) * 690 + elapsed * speed) % 790 - 45;
-            double angle = elapsed * (110 + view.Hash(513, i) * 280) + i * 31;
-            Color billColor = i % 3 == 0 ? Color.FromRgb(104, 232, 143) : Color.FromRgb(66, 178, 112);
-            dc.PushTransform(new TranslateTransform(x, y));
-            dc.PushTransform(new RotateTransform(angle));
-            dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(220, billColor.R, billColor.G, billColor.B)),
-                new Pen(new SolidColorBrush(Color.FromRgb(194, 255, 210)), .7), new Rect(-10, -5, 20, 10));
-            if (i % 3 == 0)
-            {
-                view.DrawCenteredText(dc, "$", 0, 3, 7,
-                    new SolidColorBrush(Color.FromRgb(12, 75, 42)), FontWeights.Black);
-            }
-
-            dc.Pop();
-            dc.Pop();
-        }
     }
 
     private void DrawTitleHighScores(GameView view, DrawingContext dc)

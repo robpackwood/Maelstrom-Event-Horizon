@@ -161,7 +161,6 @@ internal sealed class GameEngine
     public int SummaryMultiplier { get; internal set; } = 1;
     public int SummaryTotalCash { get; internal set; }
     public int SummaryDeposited { get; internal set; }
-    public double CashConfettiTime { get; internal set; }
     public double TransitionAlpha { get; internal set; }
     public double GameOverOverlayAlpha => Math.Clamp(GameOverFadeElapsed / GameOverFadeDuration, 0, 1);
     public bool SummaryComplete => SummaryDeposited >= SummaryTotalCash;

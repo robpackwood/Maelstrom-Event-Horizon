@@ -53,7 +53,7 @@ internal sealed class SynthAudio : IAudioService
     {
         clips = soundEffects.Clips;
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
-        titleMusicPath = assets.PathFor("Music", "wave-09-anti-entity.mp3");
+        titleMusicPath = assets.PathFor("Music", "wave-13-joining-forces.mp3");
         bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
         bossMusicPath = assets.PathFor("Music", "boss-heavy-ominous.mp3");
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
@@ -82,8 +82,7 @@ internal sealed class SynthAudio : IAudioService
 
     public void StartTitleMusic()
     {
-        StartTrack(File.Exists(titleMusicPath) ? titleMusicPath : normalMusicPath, true, .30,
-            TimeSpan.FromSeconds(.2));
+        StartTrack(File.Exists(titleMusicPath) ? titleMusicPath : normalMusicPath, true, .30);
     }
 
     public void StartWaveMusic(int wave, bool intense)

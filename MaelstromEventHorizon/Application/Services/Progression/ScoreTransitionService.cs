@@ -45,17 +45,22 @@ internal sealed class ScoreTransitionService
             return;
         }
 
-        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 })
+        const double boostedEventChance = .8;
+
+        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 } &&
+            game.Random.NextDouble() < boostedEventChance)
         {
             game.CanisterTimer = .8 + game.Random.NextDouble() * 2.8;
         }
 
-        if (game is { MultiplierSpawned: false, MultiplierTimer: <= 0 })
+        if (game is { MultiplierSpawned: false, MultiplierTimer: <= 0 } &&
+            game.Random.NextDouble() < boostedEventChance)
         {
             game.MultiplierTimer = 1.1 + game.Random.NextDouble() * 3.0;
         }
 
-        if (game is { CometSpawned: false, CometTimer: <= 0 })
+        if (game is { CometSpawned: false, CometTimer: <= 0 } &&
+            game.Random.NextDouble() < boostedEventChance)
         {
             game.CometTimer = 1.4 + game.Random.NextDouble() * 3.2;
         }
@@ -80,7 +85,6 @@ internal sealed class ScoreTransitionService
         game.SummaryScreenElapsed = 0;
         game.CashTickCooldown = 0;
         bool earnedCashBonus = game.SummaryTotalCash > 10_000;
-        game.CashConfettiTime = earnedCashBonus ? 2.7 : 0;
         game.TransitionAlpha = 1;
         game.Mode = GameMode.WaveSummary;
         game.Audio.StartSummaryMusic(earnedCashBonus);

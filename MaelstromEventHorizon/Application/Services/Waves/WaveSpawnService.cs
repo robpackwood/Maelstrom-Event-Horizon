@@ -24,7 +24,6 @@ internal sealed class WaveSpawnService
         game.Mode = GameMode.Playing;
         game.BossCountdown = 0;
         game.BossInvulnerability = 0;
-        game.CashConfettiTime = 0;
         game.RicochetArenaActive = false;
         game.CenterPlayerWithShield();
         game.Wave = game.BonusOnlyMode
@@ -65,13 +64,14 @@ internal sealed class WaveSpawnService
         game.CometStormRemaining = 0;
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
-        game.CanisterTimer = standardWave && (lucky || game.Random.Next(3) == 0)
+        double itemEventChance = lucky ? .8 : 1.0 / 3;
+        game.CanisterTimer = standardWave && game.Random.NextDouble() < itemEventChance
             ? 2.5 + game.Random.NextDouble() * 7.5
             : -1;
-        game.MultiplierTimer = standardWave && (lucky || game.Random.Next(3) == 0)
+        game.MultiplierTimer = standardWave && game.Random.NextDouble() < itemEventChance
             ? 3 + game.Random.NextDouble() * 7.5
             : -1;
-        game.CometTimer = standardWave && (game.CometStormWave || lucky || game.Random.Next(3) == 0)
+        game.CometTimer = standardWave && (game.CometStormWave || game.Random.NextDouble() < itemEventChance)
             ? 3.5 + game.Random.NextDouble() * 7.5
             : -1;
         game.BlackHoleTimer = standardWave && game.Wave > 1 && game.Random.NextDouble() < .125
@@ -140,7 +140,7 @@ internal sealed class WaveSpawnService
             }
 
             game.EventTimer = 6 + game.Random.NextDouble() * 4;
-            double rescueChance = Math.Min(.30, .12 + game.Wave * .008 + (game.LuckActive ? .10 : 0));
+            double rescueChance = Math.Min(.30, .12 + game.Wave * .008);
             game.RescueTimer = game.Random.NextDouble() < rescueChance ? 5 + game.Random.NextDouble() * 10 : -1;
         }
 

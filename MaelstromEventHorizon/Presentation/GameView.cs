@@ -36,7 +36,7 @@ internal sealed class GameView : FrameworkElement
     [
         (TickerIcon.Canister, "ITEM CANISTER", "contains one random ship power-up", 0xff50eaff),
         (TickerIcon.AirBrakes, "AIR BRAKES", "adds strong momentum control", 0xff73d8ff),
-        (TickerIcon.Luck, "LUCK OF THE IRISH", "triggers every special event once this wave", 0xff72f09a),
+        (TickerIcon.Luck, "LUCK OF THE IRISH", "greatly boosts the chance of bonus items while active", 0xff72f09a),
         (TickerIcon.TripleFire, "TRIPLE FIRE", "launches a three-way shot", 0xffffb85d),
         (TickerIcon.RiftVolley, "RIFT VOLLEY", "shots echo from twin delayed rifts", 0xffa774ff),
         (TickerIcon.LongRange, "LONG RANGE", "keeps shots active farther", 0xff8fd5ff),
