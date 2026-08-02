@@ -14,6 +14,7 @@ internal sealed class PowerupService
             particle.Age += dt;
             particle.Position += particle.Velocity * dt;
             particle.Velocity *= Math.Pow(.96, dt * 60);
+
             if (particle.Age >= particle.Lifetime)
             {
                 particle.Alive = false;
@@ -23,6 +24,7 @@ internal sealed class PowerupService
         foreach (Shockwave ring in game.Shockwaves)
         {
             ring.Age += dt;
+
             if (ring.Age >= ring.Lifetime)
             {
                 ring.Alive = false;
@@ -53,12 +55,14 @@ internal sealed class PowerupService
         for (int i = 0; i < game.Fighters.Count; i++)
         {
             Fighter fighter = game.Fighters[i];
+
             if (!fighter.Alive)
             {
                 continue;
             }
 
             V2 away = game.ArenaDelta(game.Player.Position, fighter.Position);
+
             if (away.Length < 280)
             {
                 away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
@@ -71,12 +75,14 @@ internal sealed class PowerupService
         for (int i = 0; i < game.Bosses.Count; i++)
         {
             AlienBoss boss = game.Bosses[i];
+
             if (!boss.Alive)
             {
                 continue;
             }
 
             V2 away = game.ArenaDelta(game.Player.Position, boss.Position);
+
             if (away.Length < 390)
             {
                 away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
@@ -99,6 +105,7 @@ internal sealed class PowerupService
         }
 
         List<PowerupKind> available = [];
+
         foreach (PowerupKind candidate in Enum.GetValues<PowerupKind>())
         {
             if (CanAwardPowerup(game, candidate))
@@ -118,6 +125,7 @@ internal sealed class PowerupService
 
         PowerupKind power = available[game.Random.Next(available.Count)];
         game.LastPowerupTime = 4;
+
         switch (power)
         {
             case PowerupKind.AirBrakes:
@@ -158,6 +166,7 @@ internal sealed class PowerupService
 
         game.ShowBanner(PowerupAnnouncementText(power), 2.2);
         game.Audio.Play(SoundCue.Pickup, .9);
+
         if (power == PowerupKind.GiantShip)
         {
             game.Audio.Play(SoundCue.GiantGrow, .96);
@@ -272,6 +281,7 @@ internal sealed class PowerupService
     private void SmartBomb(GameEngine game)
     {
         List<Asteroid> fragments = [];
+
         foreach (Asteroid asteroid in game.Asteroids.Where(a => a.Alive).ToArray())
         {
             if (asteroid.Steel)
@@ -291,9 +301,11 @@ internal sealed class PowerupService
             game.AddScore(asteroid.Size switch { 3 => 20, 2 => 50, _ => 100 });
             game.Explosion(asteroid.Position, 12, 0xffffbd5a);
             int fragmentCount = game.RollAsteroidFragmentCount();
+
             for (int i = 0; i < fragmentCount; i++)
             {
                 V2 direction = game.RandomDirection();
+
                 fragments.Add(new Asteroid(asteroid.Position + direction * 8,
                     asteroid.Velocity * .45 + direction * game.Random.Next(105, 190), asteroid.Size - 1, false,
                     game.Random.Next()));
@@ -301,6 +313,7 @@ internal sealed class PowerupService
         }
 
         game.Asteroids.AddRange(fragments);
+
         foreach (Fighter fighter in game.Fighters.Where(f => f.Alive).ToArray())
         {
             game.DestroyFighter(fighter);
@@ -325,9 +338,11 @@ internal sealed class PowerupService
         nova.Detonated = true;
         nova.Alive = false;
         int asteroidCount = game.Asteroids.Count;
+
         for (int i = 0; i < asteroidCount; i++)
         {
             Asteroid asteroid = game.Asteroids[i];
+
             if (!asteroid.Alive)
             {
                 continue;
@@ -362,6 +377,7 @@ internal sealed class PowerupService
         }
 
         game.BossInvulnerability = 0;
+
         for (int i = 0; i < game.Bosses.Count; i++)
         {
             if (game.Bosses[i].Alive)

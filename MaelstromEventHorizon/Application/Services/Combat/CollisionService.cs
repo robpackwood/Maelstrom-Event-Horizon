@@ -12,9 +12,11 @@ internal sealed partial class CollisionService
     {
         spatialHash.Build(game);
         int shotCount = game.Shots.Count;
+
         for (int shotIndex = 0; shotIndex < shotCount; shotIndex++)
         {
             Shot shot = game.Shots[shotIndex];
+
             if (!shot.Alive || shot.Enemy)
             {
                 continue;
@@ -64,6 +66,7 @@ internal sealed partial class CollisionService
             if (mine is not null)
             {
                 shot.Alive = false;
+
                 game.Audio.Play(SoundCue.MineHit, .5);
 
                 if ((mine.HitPoints -= shot.Damage) <= 0)
@@ -125,6 +128,7 @@ internal sealed partial class CollisionService
                 {
                     game.AddScore(prize.Value);
                     game.Audio.Play(SoundCue.Coin, .82);
+
                     if (prize.Kind == PickupKind.Bonus)
                     {
                         game.Audio.Play(SoundCue.ShipBlast, .82);
@@ -136,9 +140,11 @@ internal sealed partial class CollisionService
         if (!game.PlayerRespawning)
         {
             int enemyShotCount = game.Shots.Count;
+
             for (int shotIndex = 0; shotIndex < enemyShotCount; shotIndex++)
             {
                 Shot shot = game.Shots[shotIndex];
+
                 if (!shot.Alive || !shot.Enemy)
                 {
                     continue;
@@ -149,6 +155,7 @@ internal sealed partial class CollisionService
                     if (game.ReflectionShieldActive)
                     {
                         V2 direction = (game.Player.Position - shot.Position).Normalized;
+
                         if (direction.Length <= 0)
                         {
                             direction = V2.FromAngle(game.Player.Angle);
@@ -173,9 +180,11 @@ internal sealed partial class CollisionService
         if (!game.PlayerRespawning)
         {
             int pickupCount = game.Pickups.Count;
+
             for (int pickupIndex = 0; pickupIndex < pickupCount; pickupIndex++)
             {
                 Pickup pickup = game.Pickups[pickupIndex];
+
                 if (!pickup.Alive || pickup.Kind is not (PickupKind.Canister or PickupKind.RescueShip
                         or PickupKind.TimeFreeze or PickupKind.SmartBomb or PickupKind.RicochetArena) ||
                     !game.Touching(pickup, game.Player))
@@ -194,6 +203,7 @@ internal sealed partial class CollisionService
                 else if (pickup.Kind == PickupKind.Canister)
                 {
                     game.AwardCanister();
+
                     if (game.IsDemoMode)
                     {
                         game.DemoPowerupCollected = true;
@@ -367,6 +377,7 @@ internal sealed partial class CollisionService
             asteroid.HitPoints -= Math.Max(1, damage);
             game.Spark(asteroid.Position, 0xffffb866, 14 + damage * 6);
             game.Audio.Play(SoundCue.AsteroidExplosion, .72);
+
             if (asteroid.HitPoints > 0)
             {
                 return;
@@ -375,9 +386,11 @@ internal sealed partial class CollisionService
             asteroid.Alive = false;
             game.AddScore(60);
             game.AsteroidBreakup(asteroid.Position, 44, 0xffff9b4a);
+
             for (int i = 0; i < 3; i++)
             {
                 V2 velocity = asteroid.Velocity * .32 + game.RandomDirection() * game.Random.Next(95, 205);
+
                 game.Asteroids.Add(new Asteroid(asteroid.Position + game.RandomDirection() * game.Random.Next(18, 45),
                     velocity, 3, false, game.Random.Next()));
             }

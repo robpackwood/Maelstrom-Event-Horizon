@@ -38,6 +38,7 @@ internal sealed class EffectsHudRenderer
         {
             double life = Math.Clamp(1 - text.Age / text.Lifetime, 0, 1);
             double y = text.Position.Y - text.Age * 34;
+
             if (!Visible(text.Position.X, y, 140))
             {
                 continue;
@@ -45,8 +46,10 @@ internal sealed class EffectsHudRenderer
 
             byte alpha = (byte)(255 * Math.Min(1, life * 2.4));
             Color color = view.FromArgb(text.Color, alpha);
+
             view.DrawCenteredText(dc, text.Text, text.Position.X + 1.5, y + 1.5, 18,
                 view.Brush(Color.FromArgb((byte)(alpha * .7), 2, 7, 14)), FontWeights.Black);
+
             view.DrawCenteredText(dc, text.Text, text.Position.X, y, 18, view.Brush(color), FontWeights.Black);
         }
     }
@@ -68,6 +71,7 @@ internal sealed class EffectsHudRenderer
             }
 
             double radius = shot.BossShot ? Math.Max(6.2, shot.Radius) : shot.Enemy ? 5.2 : Math.Max(4.3, shot.Radius);
+
             Color color = shot.BossShot ? view.FromArgb(shot.Tint) :
                 shot.Enemy ? Color.FromRgb(83, 119, 255) : shot.PowerLevel switch
                 {
@@ -76,13 +80,16 @@ internal sealed class EffectsHudRenderer
                     3 => Color.FromRgb(255, 104, 168),
                     _ => Color.FromRgb(47, 201, 255)
                 };
+
             bool enhanced = shot.BossShot || shot is { Enemy: false, PowerLevel: > 0 };
             (Brush Glow, Brush Body, Pen Outline) visual = GetShotVisual(view, color, enhanced, shot.PowerLevel);
             dc.DrawEllipse(visual.Glow, null, view.Pt(shot.Position), radius * 2.15, radius * 2.15);
             dc.DrawEllipse(visual.Body, visual.Outline, view.Pt(shot.Position), radius, radius);
+
             if (shot is { Enemy: false, PowerLevel: > 0 })
             {
                 double orbit = radius * (1.28 + .05 * Math.Sin(view.Game.TotalTime * 18 + shot.Age * 9));
+
                 dc.DrawArc(GetOrbitPen(color, shot.PowerLevel), view.Pt(shot.Position), orbit,
                     shot.Angle * 180 / Math.PI, 155 + shot.PowerLevel * 28);
             }
@@ -92,6 +99,7 @@ internal sealed class EffectsHudRenderer
     private Pen GetOrbitPen(Color color, int power)
     {
         (Color color, int power) key = (color, power);
+
         if (shotOrbitPens.TryGetValue(key, out Pen? pen))
         {
             return pen;
@@ -105,6 +113,7 @@ internal sealed class EffectsHudRenderer
     private (Brush Glow, Brush Body, Pen Outline) GetShotVisual(GameView view, Color color, bool enhanced, int power)
     {
         (Color color, bool enhanced) key = (color, enhanced);
+
         if (shotVisuals.TryGetValue(key, out (Brush Glow, Brush Body, Pen Outline) cached))
         {
             return cached;
@@ -114,6 +123,7 @@ internal sealed class EffectsHudRenderer
         glow.GradientStops.Add(new GradientStop(Color.FromArgb(105, color.R, color.G, color.B), 0));
         glow.GradientStops.Add(new GradientStop(Color.FromArgb(35, color.R, color.G, color.B), .48));
         glow.GradientStops.Add(new GradientStop(Color.FromArgb(0, color.R, color.G, color.B), 1));
+
         RadialGradientBrush sphere = new()
         {
             GradientOrigin = new Point(.32, .27),
@@ -121,18 +131,26 @@ internal sealed class EffectsHudRenderer
             RadiusX = .7,
             RadiusY = .7
         };
+
         sphere.GradientStops.Add(new GradientStop(Colors.White, 0));
+
         sphere.GradientStops.Add(new GradientStop(enhanced
             ? view.Lighten(color, .58)
             : Color.FromRgb(151, 226, 255), .24));
+
         sphere.GradientStops.Add(new GradientStop(color, .6));
+
         sphere.GradientStops.Add(new GradientStop(enhanced
             ? view.Darken(color, .72)
             : Color.FromRgb(9, 31, 103), 1));
+
         glow.Freeze();
         sphere.Freeze();
-        Pen outline = new(new SolidColorBrush(enhanced ? view.Lighten(color, .38) : Color.FromArgb(210, 174, 230, 255)),
+
+        Pen outline = new(
+            new SolidColorBrush(enhanced ? view.Lighten(color, .38) : Color.FromArgb(210, 174, 230, 255)),
             .65 + power * .18);
+
         outline.Freeze();
         return shotVisuals[key] = (glow, sphere, outline);
     }
@@ -144,11 +162,14 @@ internal sealed class EffectsHudRenderer
         V2 heading = shot.Velocity.Normalized;
         V2 trail = -heading;
         int trailDrops = shot.SludgeVomit ? 2 : 4;
+
         for (int i = trailDrops; i >= 1; i--)
         {
             double size = radius * (.18 + i * .08);
+
             V2 position = shot.Position + trail * (radius * (.55 + i * .54)) +
                           new V2(-heading.Y, heading.X) * Math.Sin(shot.Angle + i * 1.9) * radius * .2;
+
             dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(35 + i * 17), color.R, color.G, color.B)),
                 null, view.Pt(position), size, size * .8);
         }
@@ -156,6 +177,7 @@ internal sealed class EffectsHudRenderer
         view.DrawGlowEllipse(dc, shot.Position, radius * 1.18, color, shot.SplitAge > 0 ? 4 : 2, .3);
         dc.PushTransform(new TranslateTransform(shot.Position.X, shot.Position.Y));
         dc.PushTransform(new RotateTransform(Math.Atan2(heading.Y, heading.X) * 180 / Math.PI));
+
         if (shot.SludgeVomit)
         {
             dc.PushTransform(new ScaleTransform(1.32, .82));
@@ -168,12 +190,13 @@ internal sealed class EffectsHudRenderer
             RadiusX = .72,
             RadiusY = .72
         };
+
         body.GradientStops.Add(new GradientStop(Color.FromRgb(225, 255, 157), 0));
         body.GradientStops.Add(new GradientStop(view.Lighten(color, .28), .3));
         body.GradientStops.Add(new GradientStop(color, .67));
         body.GradientStops.Add(new GradientStop(view.Darken(color, .68), 1));
-
         int lobes = shot.SplitAge > 0 ? 7 : 4;
+
         for (int i = 0; i < lobes; i++)
         {
             double angle = i * Math.PI * 2 / lobes + shot.Angle * .31;
@@ -185,8 +208,10 @@ internal sealed class EffectsHudRenderer
 
         dc.DrawEllipse(body, new Pen(view.Brush(Color.FromArgb(205, 168, 235, 91)), .85),
             new Point(), radius, radius * .91);
+
         dc.DrawEllipse(view.Brush(Color.FromArgb(175, 230, 255, 161)), null,
             new Point(-radius * .3, -radius * .27), radius * .18, radius * .13);
+
         dc.DrawEllipse(view.Brush(Color.FromArgb(145, 42, 83, 27)), null,
             new Point(radius * .27, radius * .21), radius * .15, radius * .19);
 
@@ -208,13 +233,16 @@ internal sealed class EffectsHudRenderer
         dc.PushTransform(new RotateTransform(shot.Angle * 180 / Math.PI));
         dc.PushClip(new EllipseGeometry(new Point(), radius, radius));
         dc.DrawEllipse(Brushes.White, null, new Point(), radius, radius);
+
         Color[] colors = shot.Enemy
             ? [Color.FromRgb(255, 76, 67), Color.FromRgb(255, 221, 75), Color.FromRgb(63, 174, 255)]
             : [Color.FromRgb(41, 196, 255), Color.FromRgb(255, 214, 64), Color.FromRgb(255, 91, 116)];
+
         for (int i = 0; i < 6; i++)
         {
             double a0 = (i * 60 - 8) * Math.PI / 180;
             double a1 = (i * 60 + 30) * Math.PI / 180;
+
             dc.DrawGeometry(view.Brush(colors[i % colors.Length]), null,
                 view.Polygon((0, 0), (Math.Cos(a0) * radius * 1.35, Math.Sin(a0) * radius * 1.35),
                     (Math.Cos(a1) * radius * 1.35, Math.Sin(a1) * radius * 1.35)));
@@ -227,14 +255,17 @@ internal sealed class EffectsHudRenderer
             RadiusX = .72,
             RadiusY = .72
         };
+
         shade.GradientStops.Add(new GradientStop(Color.FromArgb(120, 255, 255, 255), 0));
         shade.GradientStops.Add(new GradientStop(Color.FromArgb(0, 255, 255, 255), .42));
         shade.GradientStops.Add(new GradientStop(Color.FromArgb(105, 0, 18, 36), 1));
         dc.DrawEllipse(shade, null, new Point(), radius, radius);
         dc.Pop();
         dc.DrawEllipse(null, new Pen(view.Brush(Color.FromRgb(232, 251, 255)), 1.1), new Point(), radius, radius);
+
         dc.DrawEllipse(Brushes.White, new Pen(view.Brush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22,
             radius * .22);
+
         dc.Pop();
         dc.Pop();
     }
@@ -249,8 +280,10 @@ internal sealed class EffectsHudRenderer
         dc.DrawRectangle(ArenaShade, null, new Rect(GameEngine.Width - inset, 0, inset, GameEngine.Height));
         dc.DrawRoundedRectangle(null, ArenaRail, inner, 3, 3);
         dc.DrawRoundedRectangle(null, ArenaGlow, inner, 3, 3);
+
         dc.DrawRoundedRectangle(null, ArenaAccent,
             new Rect(14, 14, GameEngine.Width - 28, GameEngine.Height - 28), 2, 2);
+
         foreach (Point corner in ArenaCorners)
         {
             dc.DrawEllipse(ArenaCorner, ArenaCornerOutline, corner, 4, 4);
@@ -277,9 +310,11 @@ internal sealed class EffectsHudRenderer
     {
         int maximum = view.Game.VisualQuality switch { 0 => 220, 1 => 520, _ => 900 };
         int stride = Math.Max(1, (view.Game.Particles.Count + maximum - 1) / maximum);
+
         for (int index = 0; index < view.Game.Particles.Count; index += stride)
         {
             Particle p = view.Game.Particles[index];
+
             if (!Visible(p.Position.X, p.Position.Y, 42))
             {
                 continue;
@@ -289,13 +324,16 @@ internal sealed class EffectsHudRenderer
             Color c = view.FromArgb(p.Color, (byte)(255 * life));
             double r = p.StartSize * (.35 + life * .8);
             dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
+
             if (r > 3 && view.Game.VisualQuality > 0)
             {
                 dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position),
                     r * 2.8, r * 2.8);
+
                 if (view.Game.VisualQuality > 1)
                 {
                     V2 trail = p.Velocity.Normalized * Math.Min(18, p.Velocity.Length * .045) * life;
+
                     dc.DrawLine(view.Pen(Color.FromArgb((byte)(105 * life), c.R, c.G, c.B), Math.Max(.65, r * .38)),
                         view.Pt(p.Position), view.Pt(p.Position - trail));
                 }
@@ -310,6 +348,7 @@ internal sealed class EffectsHudRenderer
             double p = ring.Age / ring.Lifetime;
             double r = ring.MaxRadius * view.EaseOut(p);
             Color color = view.FromArgb(ring.Color, (byte)(220 * (1 - p)));
+
             if (!Visible(ring.Position.X, ring.Position.Y, r + 12))
             {
                 continue;
@@ -335,11 +374,14 @@ internal sealed class EffectsHudRenderer
         view.DrawText(dc, "SCORE", 30, 29, 12, dim, FontWeights.SemiBold);
         view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
         view.DrawText(dc, "LEVEL", 274, 29, 12, dim, FontWeights.SemiBold);
+
         Brush levelBrush = view.Brush(view.Game.LevelBonusCash > 1_000
             ? Color.FromRgb(255, 221, 113)
             : Color.FromRgb(142, 169, 181));
+
         view.DrawText(dc, view.Money(view.Game.LevelBonusCash), 332, 31, 20, levelBrush, FontWeights.Bold);
         AlienBoss? activeBoss = null;
+
         for (int i = 0; i < view.Game.Bosses.Count; i++)
         {
             if (view.Game.Bosses[i].Alive)
@@ -358,12 +400,15 @@ internal sealed class EffectsHudRenderer
                 : view.Game.IsBonusStage
                     ? $"BONUS {view.Game.Wave:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
                     : $"WAVE {view.Game.Wave:00}";
+
         bool expandedTopHud = view.Game.IsBonusStage || activeBoss is not null;
         double stageBaseline = expandedTopHud ? 72 : 29;
+
         view.DrawCenteredText(dc, stageLabel, GameEngine.Width / 2, stageBaseline, expandedTopHud ? 15 : 18,
             view.Brush(view.Game.IsBonusStage ? Color.FromRgb(255, 221, 113) :
                 activeBoss is not null ? view.BossColor(activeBoss.Kind) : Color.FromRgb(191, 224, 241)),
             FontWeights.Bold);
+
         if (view.Game.IsBonusStage)
         {
             view.DrawCenteredText(dc, $"{view.Game.BonusStageObjective}   /   WEAPONS + SHIELDS OFFLINE" +
@@ -378,10 +423,13 @@ internal sealed class EffectsHudRenderer
             const double bossBarWidth = 390;
             double health = Math.Clamp(activeBoss.HitPoints / (double)activeBoss.MaxHitPoints, 0, 1);
             Rect barRect = new(GameEngine.Width / 2 - bossBarWidth / 2, 88, bossBarWidth, 12);
+
             dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(190, 4, 9, 14)),
                 new Pen(new SolidColorBrush(Color.FromArgb(185, 202, 239, 245)), 1), barRect, 3, 3);
+
             LinearGradientBrush healthBrush = new(view.Lighten(view.BossColor(activeBoss.Kind), .35),
                 view.Darken(view.BossColor(activeBoss.Kind), .42), 0);
+
             dc.DrawRoundedRectangle(healthBrush, null,
                 new Rect(barRect.X + 2, barRect.Y + 2, (bossBarWidth - 4) * health, 8), 2, 2);
         }
@@ -390,23 +438,31 @@ internal sealed class EffectsHudRenderer
         {
             int seconds = Math.Max(1, (int)Math.Ceiling(view.Game.BossCountdown));
             Brush countdownBrush = seconds == 1 ? Brushes.OrangeRed : Brushes.Gold;
+
             view.DrawCenteredText(dc, $"BOSS ENGAGES IN {seconds}", GameEngine.Width / 2, 330, 30, countdownBrush,
                 FontWeights.Bold);
+
             view.DrawCenteredText(dc, "SHIP SYSTEMS LOCKED", GameEngine.Width / 2, 368, 14, Brushes.White,
                 FontWeights.Bold);
         }
 
         view.DrawText(dc, view.Game.IsBonusStage ? "SHIELD OFFLINE" : "SHIELD", 30, 682, 12,
             view.Game.IsBonusStage ? view.Brush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
+
         double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
         double shieldBarSpan = view.Game.IsBonusStage ? 132 : 180;
+
         dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)), view.Pen(Color.FromRgb(55, 91, 113), 1),
             new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
+
         double shieldWidth = Math.Max(0, (shieldBarSpan - 4) * view.Game.Player.Shield / 100);
+
         LinearGradientBrush shieldBrush = view.Game.IsBonusStage
             ? new LinearGradientBrush(Color.FromRgb(82, 88, 94), Color.FromRgb(47, 53, 61), 0)
             : new LinearGradientBrush(Color.FromRgb(54, 215, 255), Color.FromRgb(90, 124, 255), 0);
+
         dc.DrawRoundedRectangle(shieldBrush, null, new Rect(shieldBarX + 2, 685, shieldWidth, 8), 2, 2);
+
         if (view.Game.Multiplier > 1)
         {
             view.DrawText(dc, $"{view.Game.Multiplier}X", 1194, 674, 26, view.Brush(Color.FromRgb(220, 155, 255)),
@@ -417,14 +473,17 @@ internal sealed class EffectsHudRenderer
         {
             double pulse = .78 + (Math.Sin(view.Game.TotalTime * 3.2) + 1) * .11;
             byte alpha = (byte)(255 * pulse);
+
             dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(120, 2, 13, 23)),
                 new Pen(new SolidColorBrush(Color.FromArgb(150, 87, 217, 247)), 1), new Rect(438, 48, 404, 31));
+
             view.DrawCenteredText(dc, "PRESS ANY KEY TO RETURN TO TITLE", GameEngine.Width / 2, 69, 13,
                 new SolidColorBrush(Color.FromArgb(alpha, 187, 239, 252)), FontWeights.Bold);
         }
 
         List<string> active = activePowerupLabels;
         active.Clear();
+
         if (view.Game.ReflectionShieldActive)
         {
             active.Add("REFLECTION SHIELD");
@@ -475,6 +534,7 @@ internal sealed class EffectsHudRenderer
             string activeLabel = string.Join("   |   ", active);
             double activeSize = active.Count >= 6 ? 9.5 : active.Count >= 5 ? 10.5 : 12;
             FormattedText measured = view.Format(activeLabel, activeSize, Brushes.White, FontWeights.SemiBold);
+
             if (measured.Width > 730)
             {
                 activeSize = Math.Max(7.5, activeSize * 730 / measured.Width);
@@ -484,11 +544,13 @@ internal sealed class EffectsHudRenderer
             double panelWidth = Math.Min(760, measured.Width + 30);
             double panelPulse = .72 + .28 * Math.Sin(view.Game.TotalTime * 4.2);
             Color panelGlow = view.Game.FreezeTime > 0 ? Color.FromRgb(126, 240, 255) : Color.FromRgb(86, 193, 215);
+
             dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(150, 1, 10, 18)),
                 new Pen(
                     new SolidColorBrush(Color.FromArgb((byte)(90 + panelPulse * 80), panelGlow.R, panelGlow.G,
                         panelGlow.B)), 1 + panelPulse * .5),
                 new Rect(GameEngine.Width / 2 - panelWidth / 2, 674, panelWidth, 29), 3, 3);
+
             view.DrawCenteredText(dc, activeLabel, GameEngine.Width / 2, 694, activeSize,
                 new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);
         }
@@ -497,6 +559,7 @@ internal sealed class EffectsHudRenderer
         {
             double alpha = Math.Min(1, view.Game.BannerTime * 2);
             SolidColorBrush b = new(Color.FromArgb((byte)(230 * alpha), 230, 246, 255));
+
             view.DrawCenteredText(dc, view.Game.Banner, GameEngine.Width / 2, expandedTopHud ? 133 : 105, 24, b,
                 FontWeights.Bold);
         }

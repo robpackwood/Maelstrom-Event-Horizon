@@ -28,6 +28,7 @@ internal sealed class AlienBoss : Body
     {
         Kind = kind;
         Encounter = encounter;
+
         int baseHealth = kind switch
         {
             AlienBossKind.SludgeMaw => 18,
@@ -37,6 +38,7 @@ internal sealed class AlienBoss : Body
             AlienBossKind.SolarWarden => 23,
             _ => 22
         };
+
         HitPoints = MaxHitPoints = baseHealth + encounter * 4;
         AttackTimer = 3.4;
         SpecialTimer = 5;

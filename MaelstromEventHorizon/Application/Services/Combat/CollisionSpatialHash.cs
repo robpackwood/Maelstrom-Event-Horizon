@@ -30,6 +30,7 @@ internal sealed class CollisionSpatialHash
         nearby.Clear();
         int x = Math.Clamp((int)(body.Position.X / CellSize), 0, Columns - 1);
         int y = Math.Clamp((int)(body.Position.Y / CellSize), 0, Rows - 1);
+
         for (int oy = -1; oy <= 1; oy++)
         for (int ox = -1; ox <= 1; ox++)
         {
@@ -46,6 +47,7 @@ internal sealed class CollisionSpatialHash
         for (int i = 0; i < bodies.Count; i++)
         {
             T body = bodies[i];
+
             if (!body.Alive)
             {
                 continue;

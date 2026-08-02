@@ -10,9 +10,11 @@ internal sealed class WaveEventService
         {
             game.UpdateBonusAsteroidStream(dt);
             bool bonusClear = game.BonusAsteroidsRemaining == 0 && !HasAlive(game.Asteroids);
+
             if (bonusClear)
             {
                 game.NextWaveTimer += dt;
+
                 if (game.NextWaveTimer > 1.6)
                 {
                     game.BeginWaveOutro();
@@ -29,9 +31,11 @@ internal sealed class WaveEventService
         if (game.IsBossStage)
         {
             bool bossClear = !HasAlive(game.Bosses);
+
             if (bossClear)
             {
                 game.NextWaveTimer += dt;
+
                 if (game.NextWaveTimer > 1.8)
                 {
                     game.BeginWaveOutro();
@@ -48,6 +52,7 @@ internal sealed class WaveEventService
         if (game.RescueTimer > 0)
         {
             game.RescueTimer -= dt;
+
             if (game.RescueTimer <= 0)
             {
                 game.SpawnRescueShip();
@@ -58,6 +63,7 @@ internal sealed class WaveEventService
         if (game.CanisterTimer > 0)
         {
             game.CanisterTimer -= dt;
+
             if (game.CanisterTimer <= 0)
             {
                 game.SpawnCanister();
@@ -67,6 +73,7 @@ internal sealed class WaveEventService
         if (game.MultiplierTimer > 0)
         {
             game.MultiplierTimer -= dt;
+
             if (game.MultiplierTimer <= 0)
             {
                 game.SpawnMultiplier();
@@ -76,6 +83,7 @@ internal sealed class WaveEventService
         if (game.CometTimer > 0)
         {
             game.CometTimer -= dt;
+
             if (game.CometTimer <= 0)
             {
                 game.SpawnComet();
@@ -85,6 +93,7 @@ internal sealed class WaveEventService
         if (game.BlackHoleTimer > 0)
         {
             game.BlackHoleTimer -= dt;
+
             if (game.BlackHoleTimer <= 0)
             {
                 game.SpawnVortex();
@@ -94,6 +103,7 @@ internal sealed class WaveEventService
         if (game.CometStormRemaining > 0)
         {
             game.CometStormSpawnTimer -= dt;
+
             if (game.CometStormSpawnTimer <= 0)
             {
                 game.SpawnCometEntity();
@@ -103,10 +113,12 @@ internal sealed class WaveEventService
         }
 
         game.EventTimer -= dt;
+
         if (game.EventTimer <= 0)
         {
             game.EventTimer = Math.Max(4.5, 10.5 - game.Wave * .28) + game.Random.NextDouble() * 5;
             int assaultRoll = game.Random.Next(1000);
+
             if (game.Wave >= 3 && assaultRoll < 18)
             {
                 game.SpawnFighterAssault();
@@ -127,11 +139,14 @@ internal sealed class WaveEventService
 
         bool pendingStorm = game is { CometStormWave: true, CometSpawned: false } ||
                             game.CometStormRemaining > 0;
+
         bool waveClear = !game.PlayerRespawning && !HasAlive(game.Asteroids) && !HasAlive(game.Fighters) &&
                          !HasAlive(game.Vortices) && !pendingStorm && game.BlackHoleTimer <= 0;
+
         if (waveClear)
         {
             game.NextWaveTimer += dt;
+
             if (game.NextWaveTimer > 1.6)
             {
                 game.BeginWaveOutro();
@@ -146,6 +161,7 @@ internal sealed class WaveEventService
     private static void SpawnStandardEvent(GameEngine game)
     {
         int roll = game.Random.Next(100);
+
         if (roll < 31)
         {
             game.SpawnFighter();

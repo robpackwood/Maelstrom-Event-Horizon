@@ -59,6 +59,7 @@ internal sealed class SynthAudio : IAudioService
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
         celebrationSummaryMusicPath = assets.PathFor("Music", "summary-celebration-our-expanse.mp3");
         gameOverMusicPath = assets.PathFor("Music", "game-over-alone.mp3");
+
         waveMusicPaths =
         [
             assets.PathFor("Music", "wave-12-gsf-discovery.mp3"),
@@ -76,6 +77,7 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-19-anti-entity-original.mp3"),
             assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
+
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
     }
@@ -88,10 +90,12 @@ internal sealed class SynthAudio : IAudioService
     public void StartWaveMusic(int wave, bool intense)
     {
         StopActiveEffects();
+
         try
         {
             int trackIndex = (Math.Max(1, wave) - 1) % waveMusicPaths.Length;
             string path = waveMusicPaths[trackIndex];
+
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException("Wave _music asset was not extracted.", path);
@@ -136,13 +140,18 @@ internal sealed class SynthAudio : IAudioService
         {
             musicVolume = Math.Clamp(musicLevel, 0, 1);
             effectsVolume = Math.Clamp(effectsLevel, 0, 1);
+
             try
             {
                 music.Volume = requestedMusicVolume * musicVolume;
             }
-            catch (Exception exception) { TraceAudioFailure("set _music volume", exception); }
+            catch (Exception exception)
+            {
+                TraceAudioFailure("set _music volume", exception);
+            }
 
             RebalanceLayeredEffects();
+
             if (thrustLoopActive)
             {
                 thrustLoop.Volume = thrustIntensity * effectsVolume;
@@ -156,11 +165,15 @@ internal sealed class SynthAudio : IAudioService
         musicRequested = false;
         audioPaused = false;
         pausedMusicPosition = TimeSpan.Zero;
+
         try
         {
             music.Stop();
         }
-        catch (Exception exception) { TraceAudioFailure("stop _music", exception); }
+        catch (Exception exception)
+        {
+            TraceAudioFailure("stop _music", exception);
+        }
 
         if (stopEffects)
         {
@@ -171,12 +184,16 @@ internal sealed class SynthAudio : IAudioService
     public void PauseAll()
     {
         audioPaused = true;
+
         try
         {
             pausedMusicPosition = music.Position;
             music.Stop();
         }
-        catch (Exception exception) { TraceAudioFailure("pause _music", exception); }
+        catch (Exception exception)
+        {
+            TraceAudioFailure("pause _music", exception);
+        }
 
         StopActiveEffects();
     }
@@ -184,6 +201,7 @@ internal sealed class SynthAudio : IAudioService
     public void ResumeAll()
     {
         audioPaused = false;
+
         if (!musicRequested)
         {
             return;
@@ -202,7 +220,10 @@ internal sealed class SynthAudio : IAudioService
                 OpenAndPlayMusic(requestedMusicPath, false);
             }
         }
-        catch (Exception exception) { TraceAudioFailure("resume _music", exception); }
+        catch (Exception exception)
+        {
+            TraceAudioFailure("resume _music", exception);
+        }
     }
 
     public void Play(SoundCue cue, double volume = 1)
@@ -213,6 +234,7 @@ internal sealed class SynthAudio : IAudioService
         }
 
         double categoryVolume = effectsVolume;
+
         if (audioPaused || volume <= 0 || categoryVolume <= 0)
         {
             return;
@@ -229,6 +251,7 @@ internal sealed class SynthAudio : IAudioService
         }
 
         int volumeStep = (int)Math.Round(Math.Clamp(volume * categoryVolume, 0, 1) * 100);
+
         if (volumeStep <= 0)
         {
             return;
@@ -244,6 +267,7 @@ internal sealed class SynthAudio : IAudioService
                 }
 
                 (SoundCue cue, int volumeStep) key = (cue, volumeStep);
+
                 if (!effectPlayers.TryGetValue(key, out (SoundPlayer Player, MemoryStream Stream) cached))
                 {
                     byte[] bytes = volumeStep >= 99 ? source : Scale(source, volumeStep / 100.0);
@@ -269,6 +293,7 @@ internal sealed class SynthAudio : IAudioService
         lock (playerGate)
         {
             thrustIntensity = Math.Clamp(intensity, 0, .73);
+
             if (audioPaused || thrustIntensity <= 0 ||
                 !layeredEffectPaths.TryGetValue(SoundCue.Thrust, out string? path))
             {
@@ -287,6 +312,7 @@ internal sealed class SynthAudio : IAudioService
 
                 thrustLoop.Volume = thrustIntensity * effectsVolume;
                 thrustLoopSecondary.Volume = thrustIntensity * effectsVolume;
+
                 if (!thrustLoopActive)
                 {
                     thrustLoop.Position = TimeSpan.Zero;
@@ -323,6 +349,7 @@ internal sealed class SynthAudio : IAudioService
         musicRequested = true;
         audioPaused = false;
         pausedMusicPosition = TimeSpan.Zero;
+
         if (File.Exists(path))
         {
             OpenAndPlayMusic(path, restart || trackChanged || !wasRequested);
@@ -396,7 +423,10 @@ internal sealed class SynthAudio : IAudioService
                 {
                     cached.Player.Stop();
                 }
-                catch (Exception exception) { TraceAudioFailure("stop sound effect", exception); }
+                catch (Exception exception)
+                {
+                    TraceAudioFailure("stop sound effect", exception);
+                }
             }
 
             foreach (LayeredEffectVoice voice in layeredEffectVoices)
@@ -405,7 +435,10 @@ internal sealed class SynthAudio : IAudioService
                 {
                     voice.Player.Stop();
                 }
-                catch (Exception exception) { TraceAudioFailure("stop layered effect", exception); }
+                catch (Exception exception)
+                {
+                    TraceAudioFailure("stop layered effect", exception);
+                }
 
                 voice.Busy = false;
             }
@@ -445,7 +478,10 @@ internal sealed class SynthAudio : IAudioService
             thrustLoop.Stop();
             thrustLoopSecondary.Stop();
         }
-        catch (Exception exception) { TraceAudioFailure("stop thrust loop", exception); }
+        catch (Exception exception)
+        {
+            TraceAudioFailure("stop thrust loop", exception);
+        }
 
         thrustLoopActive = false;
     }
@@ -457,7 +493,9 @@ internal sealed class SynthAudio : IAudioService
             string root = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "MaelstromEventHorizon", "EffectCache");
+
             Directory.CreateDirectory(root);
+
             foreach (SoundCue cue in Enum.GetValues<SoundCue>())
             {
                 if (!clips.TryGetValue(cue, out byte[]? source))
@@ -467,6 +505,7 @@ internal sealed class SynthAudio : IAudioService
 
                 string fingerprint = Convert.ToHexString(SHA256.HashData(source).AsSpan(0, 8));
                 string path = Path.Combine(root, $"{cue}-{fingerprint}.wav");
+
                 if (!File.Exists(path))
                 {
                     File.WriteAllBytes(path, source);
@@ -549,33 +588,28 @@ internal sealed class SynthAudio : IAudioService
                      })
             {
                 string path = assets.PathFor("SoundEffects", recorded.Value);
+
                 // Individually curated CC0 recordings: only the events that benefit from a real,
                 // distinctive sound replace their prior synthesized cue.
                 if (File.Exists(path) && recorded.Key is SoundCue.EnemyFire or
                         SoundCue.EnemyWarning or SoundCue.BossAlarm or SoundCue.Pickup or SoundCue.BonusVoice or
-                        SoundCue.AnnouncerWarning or SoundCue.AnnouncerBossDown or SoundCue.AnnouncerExtraShip
-                        or SoundCue.Shield or SoundCue.Nova or
-                        SoundCue.AnnouncerWaveStart or
-                        SoundCue.AnnouncerEnemyInbound or SoundCue.AnnouncerEnemyAssault or SoundCue.AnnouncerMineAlert
-                        or SoundCue.AnnouncerBlackHoleAlert or
-                        SoundCue.AnnouncerNovaAlert or SoundCue.AnnouncerItemBox
-                        or SoundCue.AnnouncerCometStorm or
+                        SoundCue.AnnouncerWarning or SoundCue.AnnouncerBossDown or SoundCue.AnnouncerExtraShip or
+                        SoundCue.Shield or SoundCue.Nova or SoundCue.AnnouncerWaveStart or
+                        SoundCue.AnnouncerEnemyInbound or SoundCue.AnnouncerEnemyAssault or
+                        SoundCue.AnnouncerMineAlert or SoundCue.AnnouncerBlackHoleAlert or
+                        SoundCue.AnnouncerNovaAlert or SoundCue.AnnouncerItemBox or SoundCue.AnnouncerCometStorm or
                         SoundCue.AnnouncerBonusComet or SoundCue.AnnouncerAirBrakes or SoundCue.AnnouncerLuck or
-                        SoundCue.AnnouncerTripleFire or SoundCue.AnnouncerRiftVolley or SoundCue.AnnouncerLongRange
-                        or SoundCue.AnnouncerShields or
-                        SoundCue.AnnouncerReflectionShield or SoundCue.AnnouncerTimeFreeze
-                        or SoundCue.AnnouncerSmartBomb or SoundCue.AnnouncerRicochetArena or SoundCue.AnnouncerGiantShip
-                        or
-                        SoundCue.Vortex or SoundCue.Life or SoundCue.RescueCelebration or
-                        SoundCue.ChaChing or SoundCue.CometCelebration or SoundCue.CometSpawn
-                        or SoundCue.MultiplierWoohoo or
+                        SoundCue.AnnouncerTripleFire or SoundCue.AnnouncerRiftVolley or SoundCue.AnnouncerLongRange or
+                        SoundCue.AnnouncerShields or SoundCue.AnnouncerReflectionShield or
+                        SoundCue.AnnouncerTimeFreeze or SoundCue.AnnouncerSmartBomb or
+                        SoundCue.AnnouncerRicochetArena or SoundCue.AnnouncerGiantShip or SoundCue.Vortex or
+                        SoundCue.Life or SoundCue.RescueCelebration or SoundCue.ChaChing or
+                        SoundCue.CometCelebration or SoundCue.CometSpawn or SoundCue.MultiplierWoohoo or
                         SoundCue.BonusFailed or SoundCue.GiantGrow or SoundCue.GiantShrink or
-                        SoundCue.ShieldImpact or SoundCue.ReflectionBreak or SoundCue.VortexHit or SoundCue.NovaHit
-                        or SoundCue.RicochetBounce or
-                        SoundCue.EnemyHit or SoundCue.EnemyDestroyed or SoundCue.MineHit or SoundCue.ShipCrash
-                        or SoundCue.ShipBlast or
-                        SoundCue.Coin or SoundCue.SludgeMawHit or SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit
-                        or
+                        SoundCue.ShieldImpact or SoundCue.ReflectionBreak or SoundCue.VortexHit or
+                        SoundCue.NovaHit or SoundCue.RicochetBounce or SoundCue.EnemyHit or SoundCue.EnemyDestroyed or
+                        SoundCue.MineHit or SoundCue.ShipCrash or SoundCue.ShipBlast or SoundCue.Coin or
+                        SoundCue.SludgeMawHit or SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit or
                         SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit or
                         SoundCue.SludgeMawFire or SoundCue.EyeTyrantFire or SoundCue.BoneBroodmotherFire or
                         SoundCue.VoidLeechFire or SoundCue.DreadHarvesterFire or SoundCue.SolarWardenFire)
@@ -609,6 +643,7 @@ internal sealed class SynthAudio : IAudioService
         lock (playerGate)
         {
             LayeredEffectVoice? voice = null;
+
             try
             {
                 if (audioPaused)
@@ -617,9 +652,11 @@ internal sealed class SynthAudio : IAudioService
                 }
 
                 voice = layeredEffectVoices[0];
+
                 for (int i = 0; i < layeredEffectVoices.Count; i++)
                 {
                     LayeredEffectVoice candidate = layeredEffectVoices[i];
+
                     if (!candidate.Busy)
                     {
                         voice = candidate;
@@ -645,11 +682,7 @@ internal sealed class SynthAudio : IAudioService
             }
             catch
             {
-                if (voice is not null)
-                {
-                    voice.Busy = false;
-                }
-
+                voice?.Busy = false;
                 return false;
             }
         }
@@ -666,6 +699,7 @@ internal sealed class SynthAudio : IAudioService
             cue is SoundCue.EyeTyrantHit or
                 SoundCue.BoneBroodmotherHit or SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit
                 or SoundCue.SolarWardenHit ? .15 : 0;
+
         if (seconds <= 0)
         {
             return;
@@ -675,9 +709,11 @@ internal sealed class SynthAudio : IAudioService
         long order = voice.StartedOrder;
         DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(seconds) };
         voice.CutoffTimer = timer;
+
         timer.Tick += (_, _) =>
         {
             timer.Stop();
+
             if (voice.StartedOrder != order)
             {
                 return;
@@ -686,6 +722,7 @@ internal sealed class SynthAudio : IAudioService
             voice.Player.Stop();
             ReleaseLayeredVoice(voice);
         };
+
         timer.Start();
     }
 
@@ -702,6 +739,7 @@ internal sealed class SynthAudio : IAudioService
     private void RebalanceLayeredEffects()
     {
         int activeCount = 0;
+
         for (int i = 0; i < layeredEffectVoices.Count; i++)
         {
             if (layeredEffectVoices[i].Busy)
@@ -713,9 +751,11 @@ internal sealed class SynthAudio : IAudioService
         double headroom = activeCount <= 1
             ? 1
             : Math.Max(.4, 1 / Math.Sqrt(1 + (activeCount - 1) * .38));
+
         for (int i = 0; i < layeredEffectVoices.Count; i++)
         {
             LayeredEffectVoice voice = layeredEffectVoices[i];
+
             if (voice.Busy)
             {
                 voice.Player.Volume = voice.RequestedVolume * headroom;
@@ -738,6 +778,7 @@ internal sealed class SynthAudio : IAudioService
     private static byte[] Scale(byte[] source, double volume)
     {
         byte[] copy = (byte[])source.Clone();
+
         for (int i = 44; i + 1 < copy.Length; i += 2)
         {
             short value = BitConverter.ToInt16(copy, i);

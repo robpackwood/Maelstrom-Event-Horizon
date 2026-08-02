@@ -32,7 +32,6 @@ internal sealed class GameWindow : Window
         SetWindowIcon();
         Content = view;
         ApplyFullScreen(display.FullScreen);
-
         this.game.FullScreenChanged += ApplyFullScreen;
         SourceInitialized += (_, _) => ApplySystemTitleBarTheme();
         Activated += (_, _) => ApplySystemTitleBarTheme();
@@ -48,11 +47,13 @@ internal sealed class GameWindow : Window
     private void ApplyFullScreen(bool enabled)
     {
         fullScreen = enabled;
+
         if (enabled)
         {
             if (IsLoaded && WindowStyle != WindowStyle.None)
             {
                 Rect bounds = RestoreBounds;
+
                 if (bounds.Width >= MinWidth && bounds.Height >= MinHeight)
                 {
                     windowedBounds = bounds;
@@ -69,6 +70,7 @@ internal sealed class GameWindow : Window
             WindowState = WindowState.Normal;
             WindowStyle = WindowStyle.SingleBorderWindow;
             ResizeMode = ResizeMode.CanResize;
+
             if (windowedBounds.Width >= MinWidth && windowedBounds.Height >= MinHeight)
             {
                 WindowStartupLocation = WindowStartupLocation.Manual;
@@ -90,6 +92,7 @@ internal sealed class GameWindow : Window
         try
         {
             string path = assets.PathFor("MaelstromEventHorizon.ico");
+
             if (!File.Exists(path))
             {
                 return;
@@ -114,12 +117,14 @@ internal sealed class GameWindow : Window
         try
         {
             nint handle = new WindowInteropHelper(this).Handle;
+
             if (handle == 0)
             {
                 return;
             }
 
             int darkMode = SystemUsesDarkAppTheme() ? 1 : 0;
+
             if (DwmSetWindowAttribute(handle, 20, ref darkMode, sizeof(int)) != 0)
             {
                 DwmSetWindowAttribute(handle, 19, ref darkMode, sizeof(int));
@@ -135,6 +140,7 @@ internal sealed class GameWindow : Window
     {
         using RegistryKey? key = Registry.CurrentUser.OpenSubKey(
             @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+
         object? value = key?.GetValue("AppsUseLightTheme");
         return value is 0;
     }

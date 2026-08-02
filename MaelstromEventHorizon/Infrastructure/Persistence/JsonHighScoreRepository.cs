@@ -12,6 +12,7 @@ internal sealed class JsonHighScoreRepository(IAppDataPathProvider paths) : IHig
         try
         {
             string path = paths.ReadPath("highscores.json");
+
             if (!File.Exists(path))
             {
                 return [];
@@ -34,10 +35,12 @@ internal sealed class JsonHighScoreRepository(IAppDataPathProvider paths) : IHig
         try
         {
             Directory.CreateDirectory(paths.DirectoryPath);
+
             List<HighScoreEntry> topTen = [.. entries.OrderByDescending(entry => entry.Score)
                 .ThenBy(entry => entry.AchievedAt)
                 .Take(10)
                 ];
+
             File.WriteAllText(paths.WritePath("highscores.json"),
                 JsonSerializer.Serialize(topTen, new JsonSerializerOptions { WriteIndented = true }));
         }

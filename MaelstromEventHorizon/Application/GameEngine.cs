@@ -111,6 +111,7 @@ internal sealed class GameEngine
         audio.SetVolumes(MusicVolume, EffectsVolume);
         audio.StartTitleMusic();
         HighScores = highScoreRepository.Load();
+
         for (int i = 0; i < 115; i++)
         {
             Stars.Add(new Star(new V2(random.NextDouble() * Width, random.NextDouble() * Height),
@@ -242,9 +243,11 @@ internal sealed class GameEngine
         dt = Math.Min(dt, .04);
         TotalTime += dt;
         RicochetBounceSoundCooldown = Math.Max(0, RicochetBounceSoundCooldown - dt);
+
         if (Mode == GameMode.Title)
         {
             TitleIdleTime += dt;
+
             if (TitleIdleTime >= TitleDemoDelay)
             {
                 StartDemo();
@@ -257,6 +260,7 @@ internal sealed class GameEngine
         {
             UpdateDeathEffects(dt);
             GameOverDelayTimer = Math.Max(0, GameOverDelayTimer - dt);
+
             if (GameOverDelayTimer <= 0)
             {
                 GameOverFadeElapsed = 0;
@@ -305,6 +309,7 @@ internal sealed class GameEngine
         if (IsDemoMode)
         {
             DemoElapsed += dt;
+
             if (DemoElapsed >= DemoDuration)
             {
                 ReturnToTitle();
@@ -313,6 +318,7 @@ internal sealed class GameEngine
         }
 
         TickTimers(dt);
+
         if (!PlayerRespawning && !BossCountdownActive)
         {
             if (IsDemoMode)
@@ -328,6 +334,7 @@ internal sealed class GameEngine
         UpdateWorld(dt);
         HandleCollisions();
         RemoveDead();
+
         if (Mode != GameMode.Playing)
         {
             return;
@@ -348,9 +355,11 @@ internal sealed class GameEngine
     internal Shot SpawnShot(V2 position, V2 velocity, bool enemy, double lifetime)
     {
         TrimPool(Shots, shotPool, MaxPooledShots);
+
         Shot shot = shotPool.Count > 0
             ? shotPool.Pop().Reset(position, velocity, enemy, lifetime)
             : new Shot(position, velocity, enemy, lifetime);
+
         Shots.Add(shot);
         return shot;
     }
@@ -358,9 +367,11 @@ internal sealed class GameEngine
     internal Particle SpawnParticle(V2 position, V2 velocity, double lifetime, uint color, double size)
     {
         TrimPool(Particles, particlePool, MaxPooledParticles);
+
         Particle particle = particlePool.Count > 0
             ? particlePool.Pop().Reset(position, velocity, lifetime, color, size)
             : new Particle(position, velocity, lifetime, color, size);
+
         Particles.Add(particle);
         return particle;
     }
@@ -368,9 +379,11 @@ internal sealed class GameEngine
     internal Shockwave SpawnShockwave(V2 position, double lifetime, uint color, double maxRadius)
     {
         TrimPool(Shockwaves, shockwavePool, MaxPooledShockwaves);
+
         Shockwave shockwave = shockwavePool.Count > 0
             ? shockwavePool.Pop().Reset(position, lifetime, color, maxRadius)
             : new Shockwave(position, lifetime, color, maxRadius);
+
         Shockwaves.Add(shockwave);
         return shockwave;
     }
@@ -386,6 +399,7 @@ internal sealed class GameEngine
         FloatingText floatingText = floatingTextPool.Count > 0
             ? floatingTextPool.Pop().Reset(position, text, color)
             : new FloatingText(position, text, color);
+
         FloatingTexts.Add(floatingText);
         return floatingText;
     }
@@ -401,6 +415,7 @@ internal sealed class GameEngine
         ShipDebris piece = shipDebrisPool.Count > 0
             ? shipDebrisPool.Pop().Reset(position, velocity, kind, angle, spin)
             : new ShipDebris(position, velocity, kind, angle, spin).Initialize();
+
         ShipDebrisPieces.Add(piece);
         return piece;
     }
@@ -433,6 +448,7 @@ internal sealed class GameEngine
         RecycleDead(Shots, shotPool);
         RecycleDead(Particles, particlePool);
         RecycleDead(Shockwaves, shockwavePool);
+
         for (int i = FloatingTexts.Count - 1; i >= 0; i--)
         {
             if (!FloatingTexts[i].Alive)

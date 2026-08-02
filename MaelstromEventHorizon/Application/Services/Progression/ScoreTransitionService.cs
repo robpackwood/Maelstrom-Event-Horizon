@@ -29,6 +29,7 @@ internal sealed class ScoreTransitionService
         }
 
         game.Score += amount;
+
         while (game.Score >= game.NextLifeScore)
         {
             game.Lives++;
@@ -78,8 +79,10 @@ internal sealed class ScoreTransitionService
         game.SummaryCometCash = game.WaveCometCash;
         game.SummaryLevelBonusCash = game.LevelBonusCash;
         game.SummaryMultiplier = game.Multiplier;
+
         game.SummaryTotalCash = game.SummaryBaseCash +
                                 (game.SummaryLevelBonusCash + game.SummaryCometCash) * game.SummaryMultiplier;
+
         game.SummaryDeposited = 0;
         game.SummaryElapsed = 0;
         game.SummaryScreenElapsed = 0;
@@ -106,6 +109,7 @@ internal sealed class ScoreTransitionService
     {
         game.SummaryScreenElapsed += dt;
         game.TransitionAlpha = Math.Clamp(1 - game.SummaryScreenElapsed / GameEngine.SummaryFadeInDuration, 0, 1);
+
         if (game.SummaryScreenElapsed < GameEngine.SummaryFadeInDuration)
         {
             return;
@@ -123,6 +127,7 @@ internal sealed class ScoreTransitionService
         double eased = 1 - Math.Pow(1 - progress, 3);
         int targetDeposit = progress >= 1 ? game.SummaryTotalCash : (int)Math.Round(game.SummaryTotalCash * eased);
         int delta = targetDeposit - game.SummaryDeposited;
+
         if (delta > 0)
         {
             BankScore(game, delta);
@@ -143,10 +148,12 @@ internal sealed class ScoreTransitionService
         }
 
         game.LevelBonusCountdown -= dt;
+
         while (game is { LevelBonusCountdown: <= 0, LevelBonusCash: > 0 })
         {
             game.LevelBonusCash = Math.Max(0, game.LevelBonusCash - 50);
             game.LevelBonusCountdown += 5;
+
             if (game is { LevelBonusCash: <= 1_000, BonusSpawnsDisabled: false })
             {
                 DisableBonusSpawns(game);
@@ -168,6 +175,7 @@ internal sealed class ScoreTransitionService
     internal void CompleteWaveSummary(GameEngine game)
     {
         int remaining = game.SummaryTotalCash - game.SummaryDeposited;
+
         if (remaining > 0)
         {
             BankScore(game, remaining);
@@ -199,6 +207,7 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(game.TransitionElapsed / GameEngine.FadeToSummaryDuration, 0, 1);
+
         if (game.TransitionElapsed < GameEngine.FadeToSummaryDuration)
         {
             return;
@@ -228,6 +237,7 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(game.TransitionElapsed / GameEngine.FadeToWaveDuration, 0, 1);
+
         if (game.TransitionElapsed < GameEngine.FadeToWaveDuration)
         {
             return;
@@ -243,6 +253,7 @@ internal sealed class ScoreTransitionService
     {
         game.TransitionElapsed += dt;
         game.TransitionAlpha = Math.Clamp(1 - game.TransitionElapsed / GameEngine.WaveFadeInDuration, 0, 1);
+
         if (game.TransitionElapsed < GameEngine.WaveFadeInDuration)
         {
             return;
@@ -263,6 +274,7 @@ internal sealed class ScoreTransitionService
         game.Player.Position = game.SafePosition(0);
         game.Player.Velocity *= .25;
         game.Player.Invulnerable = 1.2;
+
         if (game.Random.NextDouble() < .08 && !game.LuckActive)
         {
             game.DamagePlayer();

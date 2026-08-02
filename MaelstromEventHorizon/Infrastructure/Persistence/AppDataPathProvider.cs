@@ -21,12 +21,14 @@ internal sealed class AppDataPathProvider : IAppDataPathProvider
     public string ReadPath(string filename)
     {
         string currentPath = WritePath(filename);
+
         if (File.Exists(currentPath))
         {
             return currentPath;
         }
 
         string legacyPath = Path.Combine(localAppData, LegacyFolder, filename);
+
         if (!File.Exists(legacyPath))
         {
             return currentPath;

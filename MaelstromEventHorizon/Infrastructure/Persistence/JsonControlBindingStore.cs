@@ -11,9 +11,11 @@ internal sealed class JsonControlBindingStore(IAppDataPathProvider paths) : ICon
     public IReadOnlyDictionary<GameAction, Key> Load()
     {
         Dictionary<GameAction, Key> result = new();
+
         try
         {
             string path = paths.ReadPath("controls.json");
+
             if (!File.Exists(path))
             {
                 return result;
@@ -21,6 +23,7 @@ internal sealed class JsonControlBindingStore(IAppDataPathProvider paths) : ICon
 
             Dictionary<string, string>? saved =
                 JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path));
+
             if (saved is null)
             {
                 return result;
@@ -49,8 +52,10 @@ internal sealed class JsonControlBindingStore(IAppDataPathProvider paths) : ICon
         {
             string path = paths.WritePath("controls.json");
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
             Dictionary<string, string> data =
                 bindings.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.ToString());
+
             File.WriteAllText(path, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch

@@ -36,6 +36,7 @@ internal sealed class SceneRenderer
         view.DrawFloatingTexts(dc);
         view.DrawWaveCompletionFlyby(dc);
         dc.Pop();
+
         if (waveCameraActive)
         {
             dc.Pop();
@@ -44,6 +45,7 @@ internal sealed class SceneRenderer
         view.DrawHud(dc);
         view.DrawOverlay(dc);
         dc.Pop();
+
         if (view.Game.RicochetArenaActive)
         {
             view.DrawArenaFrame(dc);
@@ -63,9 +65,11 @@ internal sealed class SceneRenderer
         double easedProgress = progress * progress * (3 - 2 * progress);
         double zoom = 3.1 - 2.1 * easedProgress;
         V2 ship = view.Game.Player.Position;
+
         dc.PushTransform(new MatrixTransform(new Matrix(zoom, 0, 0, zoom,
             GameEngine.Width * .5 - ship.X * zoom,
             GameEngine.Height * .5 - ship.Y * zoom)));
+
         return true;
     }
 
@@ -73,9 +77,11 @@ internal sealed class SceneRenderer
     {
         bool titleScene = view.Game.Mode is GameMode.Title or GameMode.Controls;
         int waveIndex = Math.Max(0, view.Game.Wave - 1);
+
         BitmapSource? selectedBackground = titleScene
             ? view.Background
             : view.WaveBackgrounds[waveIndex % view.WaveBackgrounds.Length] ?? view.Background;
+
         if (selectedBackground is not null)
         {
             if (view.Game.IsBonusStage)
@@ -88,18 +94,23 @@ internal sealed class SceneRenderer
                 double overscan = 12 + waveIndex % 4 * 3;
                 double panX = Math.Sin(view.Game.TotalTime * .018 + waveIndex * 1.73) * 7;
                 double panY = Math.Cos(view.Game.TotalTime * .014 + waveIndex * .91) * 5;
+
                 dc.PushTransform(new ScaleTransform(cycle % 2 == 1 ? -1 : 1, cycle % 4 >= 2 ? -1 : 1,
                     GameEngine.Width / 2, GameEngine.Height / 2));
+
                 dc.DrawImage(selectedBackground,
                     new Rect(-overscan + panX, -overscan + panY, GameEngine.Width + overscan * 2,
                         GameEngine.Height + overscan * 2));
+
                 dc.Pop();
             }
 
             Color grade = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
+
             dc.DrawRectangle(
                 new SolidColorBrush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)), null,
                 new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+
             dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(titleScene ? (byte)30 : (byte)52, 0, 2, 8)), null,
                 new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
@@ -107,6 +118,7 @@ internal sealed class SceneRenderer
         {
             RadialGradientBrush fallback = new(Color.FromRgb(12, 25, 57), Color.FromRgb(0, 2, 9))
                 { RadiusX = .82, RadiusY = .82 };
+
             dc.DrawRectangle(fallback, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
 
@@ -120,6 +132,7 @@ internal sealed class SceneRenderer
             double depthSpeed = .45 + star.Depth * .72;
             double x = star.Position.X;
             double y = star.Position.Y;
+
             if (view.Game.IsBonusStage)
             {
                 Vector starDrift = view.Game.BonusStageVariant switch
@@ -129,6 +142,7 @@ internal sealed class SceneRenderer
                     BonusStageKind.SpiralSwarm => new Vector(-52, 78),
                     _ => new Vector(-92, 56)
                 };
+
                 x = PositiveModulo(x + view.Game.BonusTravelTime * starDrift.X * depthSpeed, GameEngine.Width);
                 y = PositiveModulo(y + view.Game.BonusTravelTime * starDrift.Y * depthSpeed, GameEngine.Height);
             }
@@ -136,13 +150,17 @@ internal sealed class SceneRenderer
             double twinkle = .48 + .52 * Math.Sin(view.Game.TotalTime * (1.2 + star.Depth * 2.5) + star.Phase);
             double size = .65 + star.Depth * 1.55 + twinkle * .6;
             byte alpha = (byte)(85 + twinkle * 155);
+
             SolidColorBrush brush = view.Brush(Color.FromArgb(alpha,
                 (byte)(180 + star.Depth * 70), (byte)(205 + star.Depth * 45), 255));
+
             Point position = new(x, y);
             dc.DrawEllipse(brush, null, position, size, size);
+
             if (view.Game.Player.Thrusting && star.Depth > .56 && !view.Game.IsBonusStage)
             {
                 double streak = (star.Depth - .45) * 20;
+
                 dc.DrawLine(view.Pen(Color.FromArgb((byte)(alpha * .38), 146, 212, 255), .55 + star.Depth * .6),
                     new Point(x - streak, y), new Point(x + size, y));
             }
@@ -170,6 +188,7 @@ internal sealed class SceneRenderer
             BonusStageKind.SpiralSwarm => Color.FromRgb(210, 126, 255),
             _ => Color.FromRgb(105, 219, 255)
         };
+
         if (view.Game.BonusStageVariant == BonusStageKind.SlalomGates)
         {
             for (int i = 1; i < 9; i++)
@@ -191,9 +210,11 @@ internal sealed class SceneRenderer
         else
         {
             double slope = view.Game.BonusStageVariant == BonusStageKind.Crossfire ? 0 : .56;
+
             for (int i = -3; i < 10; i++)
             {
                 double y = PositiveModulo(i * 105 + view.Game.BonusTravelTime * 95, GameEngine.Height + 210) - 105;
+
                 dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(25, guide.R, guide.G, guide.B)), 1.2),
                     new Point(0, y), new Point(GameEngine.Width, y + GameEngine.Width * slope));
             }

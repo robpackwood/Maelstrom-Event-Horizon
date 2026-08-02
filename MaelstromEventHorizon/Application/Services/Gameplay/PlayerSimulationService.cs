@@ -30,6 +30,7 @@ internal sealed class PlayerSimulationService
         }
 
         game.ShieldHumTimer -= dt;
+
         if (!wasShielding || game.ShieldHumTimer <= 0)
         {
             game.Audio.Play(SoundCue.Shield);
@@ -89,11 +90,13 @@ internal sealed class PlayerSimulationService
 
         Asteroid? nearest = null;
         double distance = double.MaxValue;
+
         for (int i = 0; i < game.Asteroids.Count; i++)
         {
             if (game.Asteroids[i].Alive)
             {
                 double candidate = game.ArenaDelta(game.Player.Position, game.Asteroids[i].Position).LengthSquared;
+
                 if (candidate < distance)
                 {
                     distance = candidate;
@@ -131,11 +134,11 @@ internal sealed class PlayerSimulationService
     internal void TickTimers(GameEngine game, double dt)
     {
         game.FireCooldown -= dt;
-
         game.BannerTime -= dt;
         bool bossCountdownWasActive = game.BossCountdown > 0;
         game.BossCountdown = Math.Max(0, game.BossCountdown - dt);
         game.BossInvulnerability = Math.Max(0, game.BossInvulnerability - dt);
+
         if (bossCountdownWasActive && game.BossCountdown <= 0)
         {
             game.BossInvulnerability = 2;
@@ -212,7 +215,6 @@ internal sealed class PlayerSimulationService
             double acceleration = 493 + game.ThrustRamp * 195.5;
             game.Player.Velocity += facing * (acceleration * dt);
             game.EmitThrust();
-
             SetThrustSound(game);
         }
         else
@@ -236,7 +238,6 @@ internal sealed class PlayerSimulationService
         }
 
         UpdateShieldHum(game, wasShielding, dt);
-
         game.ApplyPlayerGravity(dt);
         double maxSpeed = GameEngine.PlayerMaxSpeed;
 
@@ -291,7 +292,6 @@ internal sealed class PlayerSimulationService
             double acceleration = 493 + game.ThrustRamp * 195.5;
             game.Player.Velocity += V2.FromAngle(game.Player.Angle) * (acceleration * dt);
             game.EmitThrust();
-
             SetThrustSound(game);
         }
         else
@@ -408,6 +408,7 @@ internal sealed class PlayerSimulationService
 
             Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
+
             shot.Radius = game.Player.Giant ? 7.42 : 4.945;
             shot.Damage = 1;
             shot.PowerLevel = 0;
@@ -425,7 +426,6 @@ internal sealed class PlayerSimulationService
         }
 
         game.FireCooldown = 0;
-
         game.Player.Velocity -= facing * .8;
         game.Audio.Play(SoundCue.Fire, .58);
     }
@@ -486,8 +486,8 @@ internal sealed class PlayerSimulationService
             V2 toShip = game.ArenaDelta(fighter.Position, game.Player.Position);
             V2 tangent = new(-toShip.Y, toShip.X);
             double weave = Math.Sin(fighter.Age * (fighter.Kind == FighterKind.Interceptor ? 2.8 : 1.5));
-
             V2 pursuit = game.PlayerRespawning ? -toShip.Normalized : toShip.Normalized;
+
             V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 118 : 72) +
                          tangent.Normalized * weave * 68;
 
@@ -520,7 +520,6 @@ internal sealed class PlayerSimulationService
         foreach (HomingMine mine in game.Mines)
         {
             mine.Age += dt;
-
             V2 delta = game.ArenaDelta(mine.Position, game.Player.Position);
             mine.Velocity += delta.Normalized * (105 * dt);
 
@@ -591,9 +590,7 @@ internal sealed class PlayerSimulationService
         }
 
         UpdateShots(game, dt, false);
-
         UpdateVisualEffects(game, dt);
-
         game.UpdateShipDebris(dt);
     }
 
@@ -616,6 +613,7 @@ internal sealed class PlayerSimulationService
             if (shot.BossShot)
             {
                 shot.Position = nextPosition;
+
                 if (nextPosition.X < -shot.Radius || nextPosition.X > GameEngine.Width + shot.Radius ||
                     nextPosition.Y < -shot.Radius || nextPosition.Y > GameEngine.Height + shot.Radius)
                 {
@@ -644,18 +642,21 @@ internal sealed class PlayerSimulationService
                 V2 offset = new V2(-direction.Y, direction.X) * 18;
                 double remainingLifetime = Math.Max(.12, shot.Lifetime - shot.Age);
                 riftShots ??= [];
+
                 riftShots.Add(new Shot(shot.Position - direction * 46 - offset, shot.Velocity, false, remainingLifetime)
                 {
                     Radius = shot.Radius,
                     Damage = shot.Damage,
                     PowerLevel = Math.Max(1, shot.PowerLevel)
                 });
+
                 riftShots.Add(new Shot(shot.Position - direction * 46 + offset, shot.Velocity, false, remainingLifetime)
                 {
                     Radius = shot.Radius,
                     Damage = shot.Damage,
                     PowerLevel = Math.Max(1, shot.PowerLevel)
                 });
+
                 game.SpawnShockwave(shot.Position - direction * 46 - offset, .18, 0xffa774ff, 28);
                 game.SpawnShockwave(shot.Position - direction * 46 + offset, .18, 0xffa774ff, 28);
             }
@@ -682,6 +683,7 @@ internal sealed class PlayerSimulationService
             particle.Age += dt;
             particle.Position = game.MoveBody(particle, particle.Position + particle.Velocity * dt, false);
             particle.Velocity *= Math.Pow(.96, dt * 60);
+
             if (particle.Age >= particle.Lifetime)
             {
                 particle.Alive = false;
@@ -691,6 +693,7 @@ internal sealed class PlayerSimulationService
         foreach (Shockwave ring in game.Shockwaves)
         {
             ring.Age += dt;
+
             if (ring.Age >= ring.Lifetime)
             {
                 ring.Alive = false;

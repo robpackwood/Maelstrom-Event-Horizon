@@ -29,16 +29,6 @@ internal sealed class BossCombatService
         {
             boss.Age += dt;
             boss.HurtFlash = Math.Max(0, boss.HurtFlash - dt);
-
-            // Respawning relocates the ship to the center. Hold the boss's course until
-            // the shield window ends so it does not abruptly reverse toward that new position.
-            if (game.PlayerRespawning)
-            {
-                boss.Phase += dt * (.85 + boss.Encounter * .025);
-                boss.Position = game.MoveBody(boss, boss.Position + boss.Velocity * dt);
-                continue;
-            }
-
             V2 toPlayer = game.ArenaDelta(boss.Position, game.Player.Position);
             V2 direction = toPlayer.Normalized;
             V2 tangent = new(-direction.Y, direction.X);
@@ -197,7 +187,6 @@ internal sealed class BossCombatService
     private void AddBossShot(GameEngine game, AlienBoss boss, V2 direction, double speed, uint tint, double lifetime)
     {
         direction = direction.Normalized;
-
         Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72), direction * speed, true, lifetime);
         shot.Radius = 5.2;
         shot.BossShot = true;
@@ -210,6 +199,7 @@ internal sealed class BossCombatService
 
         Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72),
             direction * (155 + boss.Encounter * 3), true, 4.2);
+
         shot.Radius = 12.5;
         shot.BossShot = true;
         shot.Tint = 0xff86dc45;
@@ -236,6 +226,7 @@ internal sealed class BossCombatService
 
             Shot fragment = game.SpawnShot(glob.Position + game.RandomDirection() * 5,
                 direction * (125 + game.Random.NextDouble() * 45), true, 2.5 + game.Random.NextDouble() * .5);
+
             fragment.Radius = 4.5 + game.Random.NextDouble() * 1.8;
             fragment.BossShot = true;
             fragment.Tint = game.Random.Next(3) == 0 ? 0xff4f8f2d : 0xff8fe84f;
@@ -261,6 +252,7 @@ internal sealed class BossCombatService
 
             Shot droplet = game.SpawnShot(origin, direction * (100 + game.Random.NextDouble() * 65), true,
                 2.8 + game.Random.NextDouble() * .7);
+
             droplet.Radius = 3.8 + game.Random.NextDouble() * 3.2;
             droplet.BossShot = true;
             droplet.Tint = game.Random.Next(4) switch { 0 => 0xffb7f36a, 1 => 0xff46762a, _ => 0xff77c93f };
@@ -278,6 +270,7 @@ internal sealed class BossCombatService
         for (int i = 0; i < game.Vortices.Count; i++)
         {
             GravityVortex vortex = game.Vortices[i];
+
             if (!vortex.Alive)
             {
                 continue;
@@ -294,6 +287,7 @@ internal sealed class BossCombatService
         for (int i = 0; i < game.Vortices.Count; i++)
         {
             GravityVortex vortex = game.Vortices[i];
+
             if (!vortex.Alive)
             {
                 continue;

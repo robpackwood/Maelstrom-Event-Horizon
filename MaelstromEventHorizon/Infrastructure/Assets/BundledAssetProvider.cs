@@ -18,6 +18,7 @@ internal sealed class BundledAssetProvider : IAssetProvider
     public string PathFor(params string[] segments)
     {
         string loosePath = Path.Combine([AppContext.BaseDirectory, "Assets", .. segments]);
+
         if (File.Exists(loosePath))
         {
             return loosePath;
@@ -37,18 +38,21 @@ internal sealed class BundledAssetProvider : IAssetProvider
             }
 
             Assembly assembly = typeof(BundledAssetProvider).Assembly;
+
             foreach (string resourceName in assembly.GetManifestResourceNames()
                          .Where(name => name.StartsWith(ResourcePrefix, StringComparison.Ordinal)))
             {
                 string relativePath = resourceName[ResourcePrefix.Length..].Replace('/', Path.DirectorySeparatorChar);
                 string destination = Path.GetFullPath(Path.Combine(cacheRoot, relativePath));
                 string root = Path.GetFullPath(cacheRoot) + Path.DirectorySeparatorChar;
+
                 if (!destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
                 using Stream? source = assembly.GetManifestResourceStream(resourceName);
+
                 if (source is null)
                 {
                     continue;
@@ -61,6 +65,7 @@ internal sealed class BundledAssetProvider : IAssetProvider
 
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 string temporary = destination + ".tmp";
+
                 using (FileStream output = new(temporary, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     source.CopyTo(output);

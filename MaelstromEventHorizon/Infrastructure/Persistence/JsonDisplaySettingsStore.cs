@@ -12,6 +12,7 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
         try
         {
             string path = paths.ReadPath("display.json");
+
             if (!File.Exists(path))
             {
                 return new DisplayPreferences();
@@ -19,6 +20,7 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
 
             DisplayPreferences preferences = JsonSerializer.Deserialize<DisplayPreferences>(File.ReadAllText(path))
                                              ?? new DisplayPreferences();
+
             return new DisplayPreferences
             {
                 FullScreen = preferences.FullScreen,
@@ -37,6 +39,7 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
         try
         {
             Directory.CreateDirectory(paths.DirectoryPath);
+
             File.WriteAllText(paths.WritePath("display.json"),
                 JsonSerializer.Serialize(preferences, new JsonSerializerOptions { WriteIndented = true }));
         }

@@ -106,8 +106,10 @@ internal sealed class GameView : FrameworkElement
         Focusable = true;
         SnapsToDevicePixels = true;
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.Fant);
+
         AsteroidSprites =
             [LoadSprite("asteroid-basalt.png"), LoadSprite("asteroid-fractured.png"), LoadSprite("asteroid-iron.png")];
+
         MetalAsteroidSprite = LoadSprite("asteroid-metal.png");
         RaiderSprite = LoadSprite("enemy-raider.png");
         InterceptorSprite = LoadSprite("enemy-interceptor.png");
@@ -117,12 +119,16 @@ internal sealed class GameView : FrameworkElement
         TimeFreezeSprite = LoadSprite("pickup-time-freeze.png");
         SmartBombSprite = LoadSprite("pickup-smart-bomb.png");
         RicochetArenaSprite = LoadSprite("pickup-ricochet-arena.png");
+
         PlayerShipSprite = LoadOrPrerenderSprite("player-ship.png", 192, 72,
             dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), false));
+
         GiantPlayerShipSprite = LoadOrPrerenderSprite("player-ship-giant.png", 192, 80,
             dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), true));
+
         RescueShipSprite = LoadOrPrerenderSprite("rescue-ship.png", 192, 72,
             dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(74, 255, 145), false));
+
         MineBodySprite = LoadOrPrerenderSprite("hazard-mine-v2.png", 160, 54, DrawMineBody);
         VortexCoreSprite = LoadOrPrerenderSprite("hazard-black-hole-core-v2.png", 192, 84, DrawVortexCore);
         NovaCoreSprite = LoadOrPrerenderSprite("hazard-supernova-core-v2.png", 192, 104, DrawNovaCore);
@@ -132,14 +138,17 @@ internal sealed class GameView : FrameworkElement
         Background = LoadBitmapAsset("deep-space.png");
         LoadBackgroundAtlas("space-atlas-a.png", 0);
         LoadBackgroundAtlas("space-atlas-b.png", 4);
+
         Loaded += (_, _) =>
         {
             Focus();
             Keyboard.Focus(this);
             CompositionTarget.Rendering += RenderFrame;
         };
+
         Unloaded += (_, _) => CompositionTarget.Rendering -= RenderFrame;
         MouseDown += (_, _) => Focus();
+
         TextInput += (_, e) =>
         {
             if (game.Mode is not GameMode.Title and not GameMode.NameEntry)
@@ -150,6 +159,7 @@ internal sealed class GameView : FrameworkElement
             game.HandleTextInput(e.Text);
             e.Handled = true;
         };
+
         KeyDown += (_, e) =>
         {
             if (game.Mode == GameMode.NameEntry)
@@ -193,6 +203,7 @@ internal sealed class GameView : FrameworkElement
     internal static BitmapSource PrerenderSprite(int pixelSize, double logicalSize, Action<DrawingContext> draw)
     {
         DrawingVisual visual = new();
+
         using (DrawingContext dc = visual.RenderOpen())
         {
             dc.PushTransform(new TranslateTransform(pixelSize / 2.0, pixelSize / 2.0));
@@ -215,17 +226,20 @@ internal sealed class GameView : FrameworkElement
     {
         string? outputDirectory = Environment.GetEnvironmentVariable("MAELSTROM_SPRITE_OUTPUT");
         string? forceScope = Environment.GetEnvironmentVariable("MAELSTROM_SPRITE_FORCE");
-        bool forceBake = !string.IsNullOrWhiteSpace(outputDirectory) && (forceScope == "1" ||
-                                                                         (forceScope == "boss" &&
-                                                                          filename.StartsWith("boss-",
-                                                                              StringComparison.Ordinal)));
+
+        bool forceBake = !string.IsNullOrWhiteSpace(outputDirectory) &&
+                         (forceScope == "1" ||
+                          (forceScope == "boss" && filename.StartsWith("boss-", StringComparison.Ordinal)));
+
         BitmapImage? loaded = forceBake ? null : LoadSprite(filename);
+
         if (loaded is not null)
         {
             return loaded;
         }
 
         BitmapSource rendered = PrerenderSprite(pixelSize, logicalSize, draw);
+
         if (!string.IsNullOrWhiteSpace(outputDirectory))
         {
             Directory.CreateDirectory(outputDirectory);
@@ -243,6 +257,7 @@ internal sealed class GameView : FrameworkElement
     {
         uint[] tints = [0xffff6e9e, 0xffc977ff, 0xff62dcff, 0xff63f0ca, 0xffffc65b];
         Dictionary<uint, BitmapSource> sprites = new(tints.Length);
+
         foreach (uint tint in tints)
         {
             Color color = FromArgb(tint);
@@ -256,10 +271,12 @@ internal sealed class GameView : FrameworkElement
     {
         AlienBossKind[] kinds = Enum.GetValues<AlienBossKind>();
         BitmapSource[][] sprites = new BitmapSource[kinds.Length][];
+
         foreach (AlienBossKind kind in kinds)
         {
             BitmapSource[] frames = new BitmapSource[BossSpriteFrameCount];
             AlienBoss sample = new(V2.Zero, kind, 1);
+
             for (int frame = 0; frame < frames.Length; frame++)
             {
                 sample.Age = frame / BossSpriteFrameRate;
@@ -295,6 +312,7 @@ internal sealed class GameView : FrameworkElement
     private void LoadBackgroundAtlas(string filename, int startIndex)
     {
         BitmapSource? atlas = LoadBitmapAsset(filename);
+
         if (atlas is null)
         {
             return;
@@ -302,6 +320,7 @@ internal sealed class GameView : FrameworkElement
 
         int halfWidth = atlas.PixelWidth / 2;
         int halfHeight = atlas.PixelHeight / 2;
+
         for (int row = 0; row < 2; row++)
         {
             for (int column = 0; column < 2; column++)
@@ -331,6 +350,7 @@ internal sealed class GameView : FrameworkElement
             Viewbox = new Rect(0, 0, 1, 1),
             Transform = new TranslateTransform()
         };
+
         RenderOptions.SetBitmapScalingMode(brush, BitmapScalingMode.Linear);
         return brush;
     }
@@ -344,6 +364,7 @@ internal sealed class GameView : FrameworkElement
             RadiusX = .72,
             RadiusY = .78
         };
+
         vignette.GradientStops.Add(new GradientStop(Color.FromArgb(0, 0, 0, 0), .35));
         vignette.GradientStops.Add(new GradientStop(Color.FromArgb(155, 0, 0, 5), 1));
         vignette.Freeze();
@@ -353,6 +374,7 @@ internal sealed class GameView : FrameworkElement
     private void RenderFrame(object? sender, EventArgs e)
     {
         double now = Clock.Elapsed.TotalSeconds;
+
         if (now < NextFrameTime)
         {
             return;
@@ -362,6 +384,7 @@ internal sealed class GameView : FrameworkElement
         double dt = PreviousTime == 0 ? 1.0 / 60 : now - PreviousTime;
         PreviousTime = now;
         SlowFrameCount = dt > .026 ? SlowFrameCount + 1 : Math.Max(0, SlowFrameCount - 2);
+
         if (SlowFrameCount >= 24 && Game.LowerVisualQualityIfNeeded())
         {
             SlowFrameCount = 0;
@@ -369,9 +392,11 @@ internal sealed class GameView : FrameworkElement
 
         Game.Update(dt);
         bool useFastSampling = Game is { IsBonusStage: true, Mode: GameMode.Playing };
+
         if (useFastSampling != FastBonusSampling)
         {
             FastBonusSampling = useFastSampling;
+
             RenderOptions.SetBitmapScalingMode(this,
                 FastBonusSampling ? BitmapScalingMode.Linear : BitmapScalingMode.Fant);
         }
@@ -383,6 +408,7 @@ internal sealed class GameView : FrameworkElement
     {
         base.OnRender(dc);
         dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, ActualWidth, ActualHeight));
+
         if (ActualWidth < 1 || ActualHeight < 1)
         {
             return;

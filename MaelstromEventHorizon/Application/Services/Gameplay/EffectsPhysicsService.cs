@@ -55,8 +55,7 @@ internal sealed class EffectsPhysicsService
 
         for (int i = 0; i < 2; i++)
         {
-            AddParticle(game,
-                game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
+            AddParticle(game, game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
                 game.Player.Velocity * .2 + back * game.Random.Next(120, 260) + RandomDirection(game) * 25,
                 .28 + game.Random.NextDouble() * .25, i == 0 ? 0xff5be8ff : 0xffff7b45, game.Random.Next(2, 6));
         }
@@ -91,6 +90,7 @@ internal sealed class EffectsPhysicsService
         {
             double speed = game.Random.Next(150, 410);
             uint fragmentColor = i % 5 == 0 ? 0xffffe1a4 : i % 3 == 0 ? 0xffd77542 : color;
+
             AddParticle(game, position, RandomDirection(game) * speed,
                 .16 + game.Random.NextDouble() * .32, fragmentColor, 1.5 + game.Random.NextDouble() * 4.5);
         }
@@ -137,6 +137,7 @@ internal sealed class EffectsPhysicsService
     private static void TrimOldest<T>(List<T> items, int maximum)
     {
         int excess = items.Count - maximum;
+
         if (excess > 0)
         {
             items.RemoveRange(0, excess);
@@ -291,6 +292,7 @@ internal sealed class EffectsPhysicsService
         }
 
         body.Velocity = new V2(vx, vy);
+
         if (bounced && game.RicochetBounceSoundCooldown <= 0)
         {
             game.RicochetBounceSoundCooldown = .075;

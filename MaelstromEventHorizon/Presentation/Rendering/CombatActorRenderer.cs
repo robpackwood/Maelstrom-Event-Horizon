@@ -18,12 +18,15 @@ internal sealed class CombatActorRenderer
             Color glow = little ? Color.FromRgb(63, 228, 255) : Color.FromRgb(255, 57, 112);
             V2 exhaust = fighter.Position - fighter.Velocity.Normalized * (little ? 22 : 30);
             view.DrawGlowEllipse(dc, exhaust, little ? 10 : 14, glow, 3, .36);
+
             dc.DrawLine(view.Pen(Color.FromArgb(135, glow.R, glow.G, glow.B), little ? 2 : 2.8),
                 view.Pt(exhaust), view.Pt(exhaust - fighter.Velocity.Normalized * (little ? 19 : 27)));
+
             view.DrawGlowEllipse(dc, fighter.Position, fighter.Radius * .78, glow, 3, .2);
             dc.PushTransform(new TranslateTransform(fighter.Position.X, fighter.Position.Y));
             dc.PushTransform(new RotateTransform(fighter.Angle * 180 / Math.PI));
             BitmapImage? sprite = little ? view.InterceptorSprite : view.RaiderSprite;
+
             if (sprite is not null)
             {
                 double span = little ? 52 : 72;
@@ -34,12 +37,17 @@ internal sealed class CombatActorRenderer
                 Geometry wings = little
                     ? view.Polygon((22, 0), (1, -12), (-18, -15), (-10, 0), (-18, 15), (1, 12))
                     : view.Polygon((27, 0), (6, -13), (-25, -21), (-16, -2), (-27, 0), (-16, 2), (-25, 21), (6, 13));
+
                 view.DrawGlowGeometry(dc, wings, glow, 8);
+
                 LinearGradientBrush body = new(view.Lighten(glow, .75), view.Darken(glow, .72), new Point(1, 0),
                     new Point(0, 1));
+
                 dc.DrawGeometry(body, new Pen(new SolidColorBrush(view.Lighten(glow, .4)), 1.5), wings);
+
                 dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(5, 12, 24)), new Pen(new SolidColorBrush(glow), 1),
                     new Point(7, 0), 7, 5);
+
                 dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(255, 246, 170)), null, new Point(13, 0), 2, 2);
             }
 
@@ -53,33 +61,41 @@ internal sealed class CombatActorRenderer
         for (int bossIndex = 0; bossIndex < view.Game.Bosses.Count; bossIndex++)
         {
             AlienBoss boss = view.Game.Bosses[bossIndex];
+
             if (!boss.Alive)
             {
                 continue;
             }
 
             Color tint = BossColor(boss.Kind);
+
             double hover = Math.Sin(boss.Age * (boss.Kind == AlienBossKind.BoneBroodmother ? 1.1 : 1.65)) *
                            (boss.Kind == AlienBossKind.EyeTyrant ? 5 : 2.5);
+
             double breathe = Math.Sin(boss.Age * 2.25);
             double scaleX = 1 + breathe * (boss.Kind == AlienBossKind.VoidLeech ? .025 : .012);
             double scaleY = 1 - breathe * (boss.Kind == AlienBossKind.SludgeMaw ? .025 : .012);
             V2 position = new(boss.Position.X, boss.Position.Y + hover);
+
             if (view.Game.BossCountdownActive || view.Game.BossInvulnerability > 0)
             {
                 double phase = view.Game.TotalTime * 180;
                 double ring = boss.Radius * (1.1 + Math.Sin(view.Game.TotalTime * 7) * .06);
                 Color ward = view.Game.BossCountdownActive ? Color.FromRgb(255, 210, 91) : Color.FromRgb(105, 222, 255);
                 view.DrawGlowEllipse(dc, position, ring, ward, 5, .55);
+
                 dc.DrawArc(view.Pen(Color.FromArgb(185, ward.R, ward.G, ward.B), 1.5), view.Pt(position), ring, phase,
                     128);
+
                 dc.DrawArc(view.Pen(Color.FromArgb(120, ward.R, ward.G, ward.B), 1), view.Pt(position), ring * 1.17,
                     -phase * .72, 86);
             }
 
             view.DrawGlowEllipse(dc, position, boss.Radius * .92, tint, 3, .14);
+
             dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(75, 0, 0, 0)), null,
                 new Point(position.X + 8, position.Y + boss.Radius * .64), boss.Radius * .72, boss.Radius * .19);
+
             dc.PushTransform(new TranslateTransform(position.X, position.Y));
             dc.PushTransform(new ScaleTransform(scaleX, scaleY));
             BitmapSource[] frames = view.BossSpriteFrames[(int)boss.Kind];
@@ -89,6 +105,7 @@ internal sealed class CombatActorRenderer
             Rect spriteRect = BossSpriteRect(boss.Kind);
             dc.DrawImage(frames[frame], spriteRect);
             DrawAttackTell(dc, boss, tint);
+
             if (boss.HurtFlash > 0)
             {
                 dc.PushOpacity(Math.Clamp(boss.HurtFlash / .14, 0, 1) * .82);
@@ -119,12 +136,14 @@ internal sealed class CombatActorRenderer
         double timer = boss.Kind is AlienBossKind.SludgeMaw or AlienBossKind.BoneBroodmother
             ? Math.Min(boss.AttackTimer, boss.SpecialTimer)
             : boss.AttackTimer;
+
         if (timer is <= 0 or >= .7)
         {
             return;
         }
 
         double charge = 1 - timer / .7;
+
         Point focus = boss.Kind switch
         {
             AlienBossKind.SludgeMaw => new Point(0, 25),
@@ -132,9 +151,12 @@ internal sealed class CombatActorRenderer
             AlienBossKind.BoneBroodmother => new Point(0, 27),
             _ => new Point(0, 0)
         };
+
         byte alpha = (byte)(70 + charge * 145);
+
         RadialGradientBrush glow = new(Color.FromArgb(alpha, 255, 245, 192),
             Color.FromArgb(0, tint.R, tint.G, tint.B));
+
         double radius = 14 + charge * 14;
         dc.DrawEllipse(glow, null, focus, radius, radius);
     }
@@ -173,6 +195,7 @@ internal sealed class CombatActorRenderer
         }
 
         (double x, double y)[] points = new (double x, double y)[18];
+
         for (int i = 0; i < points.Length; i++)
         {
             double angle = i * Math.PI * 2 / points.Length;
@@ -187,11 +210,13 @@ internal sealed class CombatActorRenderer
             RadiusX = .72,
             RadiusY = .72
         };
+
         flesh.GradientStops.Add(new GradientStop(Color.FromRgb(209, 241, 105), 0));
         flesh.GradientStops.Add(new GradientStop(Color.FromRgb(92, 158, 48), .52));
         flesh.GradientStops.Add(new GradientStop(Color.FromRgb(27, 66, 25), 1));
         Geometry fleshShape = view.Polygon(points);
         dc.DrawGeometry(flesh, new Pen(new SolidColorBrush(Color.FromRgb(166, 235, 91)), 2.2), fleshShape);
+
         DrawBossSurfaceTexture(dc, fleshShape, new Point(), 58, 47,
             Color.FromRgb(31, 74, 24), Color.FromRgb(218, 251, 128), 17, 44);
 
@@ -200,12 +225,15 @@ internal sealed class CombatActorRenderer
             double angle = i * Math.PI / 4 + .18;
             Point inner = new(Math.Cos(angle) * 12, Math.Sin(angle) * 9);
             Point outer = new(Math.Cos(angle) * (47 + i % 2 * 5), Math.Sin(angle) * (35 + i % 3 * 4));
+
             Pen vein = new(new SolidColorBrush(Color.FromArgb(125, 48, 91, 34)), 1.15)
             {
                 StartLineCap = PenLineCap.Round,
                 EndLineCap = PenLineCap.Round
             };
+
             dc.DrawLine(vein, inner, outer);
+
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(90, 166, 222, 76)), .7),
                 new Point((inner.X + outer.X) * .58, (inner.Y + outer.Y) * .58),
                 new Point(outer.X - Math.Sin(angle) * 7, outer.Y + Math.Cos(angle) * 7));
@@ -218,6 +246,7 @@ internal sealed class CombatActorRenderer
         {
             double angle = i * 2.31;
             Point pustule = new(Math.Cos(angle) * (28 + i % 3 * 8), Math.Sin(angle) * (20 + i % 2 * 10));
+
             dc.DrawEllipse(new RadialGradientBrush(Color.FromRgb(235, 255, 139), Color.FromRgb(63, 105, 38)),
                 new Pen(new SolidColorBrush(Color.FromRgb(35, 73, 29)), 1), pustule, 4 + i % 2, 3 + i % 3);
         }
@@ -225,31 +254,39 @@ internal sealed class CombatActorRenderer
         for (int i = -1; i <= 1; i++)
         {
             double sway = Math.Sin(boss.Age * 2.7 + i) * 3;
+
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromRgb(81, 142, 46)), 6),
                 new Point(i * 25, -30), new Point(i * 31 + sway, -58 - Math.Abs(i) * 4));
+
             dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(232, 245, 151)),
                 new Pen(new SolidColorBrush(Color.FromRgb(30, 57, 22)), 2),
                 new Point(i * 31 + sway, -61 - Math.Abs(i) * 4), 10, 9);
+
             dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(16, 24, 12)), null,
                 new Point(i * 31 + sway + 2, -61 - Math.Abs(i) * 4), 4, 5);
         }
 
         dc.DrawEllipse(new RadialGradientBrush(Color.FromRgb(45, 13, 18), Colors.Black),
             new Pen(new SolidColorBrush(Color.FromRgb(42, 69, 28)), 3), new Point(4, 15), 35, 26);
+
         for (int i = 0; i < 8; i++)
         {
             double x = -24 + i * 8;
+
             Geometry tooth = i % 2 == 0
                 ? view.Polygon((x, -5), (x + 6, -5), (x + 3, 8))
                 : view.Polygon((x, 35), (x + 6, 35), (x + 3, 23));
+
             dc.DrawGeometry(new SolidColorBrush(Color.FromRgb(232, 225, 155)), null, tooth);
         }
 
         dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(190, 160, 245, 74)), 3),
             new Point(14, 38), new Point(12 + Math.Sin(boss.Age * 3) * 4, 61));
+
         for (int i = 0; i < 3; i++)
         {
             double bubble = 2.2 + i * 1.1 + Math.Sin(boss.Age * 5 + i) * .45;
+
             dc.DrawEllipse(new RadialGradientBrush(Color.FromRgb(207, 255, 119), Color.FromRgb(55, 104, 31)),
                 new Pen(new SolidColorBrush(Color.FromArgb(170, 191, 242, 102)), .7),
                 new Point(17 + i * 5, 51 + i * 8), bubble, bubble);
@@ -271,26 +308,34 @@ internal sealed class CombatActorRenderer
             RadiusX = .74,
             RadiusY = .74
         };
+
         skin.GradientStops.Add(new GradientStop(Color.FromRgb(229, 136, 236), 0));
         skin.GradientStops.Add(new GradientStop(Color.FromRgb(122, 50, 142), .55));
         skin.GradientStops.Add(new GradientStop(Color.FromRgb(38, 14, 65), 1));
+
         EllipseGeometry skinShape = new(new Point(), 59, 52);
         dc.DrawGeometry(skin, new Pen(new SolidColorBrush(Color.FromRgb(220, 118, 244)), 2.2), skinShape);
+
         DrawBossSurfaceTexture(dc, skinShape, new Point(), 56, 49,
             Color.FromRgb(67, 18, 81), Color.FromRgb(248, 169, 239), 31, 40);
+
         for (int i = 0; i < 12; i++)
         {
             double a = i * Math.PI / 6 + .2;
+
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(135, 75, 20, 74)), 1.2),
                 new Point(Math.Cos(a) * 28, Math.Sin(a) * 22),
                 new Point(Math.Cos(a) * 51, Math.Sin(a) * 44));
         }
 
         EllipseGeometry scleraShape = new(new Point(3, 0), 39, 29);
+
         dc.DrawGeometry(new SolidColorBrush(Color.FromRgb(241, 230, 184)),
             new Pen(new SolidColorBrush(Color.FromRgb(70, 28, 75)), 3), scleraShape);
+
         DrawBossSurfaceTexture(dc, scleraShape, new Point(3, 0), 36, 26,
             Color.FromRgb(151, 46, 78), Color.FromRgb(255, 249, 211), 43, 18);
+
         for (int i = 0; i < 10; i++)
         {
             double angle = i * Math.PI / 5;
@@ -301,13 +346,17 @@ internal sealed class CombatActorRenderer
 
         dc.DrawEllipse(new RadialGradientBrush(Color.FromRgb(255, 229, 101), Color.FromRgb(146, 45, 14)),
             null, new Point(7, 0), 18, 18);
+
         dc.DrawEllipse(null, new Pen(new SolidColorBrush(Color.FromArgb(210, 255, 188, 63)), 1.4),
             new Point(7, 0), 13, 13);
+
         dc.DrawArc(new Pen(new SolidColorBrush(Color.FromArgb(210, 255, 240, 151)), 1.8),
             new Point(7, 0), 21, boss.Age * 36, 116);
+
         dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(9, 4, 15)), null, new Point(10, 0), 7, 17);
         dc.DrawEllipse(Brushes.White, null, new Point(3, -7), 5, 3.5);
         dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(190, 255, 255, 255)), null, new Point(7, -3), 2.2, 4.2);
+
         for (int i = 0; i < 5; i++)
         {
             dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(245, 135, 196)),
@@ -327,17 +376,22 @@ internal sealed class CombatActorRenderer
         RadialGradientBrush body = new(Color.FromRgb(255, 150, 92), Color.FromRgb(75, 18, 24));
         EllipseGeometry bodyShape = new(new Point(-3, 3), 65, 51);
         dc.DrawGeometry(body, new Pen(new SolidColorBrush(Color.FromRgb(255, 174, 97)), 2), bodyShape);
+
         DrawBossSurfaceTexture(dc, bodyShape, new Point(-3, 3), 61, 47,
             Color.FromRgb(78, 21, 27), Color.FromRgb(255, 193, 118), 59, 46);
+
         for (int i = 0; i < 5; i++)
         {
             double y = -34 + i * 16;
             double width = 31 + Math.Sin(i * 1.7) * 5;
+
             Geometry carapace = view.Polygon((-width, y - 7), (0, y - 12), (width, y - 7),
                 (width - 7, y + 6), (0, y + 10), (-width + 7, y + 6));
+
             dc.DrawGeometry(
                 new LinearGradientBrush(Color.FromArgb(145, 250, 205, 151), Color.FromArgb(95, 88, 38, 37), 90),
                 new Pen(new SolidColorBrush(Color.FromArgb(150, 255, 194, 119)), .8), carapace);
+
             DrawBossSurfaceTexture(dc, carapace, new Point(0, y), width * .88, 8,
                 Color.FromRgb(78, 43, 39), Color.FromRgb(255, 225, 170), 71 + i, 8);
         }
@@ -346,12 +400,16 @@ internal sealed class CombatActorRenderer
         {
             Geometry plate = view.Polygon((side * 8, -45), (side * 49, -35), (side * 69, -10),
                 (side * 53, 2), (side * 23, -10));
+
             dc.DrawGeometry(new LinearGradientBrush(Color.FromRgb(246, 225, 173), Color.FromRgb(126, 85, 61), 90),
                 new Pen(new SolidColorBrush(Color.FromRgb(255, 211, 143)), 1.5), plate);
+
             Geometry mandible = view.Polygon((side * 19, 22), (side * 61, 34), (side * 75, 52),
                 (side * 48, 45), (side * 6, 32));
+
             dc.DrawGeometry(new LinearGradientBrush(Color.FromRgb(230, 205, 152), Color.FromRgb(92, 49, 39), 45),
                 new Pen(new SolidColorBrush(Color.FromRgb(255, 188, 110)), 1.4), mandible);
+
             for (int rib = 0; rib < 3; rib++)
             {
                 dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(170, 255, 218, 157)), 1.1),
@@ -363,14 +421,17 @@ internal sealed class CombatActorRenderer
         for (int i = 0; i < 6; i++)
         {
             double x = -31 + i * 12.5;
+
             dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(255, 231, 96)),
                 new Pen(new SolidColorBrush(Color.FromRgb(72, 19, 22)), 1.4), new Point(x, 3 + Math.Abs(i - 2.5) * 2),
                 5.5, 4.5);
+
             dc.DrawEllipse(Brushes.Black, null, new Point(x + 1, 4 + Math.Abs(i - 2.5) * 2), 2, 2.7);
         }
 
         dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(39, 6, 12)),
             new Pen(new SolidColorBrush(Color.FromRgb(218, 76, 56)), 2), new Point(0, 27), 22, 13);
+
         for (int i = 0; i < 7; i++)
         {
             dc.DrawGeometry(new SolidColorBrush(Color.FromRgb(244, 224, 169)), null,
@@ -380,20 +441,24 @@ internal sealed class CombatActorRenderer
 
     private void DrawVoidLeech(GameView view, DrawingContext dc, AlienBoss boss)
     {
-        Pen connectiveTissue = new(new LinearGradientBrush(Color.FromRgb(83, 205, 186), Color.FromRgb(18, 62, 73), 45),
-            15)
+        Pen connectiveTissue = new(
+            new LinearGradientBrush(Color.FromRgb(83, 205, 186), Color.FromRgb(18, 62, 73), 45), 15)
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
+
         for (int i = 0; i < 9; i++)
         {
             double a0 = i * Math.PI * 2 / 9 + boss.Age * .12;
             double a1 = (i + 1) * Math.PI * 2 / 9 + boss.Age * .12;
+
             Point p0 = new(Math.Cos(a0) * (47 + Math.Sin(boss.Age * 2 + i) * 8),
                 Math.Sin(a0) * (47 + Math.Sin(boss.Age * 2 + i) * 8) * .72);
+
             Point p1 = new(Math.Cos(a1) * (47 + Math.Sin(boss.Age * 2 + i + 1) * 8),
                 Math.Sin(a1) * (47 + Math.Sin(boss.Age * 2 + i + 1) * 8) * .72);
+
             dc.DrawLine(connectiveTissue, p0, p1);
         }
 
@@ -404,33 +469,44 @@ internal sealed class CombatActorRenderer
             Point segment = new(Math.Cos(angle) * radius, Math.Sin(angle) * radius * .72);
             double size = 24 - i % 3 * 3;
             EllipseGeometry segmentShape = new(segment, size, size * .72);
+
             dc.DrawGeometry(new RadialGradientBrush(Color.FromRgb(105, 240, 210), Color.FromRgb(13, 59, 69)),
                 new Pen(new SolidColorBrush(Color.FromRgb(96, 255, 223)), 1.4), segmentShape);
+
             DrawBossSurfaceTexture(dc, segmentShape, segment, size * .9, size * .62,
                 Color.FromRgb(4, 47, 54), Color.FromRgb(164, 255, 229), 89 + i, 7);
+
             dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(170, 9, 41, 48)), null, segment, size * .43, size * .3);
+
             dc.DrawArc(new Pen(new SolidColorBrush(Color.FromArgb(165, 189, 255, 234)), .9),
                 segment, size * .72, boss.Age * 42 + i * 31, 105);
         }
 
         EllipseGeometry leechCoreShape = new(new Point(), 45, 42);
+
         dc.DrawGeometry(new RadialGradientBrush(Color.FromRgb(72, 174, 160), Color.FromRgb(3, 19, 28)),
             new Pen(new SolidColorBrush(Color.FromRgb(93, 246, 218)), 2.4), leechCoreShape);
+
         DrawBossSurfaceTexture(dc, leechCoreShape, new Point(), 42, 39,
             Color.FromRgb(2, 32, 41), Color.FromRgb(129, 248, 219), 113, 36);
+
         dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(23, 2, 15)),
             new Pen(new SolidColorBrush(Color.FromRgb(198, 77, 113)), 3), new Point(), 31, 29);
+
         for (int i = 0; i < 16; i++)
         {
             double angle = i * Math.PI / 8;
             V2 outer = V2.FromAngle(angle) * 29;
             V2 inner = V2.FromAngle(angle) * (i % 2 == 0 ? 13 : 17);
+
             dc.DrawGeometry(new SolidColorBrush(Color.FromRgb(220, 235, 179)), null,
                 view.Polygon((outer.X + Math.Sin(angle) * 3, outer.Y - Math.Cos(angle) * 3),
                     (outer.X - Math.Sin(angle) * 3, outer.Y + Math.Cos(angle) * 3), (inner.X, inner.Y)));
         }
 
-        dc.DrawEllipse(new RadialGradientBrush(Color.FromRgb(118, 24, 66), Colors.Black), null, new Point(), 12, 12);
+        dc.DrawEllipse(new RadialGradientBrush(
+            Color.FromRgb(118, 24, 66), Colors.Black), null, new Point(), 12, 12);
+
         for (int ring = 0; ring < 3; ring++)
         {
             dc.DrawArc(new Pen(new SolidColorBrush(Color.FromArgb((byte)(155 - ring * 34), 255, 85, 153)), 1.2),
@@ -446,28 +522,27 @@ internal sealed class CombatActorRenderer
     }
 
     private void DrawBossSurfaceTexture(DrawingContext dc,
-        Geometry clip,
-        Point center,
-        double radiusX,
-        double radiusY,
-        Color shadow,
-        Color highlight,
-        int seed,
+        Geometry clip, Point center, double radiusX, double radiusY, Color shadow, Color highlight, int seed,
         int detailCount)
     {
         dc.PushClip(clip);
+
         for (int i = 0; i < detailCount; i++)
         {
             double angle = TextureNoise(seed, i, 1) * Math.PI * 2;
             double distance = Math.Sqrt(TextureNoise(seed, i, 2)) * .94;
+
             Point spot = new(
                 center.X + Math.Cos(angle) * radiusX * distance,
                 center.Y + Math.Sin(angle) * radiusY * distance);
+
             double size = .55 + TextureNoise(seed, i, 3) * 1.8;
             byte alpha = (byte)(38 + TextureNoise(seed, i, 4) * 58);
+
             Color poreColor = i % 4 == 0
                 ? Color.FromArgb((byte)Math.Min(118, alpha + 20), highlight.R, highlight.G, highlight.B)
                 : Color.FromArgb(alpha, shadow.R, shadow.G, shadow.B);
+
             dc.DrawEllipse(new SolidColorBrush(poreColor), null, spot, size,
                 size * (.55 + TextureNoise(seed, i, 5) * .55));
 
@@ -479,11 +554,13 @@ internal sealed class CombatActorRenderer
             double scratchAngle = TextureNoise(seed, i, 6) * Math.PI;
             double scratchLength = 4 + TextureNoise(seed, i, 7) * 10;
             V2 direction = V2.FromAngle(scratchAngle);
+
             Pen scratchPen = new(new SolidColorBrush(Color.FromArgb(72, highlight.R, highlight.G, highlight.B)), .65)
             {
                 StartLineCap = PenLineCap.Round,
                 EndLineCap = PenLineCap.Round
             };
+
             dc.DrawLine(scratchPen,
                 new Point(spot.X - direction.X * scratchLength * .5, spot.Y - direction.Y * scratchLength * .5),
                 new Point(spot.X + direction.X * scratchLength * .5, spot.Y + direction.Y * scratchLength * .5));
@@ -505,10 +582,13 @@ internal sealed class CombatActorRenderer
         V2 normal = new(-direction.Y, direction.X);
         Point start = new(direction.X * 34, direction.Y * 30);
         Point c1 = new(direction.X * length * .55 + normal.X * wave, direction.Y * length * .55 + normal.Y * wave);
+
         Point c2 = new(direction.X * length * .86 - normal.X * wave * .45,
             direction.Y * length * .86 - normal.Y * wave * .45);
+
         Point end = new(direction.X * length, direction.Y * length);
         StreamGeometry path = new();
+
         using (StreamGeometryContext context = path.Open())
         {
             context.BeginFigure(start, false, false);
@@ -521,20 +601,25 @@ internal sealed class CombatActorRenderer
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
+
         dc.DrawGeometry(null, shadowPen, path);
-        Pen pen = new(new LinearGradientBrush(view.Lighten(color, .34), view.Darken(color, .4), angle * 180 / Math.PI),
-            width)
+
+        Pen pen = new(
+            new LinearGradientBrush(view.Lighten(color, .34), view.Darken(color, .4), angle * 180 / Math.PI), width)
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
+
         dc.DrawGeometry(null, pen, path);
+
         dc.DrawGeometry(null, new Pen(new SolidColorBrush(Color.FromArgb(105, view.Lighten(color, .62).R,
             view.Lighten(color, .62).G, view.Lighten(color, .62).B)), Math.Max(1, width * .18))
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         }, path);
+
         dc.DrawEllipse(new SolidColorBrush(view.Lighten(color, .25)), null, end, width * .36, width * .36);
     }
 

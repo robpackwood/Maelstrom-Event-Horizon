@@ -26,13 +26,16 @@ internal sealed class WaveSpawnService
         game.BossInvulnerability = 0;
         game.RicochetArenaActive = false;
         game.CenterPlayerWithShield();
+
         game.Wave = game.BonusOnlyMode
             ? game.Wave < 5 ? 5 : game.Wave + 5
             : game.BossOnlyMode
                 ? game.Wave < 6 ? 6 : game.Wave + 5
                 : game.Wave + 1;
+
         game.IsBonusStage = game.BonusOnlyMode || (!game.BossOnlyMode && game.Wave % 5 == 0);
         game.IsBossStage = game.BossOnlyMode || (game is { BonusOnlyMode: false, Wave: > 1 } && game.Wave % 5 == 1);
+
         if (game.IsBonusStage && game.Player.Giant)
         {
             game.RestoreGiantShipAfterBonus = true;
@@ -65,31 +68,39 @@ internal sealed class WaveSpawnService
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
         double itemEventChance = lucky ? .8 : 1.0 / 3;
+
         game.CanisterTimer = standardWave && game.Random.NextDouble() < itemEventChance
             ? 2.5 + game.Random.NextDouble() * 7.5
             : -1;
+
         game.MultiplierTimer = standardWave && game.Random.NextDouble() < itemEventChance
             ? 3 + game.Random.NextDouble() * 7.5
             : -1;
+
         game.CometTimer = standardWave && (game.CometStormWave || game.Random.NextDouble() < itemEventChance)
             ? 3.5 + game.Random.NextDouble() * 7.5
             : -1;
+
         game.BlackHoleTimer = standardWave && game.Wave > 1 && game.Random.NextDouble() < .125
             ? 3 + game.Random.NextDouble() * 8
             : -1;
+
         game.BonusAsteroidTotal = 0;
         game.BonusAsteroidsDodged = 0;
         game.BonusAsteroidsRemaining = 0;
+
         if (game.IsBonusStage)
         {
             int bonusStageNumber = game.Wave / 5;
             game.BonusStageVariant = (BonusStageKind)((bonusStageNumber - 1) % Enum.GetValues<BonusStageKind>().Length);
+
             game.BonusAsteroidTotal = game.BonusStageVariant switch
             {
                 BonusStageKind.SlalomGates => Math.Min(54, 32 + bonusStageNumber * 4),
                 BonusStageKind.SpiralSwarm => Math.Min(34, 14 + bonusStageNumber * 2),
                 _ => Math.Min(40, 16 + bonusStageNumber * 2)
             };
+
             game.BonusAsteroidsRemaining = game.BonusAsteroidTotal;
             game.BonusPatternStep = 0;
             game.BonusAsteroidSpawnTimer = game.BonusStageVariant == BonusStageKind.SlalomGates ? 1.14 : 1.25;
@@ -112,11 +123,14 @@ internal sealed class WaveSpawnService
         {
             int normalRocks = 3 + (game.Wave - 1) / 2;
             int rocks = normalRocks;
+
             if (game.Wave > 3 && rocks >= 3 && game.Random.Next(3) == 0)
             {
                 V2 position = game.SafeEdgePosition();
+
                 game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
                     game.Random.Next(), mega: true));
+
                 rocks -= 3;
             }
 
@@ -124,11 +138,13 @@ internal sealed class WaveSpawnService
             {
                 V2 pos = game.SafeEdgePosition();
                 bool steel = game.Wave >= 4 && i == normalRocks - 1 && game.Wave % 3 == 1;
+
                 game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3),
                     3, steel, game.Random.Next()));
             }
 
             double openingFighterChance = Math.Clamp(.08 + game.Wave * .035, .12, .42);
+
             if (game.Wave >= 2 && game.Random.NextDouble() < openingFighterChance)
             {
                 SpawnFighter(game);
@@ -145,6 +161,7 @@ internal sealed class WaveSpawnService
         }
 
         game.NextWaveTimer = 0;
+
         if (game.IsBossStage)
         {
             game.Audio.StartBossMusic();
@@ -183,6 +200,7 @@ internal sealed class WaveSpawnService
         }
 
         game.BonusAsteroidSpawnTimer -= dt;
+
         if (game.BonusAsteroidSpawnTimer > 0)
         {
             return;
@@ -190,6 +208,7 @@ internal sealed class WaveSpawnService
 
         int bonusStageNumber = game.Wave / 5;
         int difficulty = Math.Min(7, 1 + (bonusStageNumber - 1) / 2);
+
         switch (game.BonusStageVariant)
         {
             case BonusStageKind.DiagonalStorm:
@@ -213,10 +232,12 @@ internal sealed class WaveSpawnService
     {
         bool aimed = game.BonusPatternStep % 3 == 1;
         V2 origin = new(GameEngine.Width + 60 + game.Random.NextDouble() * 100, -70 + game.Random.NextDouble() * 155);
+
         V2 target = aimed
             ? game.Player.Position + game.Player.Velocity * .38 +
               new V2(game.Random.Next(-28, 29), game.Random.Next(-28, 29))
             : new V2(-120, 90 + game.BonusPatternStep % Math.Clamp(6 + difficulty, 7, 11) * 72);
+
         SpawnBonusRock(game, origin, target, 302 + difficulty * 18 + game.Random.NextDouble() * 62, 3);
         game.BonusAsteroidSpawnTimer = Math.Max(.42, .74 - difficulty * .025) + game.Random.NextDouble() * .16;
     }
@@ -226,6 +247,7 @@ internal sealed class WaveSpawnService
         int side = game.BonusPatternStep % 4;
         double edgeX = 80 + game.Random.NextDouble() * (GameEngine.Width - 160);
         double edgeY = 75 + game.Random.NextDouble() * (GameEngine.Height - 150);
+
         V2 origin = side switch
         {
             0 => new V2(-72, edgeY),
@@ -233,7 +255,9 @@ internal sealed class WaveSpawnService
             2 => new V2(edgeX, -72),
             _ => new V2(edgeX, GameEngine.Height + 72)
         };
+
         V2 target;
+
         if (game.BonusPatternStep % 3 == 0)
         {
             V2 aim = game.Player.Position + game.Player.Velocity * .3 +
@@ -253,6 +277,7 @@ internal sealed class WaveSpawnService
 
         SpawnBonusRock(game, origin, target, 225 + difficulty * 11 + game.Random.NextDouble() * 42,
             game.BonusPatternStep % 4 == 2 ? 2 : 3);
+
         game.BonusAsteroidSpawnTimer = Math.Max(.48, .74 - difficulty * .018) + game.Random.NextDouble() * .17;
     }
 
@@ -266,6 +291,7 @@ internal sealed class WaveSpawnService
         int gapStart = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
         int spawned = 0;
         double speed = 275 + difficulty * 16;
+
         for (int lane = 0; lane < lanes && game.BonusAsteroidsRemaining > 0; lane++)
         {
             if (lane >= gapStart && lane < gapStart + gapWidth)
@@ -292,14 +318,17 @@ internal sealed class WaveSpawnService
         V2 origin = center + radial * 790;
         double speed = 235 + difficulty * 10 + game.Random.NextDouble() * 32;
         V2 velocity = -radial * speed + tangent * (44 + difficulty * 2);
+
         Asteroid asteroid =
             new(origin, velocity, game.BonusPatternStep % 5 == 0 ? 3 : 2, true, game.Random.Next(), true)
             {
                 BonusCurve = (game.BonusPatternStep % 2 == 0 ? 1 : -1) * (.1 + difficulty * .005)
             };
+
         game.Asteroids.Add(asteroid);
         game.BonusAsteroidsRemaining--;
         game.BonusAsteroidSpawnTimer = Math.Max(.62, .86 - difficulty * .02) + game.Random.NextDouble() * .18;
+
         if (game.BonusPatternStep % 5 == 4)
         {
             game.BonusAsteroidSpawnTimer += .35;
@@ -326,9 +355,11 @@ internal sealed class WaveSpawnService
         }
 
         game.FighterSpawnedThisWave = true;
+
         FighterKind kind = game.Wave >= 3 && game.Random.Next(5 + game.Wave) > 6
             ? FighterKind.Interceptor
             : FighterKind.Raider;
+
         V2 pos = game.SafeEdgePosition();
         game.Fighters.Add(new Fighter(pos, game.RandomDirection() * 80, kind));
         game.Announce("ENEMY INBOUND", 1.5);
@@ -343,13 +374,15 @@ internal sealed class WaveSpawnService
         }
 
         game.FighterSpawnedThisWave = true;
+
         for (int i = 0; i < 3; i++)
         {
             FighterKind kind = game.Wave >= 4 && game.Random.NextDouble() < .45
                 ? FighterKind.Interceptor
                 : FighterKind.Raider;
-            game.Fighters.Add(new Fighter(game.SafeEdgePosition(), game.RandomDirection() * game.Random.Next(70, 105),
-                kind));
+
+            game.Fighters.Add(
+                new Fighter(game.SafeEdgePosition(), game.RandomDirection() * game.Random.Next(70, 105), kind));
         }
 
         game.Announce("ENEMY ASSAULT — THREE HOSTILES", 2.2);
@@ -387,6 +420,7 @@ internal sealed class WaveSpawnService
     {
         game.BlackHoleSpawned = true;
         game.BlackHoleTimer = -1;
+
         for (int i = 0; i < 3; i++)
         {
             game.Vortices.Add(new GravityVortex(game.SafePosition(250)));
@@ -443,8 +477,10 @@ internal sealed class WaveSpawnService
         }
 
         V2 position = game.SafeEdgePosition();
+
         V2 destination = new(GameEngine.Width * (.3 + game.Random.NextDouble() * .4),
             GameEngine.Height * (.28 + game.Random.NextDouble() * .44));
+
         V2 velocity = (destination - position).Normalized * game.Random.Next(48, 82) + game.RandomDirection() * 15;
         game.Pickups.Add(new Pickup(position, velocity, PickupKind.Canister));
     }
@@ -457,8 +493,10 @@ internal sealed class WaveSpawnService
         }
 
         V2 position = game.SafeEdgePosition();
+
         V2 destination = new(GameEngine.Width * (.28 + game.Random.NextDouble() * .44),
             GameEngine.Height * (.26 + game.Random.NextDouble() * .48));
+
         V2 velocity = (destination - position).Normalized * game.Random.Next(42, 68);
         game.Pickups.Add(new Pickup(position, velocity, kind));
     }
@@ -500,11 +538,15 @@ internal sealed class WaveSpawnService
         }
 
         bool fromLeft = game.Random.Next(2) == 0;
+
         V2 position = new(fromLeft ? 1 : GameEngine.Width - 1,
             100 + game.Random.NextDouble() * (GameEngine.Height - 200));
+
         V2 target = new(fromLeft ? GameEngine.Width + 100 : -100,
             90 + game.Random.NextDouble() * (GameEngine.Height - 180));
+
         int value = GameEngine.CometValues[game.Random.Next(GameEngine.CometValues.Length)];
+
         uint tint = value switch
         {
             >= 5000 => 0xffff6e9e,
@@ -513,6 +555,7 @@ internal sealed class WaveSpawnService
             >= 1000 => 0xff63f0ca,
             _ => 0xffffc65b
         };
+
         game.Comets.Add(new Comet(position, (target - position).Normalized * game.Random.Next(310, 430), value, tint));
         game.Audio.Play(SoundCue.CometSpawn, .96);
     }
@@ -542,6 +585,7 @@ internal sealed class WaveSpawnService
         }
 
         int value = game.Random.Next(1, 6) * 1000;
+
         game.Pickups.Add(
             new Pickup(at ?? game.SafeEdgePosition(), game.RandomDirection() * 45, PickupKind.Bonus, value));
     }
@@ -568,13 +612,16 @@ internal sealed class WaveSpawnService
             2 => new V2(game.Random.NextDouble() * GameEngine.Width, GameEngine.Height + 38),
             _ => new V2(-38, game.Random.NextDouble() * GameEngine.Height)
         };
+
         V2 destination = new(GameEngine.Width * (.3 + game.Random.NextDouble() * .4),
             GameEngine.Height * (.28 + game.Random.NextDouble() * .44));
+
         Pickup rescue = new(position, (destination - position).Normalized * game.Random.Next(78, 108),
             PickupKind.RescueShip)
         {
             Angle = game.Random.NextDouble() * Math.PI * 2
         };
+
         game.Pickups.Add(rescue);
         game.ShowBanner("RESCUE SHIP", 1.7);
     }
