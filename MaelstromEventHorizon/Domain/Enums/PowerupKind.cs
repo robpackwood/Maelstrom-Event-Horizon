@@ -7,6 +7,8 @@ internal enum PowerupKind
     TripleFire,
     RiftVolley,
     LongRange,
+    LaserShots,
+    DoubleShotSize,
     Shields,
     ReflectionShield,
     Freeze,

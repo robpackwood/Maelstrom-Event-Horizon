@@ -27,7 +27,8 @@ internal sealed partial class CollisionService
             if (asteroid is not null)
             {
                 V2 hitPosition = shot.Position;
-                shot.Alive = false;
+                shot.Alive = !shot.Laser;
+                shot.LastPiercedAsteroid = asteroid;
                 game.AwardImmediateScore(100, hitPosition);
                 HitAsteroid(game, asteroid, shot.Damage);
                 continue;
@@ -198,7 +199,7 @@ internal sealed partial class CollisionService
                 {
                     game.Lives++;
                     game.ShowBanner("RESCUE +1 SHIP", 2);
-                    game.Audio.Play(SoundCue.RescueCelebration, .7125);
+                    game.Audio.Play(SoundCue.RescueCelebration, .534375);
                 }
                 else if (pickup.Kind == PickupKind.Canister)
                 {

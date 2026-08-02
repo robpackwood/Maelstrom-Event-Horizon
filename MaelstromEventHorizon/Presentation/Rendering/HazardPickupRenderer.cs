@@ -190,9 +190,13 @@ internal sealed class HazardPickupRenderer
             }
             else if (pickup.Kind == PickupKind.RescueShip)
             {
-                dc.PushTransform(new ScaleTransform(.8, .8));
-                dc.DrawImage(view.RescueShipSprite, new Rect(-36, -36, 72, 72));
-                dc.Pop();
+                double hullCanvas = 72 * Ship.BaseVisualScale;
+                dc.DrawImage(view.PlayerShipSprite, new Rect(-hullCanvas / 2, -hullCanvas / 2, hullCanvas, hullCanvas));
+                double navPulse = .72 + Math.Sin(view.Game.TotalTime * 8.5) * .18;
+
+                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(210 * navPulse), 255, 74, 62)),
+                    new Pen(new SolidColorBrush(Color.FromRgb(255, 184, 132)), .55 * Ship.BaseVisualScale),
+                    new Point(10 * Ship.BaseVisualScale, 0), 2.1 * Ship.BaseVisualScale, 2.1 * Ship.BaseVisualScale);
             }
             else if (pickup.Kind == PickupKind.TimeFreeze)
             {

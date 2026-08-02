@@ -164,6 +164,7 @@ internal sealed class EffectsPhysicsService
         game.IsBossStage = false;
         game.BonusStageFailed = false;
         game.RespawnTimer = 0;
+        game.ThreatRetreatTime = 0;
         game.FighterSpawnedThisWave = false;
         game.MineSpawnedThisWave = false;
         game.BonusTravelTime = 0;

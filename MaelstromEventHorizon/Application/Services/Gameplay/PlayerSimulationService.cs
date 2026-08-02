@@ -148,6 +148,7 @@ internal sealed class PlayerSimulationService
         game.FreezeTime -= dt;
         game.Player.Invulnerable -= dt;
         game.Player.SpawnShieldTime -= dt;
+        game.ThreatRetreatTime = Math.Max(0, game.ThreatRetreatTime - dt);
         game.ShieldImpactTime = Math.Max(0, game.ShieldImpactTime - dt);
 
         if (game.RespawnTimer > 0)
@@ -409,8 +410,9 @@ internal sealed class PlayerSimulationService
             Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
 
-            shot.Radius = game.Player.Giant ? 7.42 : 4.945;
+            shot.Radius = (game.Player.Giant ? 7.42 : 4.945) * (game.DoubleShotSizeActive ? 2 : 1);
             shot.Damage = 1;
+            shot.Laser = game.LaserShotsActive;
             shot.PowerLevel = 0;
             shot.RiftDelay = game.RiftVolleyActive && createRiftShots ? .18 : -1;
         }
@@ -486,7 +488,8 @@ internal sealed class PlayerSimulationService
             V2 toShip = game.ArenaDelta(fighter.Position, game.Player.Position);
             V2 tangent = new(-toShip.Y, toShip.X);
             double weave = Math.Sin(fighter.Age * (fighter.Kind == FighterKind.Interceptor ? 2.8 : 1.5));
-            V2 pursuit = game.PlayerRespawning ? -toShip.Normalized : toShip.Normalized;
+            bool retreating = game.PlayerRespawning || game.ThreatRetreatTime > 0;
+            V2 pursuit = retreating ? -toShip.Normalized : toShip.Normalized;
 
             V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 118 : 72) +
                          tangent.Normalized * weave * 68;
@@ -496,7 +499,7 @@ internal sealed class PlayerSimulationService
             fighter.Position = game.MoveBody(fighter, fighter.Position + fighter.Velocity * dt);
             fighter.FireDelay -= dt;
 
-            if (!game.PlayerRespawning && fighter.FireDelay <= 0 && toShip.Length < 720)
+            if (!retreating && fighter.FireDelay <= 0 && toShip.Length < 720)
             {
                 const double enemyShotSpeed = 335;
 

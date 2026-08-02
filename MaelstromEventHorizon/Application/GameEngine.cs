@@ -18,9 +18,10 @@ internal sealed class GameEngine
     internal const double PlayerShotSpeed = 601.92;
     internal const double PlayerVortexGravity = 6_500_000;
     internal const double RespawnDelay = 2.25;
+    internal const double ThreatRetreatDuration = 4;
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
-    internal const int TitleMenuItemCount = 6;
+    internal const int TitleMenuItemCount = 7;
     internal const double VolumeStep = .05;
     private const int MaxPooledShots = 240;
     private const int MaxPooledParticles = 900;
@@ -90,6 +91,7 @@ internal sealed class GameEngine
     internal double SummaryElapsed;
     internal double SummaryScreenElapsed;
     internal double ThrustRamp;
+    internal double ThreatRetreatTime;
     internal double TitleIdleTime;
     internal string TitleSecretBuffer = "";
     internal double TransitionElapsed;
@@ -181,6 +183,8 @@ internal sealed class GameEngine
     public bool TripleFireActive { get; internal set; }
     public bool RiftVolleyActive { get; internal set; }
     public bool LongRangeActive { get; internal set; }
+    public bool LaserShotsActive { get; internal set; }
+    public bool DoubleShotSizeActive { get; internal set; }
     public bool RicochetArenaActive { get; internal set; }
     public double TotalTime { get; private set; }
     public double BonusTravelTime { get; internal set; }

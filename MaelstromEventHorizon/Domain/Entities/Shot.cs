@@ -8,6 +8,8 @@ internal sealed class Shot(V2 position, V2 velocity, bool enemy, double lifetime
     public bool BossShot;
     public int Damage = 1;
     public bool Enemy = enemy;
+    public Asteroid? LastPiercedAsteroid;
+    public bool Laser;
     public double Lifetime = lifetime;
     public int PowerLevel;
     public double RiftDelay = -1;
@@ -29,6 +31,8 @@ internal sealed class Shot(V2 position, V2 velocity, bool enemy, double lifetime
         Alive = true;
         BossShot = false;
         Tint = 0;
+        LastPiercedAsteroid = null;
+        Laser = false;
         Sludge = false;
         SludgeVomit = false;
         SplitAge = -1;

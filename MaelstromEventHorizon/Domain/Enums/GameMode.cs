@@ -7,6 +7,7 @@ internal enum GameMode
     Playing,
     Paused,
     QuitConfirm,
+    ClearHighScoresConfirm,
     WaveOutro,
     WaveSummary,
     WaveSummaryExit,

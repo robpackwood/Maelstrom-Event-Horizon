@@ -46,51 +46,8 @@ internal sealed class PowerupService
     {
         game.CenterPlayerWithShield();
         game.Player.Shield = 67;
-        ClearRespawnZone(game);
+        game.ThreatRetreatTime = GameEngine.ThreatRetreatDuration;
         game.ShowBanner("SHIP RESTORED", 1.4);
-    }
-
-    private static void ClearRespawnZone(GameEngine game)
-    {
-        for (int i = 0; i < game.Fighters.Count; i++)
-        {
-            Fighter fighter = game.Fighters[i];
-
-            if (!fighter.Alive)
-            {
-                continue;
-            }
-
-            V2 away = game.ArenaDelta(game.Player.Position, fighter.Position);
-
-            if (away.Length < 280)
-            {
-                away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
-                fighter.Position = game.Wrap(game.Player.Position + away * 330);
-                fighter.Velocity = away * 135;
-                fighter.FireDelay = Math.Max(fighter.FireDelay, 1.5);
-            }
-        }
-
-        for (int i = 0; i < game.Bosses.Count; i++)
-        {
-            AlienBoss boss = game.Bosses[i];
-
-            if (!boss.Alive)
-            {
-                continue;
-            }
-
-            V2 away = game.ArenaDelta(game.Player.Position, boss.Position);
-
-            if (away.Length < 390)
-            {
-                away = away.LengthSquared < 1 ? game.RandomDirection() : away.Normalized;
-                boss.Position = game.Wrap(game.Player.Position + away * 440);
-                boss.Velocity = away * 110;
-                boss.AttackTimer = Math.Max(boss.AttackTimer, 1.8);
-            }
-        }
     }
 
     internal void AwardCanister(GameEngine game)
@@ -143,6 +100,12 @@ internal sealed class PowerupService
                 break;
             case PowerupKind.LongRange:
                 game.LongRangeActive = true;
+                break;
+            case PowerupKind.LaserShots:
+                game.LaserShotsActive = true;
+                break;
+            case PowerupKind.DoubleShotSize:
+                game.DoubleShotSizeActive = true;
                 break;
             case PowerupKind.Shields:
                 game.Player.Shield = Math.Min(100, game.Player.Shield + 65);
@@ -220,6 +183,8 @@ internal sealed class PowerupService
             PowerupKind.TripleFire => "TRIPLE FIRE",
             PowerupKind.RiftVolley => "RIFT VOLLEY",
             PowerupKind.LongRange => "LONG RANGE",
+            PowerupKind.LaserShots => "LASER SHOTS",
+            PowerupKind.DoubleShotSize => "DOUBLE SHOT SIZE",
             PowerupKind.ReflectionShield => "REFLECTION SHIELD",
             PowerupKind.Freeze => "TIME FREEZE",
             PowerupKind.RicochetArena => "RICOCHET ARENA",
@@ -237,6 +202,8 @@ internal sealed class PowerupService
             PowerupKind.TripleFire => !game.TripleFireActive,
             PowerupKind.RiftVolley => !game.RiftVolleyActive,
             PowerupKind.LongRange => !game.LongRangeActive,
+            PowerupKind.LaserShots => !game.LaserShotsActive,
+            PowerupKind.DoubleShotSize => !game.DoubleShotSizeActive,
             PowerupKind.Shields => game.Player.Shield < 100,
             PowerupKind.ReflectionShield => !game.ReflectionShieldActive,
             PowerupKind.GiantShip => !game.Player.Giant,
@@ -247,7 +214,8 @@ internal sealed class PowerupService
     private static bool HasEveryEquipablePowerup(GameEngine game)
     {
         return game.AirBrakesActive && game.LuckActive && game.TripleFireActive &&
-               game.RiftVolleyActive && game.LongRangeActive && game.Player.Shield >= 100 &&
+               game.RiftVolleyActive && game.LongRangeActive && game.LaserShotsActive && game.DoubleShotSizeActive &&
+               game.Player.Shield >= 100 &&
                game.ReflectionShieldActive && game.Player.Giant;
     }
 
@@ -273,6 +241,8 @@ internal sealed class PowerupService
         game.TripleFireActive = false;
         game.RiftVolleyActive = false;
         game.LongRangeActive = false;
+        game.LaserShotsActive = false;
+        game.DoubleShotSizeActive = false;
         game.RicochetArenaActive = false;
         game.Player.SetGiant(false);
         game.FreezeTime = 0;

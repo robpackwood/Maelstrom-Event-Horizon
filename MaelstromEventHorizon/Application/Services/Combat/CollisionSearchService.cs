@@ -27,7 +27,7 @@ internal sealed partial class CollisionService
     {
         foreach (Body body in hash.Nearby(shot))
         {
-            if (body is Asteroid asteroid && game.Touching(shot, asteroid))
+            if (body is Asteroid asteroid && asteroid != shot.LastPiercedAsteroid && game.Touching(shot, asteroid))
             {
                 return asteroid;
             }

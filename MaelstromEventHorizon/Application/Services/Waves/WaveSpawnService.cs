@@ -50,6 +50,7 @@ internal sealed class WaveSpawnService
         bool standardWave = game is { IsBonusStage: false, IsBossStage: false };
         game.BonusStageFailed = false;
         game.RespawnTimer = 0;
+        game.ThreatRetreatTime = 0;
         game.FighterSpawnedThisWave = false;
         game.MineSpawnedThisWave = false;
         game.BonusTravelTime = 0;
@@ -290,7 +291,7 @@ internal sealed class WaveSpawnService
         int gapStep = (game.BonusPatternStep + difficulty) % gapCycle;
         int gapStart = gapStep < gapPositions ? gapStep : gapCycle - gapStep;
         int spawned = 0;
-        double speed = 275 + difficulty * 16;
+        double speed = (275 + difficulty * 16) * .8;
 
         for (int lane = 0; lane < lanes && game.BonusAsteroidsRemaining > 0; lane++)
         {
@@ -302,7 +303,7 @@ internal sealed class WaveSpawnService
             double y = 48 + lane / (double)(lanes - 1) * (GameEngine.Height - 96);
             V2 origin = new(GameEngine.Width + 78 + spawned * 5, y);
             V2 target = new(-95, y + Math.Sin(game.BonusPatternStep * .86 + lane) * (18 + difficulty * 4));
-            SpawnBonusRock(game, origin, target, speed + game.Random.NextDouble() * 30, 2);
+            SpawnBonusRock(game, origin, target, speed + game.Random.NextDouble() * 24, 2);
             spawned++;
         }
 

@@ -40,7 +40,7 @@ internal sealed class BossCombatService
                 case AlienBossKind.SludgeMaw:
                     boss.SpecialTimer -= dt;
 
-                    if (!game.PlayerRespawning && boss.SpecialTimer <= 0)
+                    if (!game.PlayerRespawning && game.ThreatRetreatTime <= 0 && boss.SpecialTimer <= 0)
                     {
                         FireSludgeVomit(game, boss, direction);
                         boss.SpecialTimer = Math.Max(4.8, 6.6 - boss.Encounter * .1);
@@ -55,7 +55,7 @@ internal sealed class BossCombatService
                 case AlienBossKind.BoneBroodmother:
                     boss.SpecialTimer -= dt;
 
-                    if (boss.SpecialTimer <= 0)
+                    if (game.ThreatRetreatTime <= 0 && boss.SpecialTimer <= 0)
                     {
                         boss.Velocity = direction * (235 + boss.Encounter * 6);
                         boss.SpecialTimer = Math.Max(3.8, 5.8 - boss.Encounter * .1);
@@ -66,7 +66,7 @@ internal sealed class BossCombatService
                     break;
                 case AlienBossKind.DreadHarvester:
                     boss.SpecialTimer -= dt;
-                    if (boss.SpecialTimer <= 0)
+                    if (game.ThreatRetreatTime <= 0 && boss.SpecialTimer <= 0)
                     {
                         boss.Velocity = tangent * (245 + boss.Encounter * 7);
                         boss.SpecialTimer = Math.Max(3.2, 5.1 - boss.Encounter * .1);
@@ -84,6 +84,11 @@ internal sealed class BossCombatService
                     break;
             }
 
+            if (game.ThreatRetreatTime > 0)
+            {
+                desired = -direction * (155 * scale);
+            }
+
             double steering = boss.Kind == AlienBossKind.BoneBroodmother ? .42 : .92;
             boss.Velocity += (desired - boss.Velocity) * Math.Min(1, dt * steering);
             double speedCap = (boss.Kind == AlienBossKind.BoneBroodmother ? 260 : 155) + boss.Encounter * 3;
@@ -98,7 +103,7 @@ internal sealed class BossCombatService
             boss.Position = game.MoveBody(boss, boss.Position + boss.Velocity * dt);
             boss.AttackTimer -= dt;
 
-            if (!game.PlayerRespawning && boss.AttackTimer <= 0)
+            if (!game.PlayerRespawning && game.ThreatRetreatTime <= 0 && boss.AttackTimer <= 0)
             {
                 FireBossAttack(game, boss);
             }

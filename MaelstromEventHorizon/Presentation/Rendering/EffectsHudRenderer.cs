@@ -83,6 +83,14 @@ internal sealed class EffectsHudRenderer
 
             bool enhanced = shot.BossShot || shot is { Enemy: false, PowerLevel: > 0 };
             (Brush Glow, Brush Body, Pen Outline) visual = GetShotVisual(view, color, enhanced, shot.PowerLevel);
+
+            if (shot.Laser)
+            {
+                V2 tail = shot.Position - shot.Velocity.Normalized * (radius * 5.5);
+                dc.DrawLine(new Pen(visual.Glow, radius * 1.8), view.Pt(tail), view.Pt(shot.Position));
+                dc.DrawLine(new Pen(Brushes.White, Math.Max(1.2, radius * .42)), view.Pt(tail), view.Pt(shot.Position));
+            }
+
             dc.DrawEllipse(visual.Glow, null, view.Pt(shot.Position), radius * 2.15, radius * 2.15);
             dc.DrawEllipse(visual.Body, visual.Outline, view.Pt(shot.Position), radius, radius);
 
@@ -512,6 +520,16 @@ internal sealed class EffectsHudRenderer
         if (view.Game.LongRangeActive)
         {
             active.Add("LONG RANGE");
+        }
+
+        if (view.Game.LaserShotsActive)
+        {
+            active.Add("LASER SHOTS");
+        }
+
+        if (view.Game.DoubleShotSizeActive)
+        {
+            active.Add("DOUBLE SHOT SIZE");
         }
 
         if (view.Game.RicochetArenaActive)

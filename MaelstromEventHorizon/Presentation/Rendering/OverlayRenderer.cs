@@ -38,7 +38,7 @@ internal sealed class OverlayRenderer
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(150, 84, 219, 255)), 1), new Point(88, 132),
                 new Point(551, 132));
 
-            string[] menuItems = ["PLAY", "CONTROLS", "MUSIC", "SOUND FX", "FULL SCREEN", "QUIT"];
+            string[] menuItems = ["PLAY", "CONTROLS", "MUSIC", "SOUND FX", "FULL SCREEN", "CLEAR HIGH SCORES", "QUIT"];
 
             for (int i = 0; i < menuItems.Length; i++)
             {
@@ -106,6 +106,24 @@ internal sealed class OverlayRenderer
                 new SolidColorBrush(Color.FromRgb(118, 239, 168)), FontWeights.Bold);
 
             view.DrawCenteredText(dc, "ESC  EXIT", 756, 421, 14,
+                new SolidColorBrush(Color.FromRgb(128, 213, 241)), FontWeights.Bold);
+        }
+        else if (view.Game.Mode == GameMode.ClearHighScoresConfirm)
+        {
+            dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(235, 4, 12, 22)),
+                new Pen(new SolidColorBrush(Color.FromRgb(104, 207, 235)), 1.4),
+                new Rect(382, 243, 516, 224), 5, 5);
+
+            view.DrawCenteredText(dc, "CLEAR HIGH SCORES?", GameEngine.Width / 2, 305, 32,
+                new SolidColorBrush(Color.FromRgb(230, 247, 252)), FontWeights.Black);
+
+            view.DrawCenteredText(dc, "THIS CANNOT BE UNDONE", GameEngine.Width / 2, 356, 14,
+                new SolidColorBrush(Color.FromRgb(255, 180, 128)), FontWeights.SemiBold);
+
+            view.DrawCenteredText(dc, "ENTER  CLEAR", 524, 421, 14,
+                new SolidColorBrush(Color.FromRgb(255, 180, 128)), FontWeights.Bold);
+
+            view.DrawCenteredText(dc, "ESC  CANCEL", 756, 421, 14,
                 new SolidColorBrush(Color.FromRgb(128, 213, 241)), FontWeights.Bold);
         }
         else if (view.Game.Mode == GameMode.Paused)

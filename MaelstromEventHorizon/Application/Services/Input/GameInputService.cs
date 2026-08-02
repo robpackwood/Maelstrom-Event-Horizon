@@ -150,6 +150,28 @@ internal sealed class GameInputService
             return true;
         }
 
+        if (game.Mode == GameMode.ClearHighScoresConfirm)
+        {
+            if (isRepeat)
+            {
+                return true;
+            }
+
+            if (key is Key.Enter or Key.Y)
+            {
+                game.HighScores.Clear();
+                game.HighlightedHighScore = null;
+                game.HighScoreRepository.Save(game.HighScores);
+                game.Mode = GameMode.Title;
+            }
+            else if (key is Key.Escape or Key.N)
+            {
+                game.Mode = GameMode.Title;
+            }
+
+            return true;
+        }
+
         if (game.Mode is not GameMode.NameEntry and not GameMode.Controls && key == game.Bindings[GameAction.Quit])
         {
             if (game.Mode is GameMode.Playing or GameMode.Paused or GameMode.WaveOutro or GameMode.WaveSummary or
@@ -199,6 +221,10 @@ internal sealed class GameInputService
                     ToggleFullScreen(game);
                 }
                 else if (game.TitleMenuSelection == 5)
+                {
+                    game.Mode = GameMode.ClearHighScoresConfirm;
+                }
+                else if (game.TitleMenuSelection == 6)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
