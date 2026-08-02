@@ -343,6 +343,19 @@ internal sealed class SynthAudio : IAudioService
     {
         bool wasRequested = musicRequested;
         bool trackChanged = !string.Equals(openedMusicPath, path, StringComparison.OrdinalIgnoreCase);
+
+        if (trackChanged)
+        {
+            try
+            {
+                music.Stop();
+            }
+            catch (Exception exception)
+            {
+                TraceAudioFailure("stop previous _music", exception);
+            }
+        }
+
         requestedMusicPath = path;
         requestedMusicVolume = volume;
         requestedMusicLoopStart = loopStart ?? TimeSpan.Zero;

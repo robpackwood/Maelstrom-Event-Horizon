@@ -198,7 +198,7 @@ internal sealed partial class CollisionService
                 {
                     game.Lives++;
                     game.ShowBanner("RESCUE +1 SHIP", 2);
-                    game.Audio.Play(SoundCue.RescueCelebration, .95);
+                    game.Audio.Play(SoundCue.RescueCelebration, .7125);
                 }
                 else if (pickup.Kind == PickupKind.Canister)
                 {
