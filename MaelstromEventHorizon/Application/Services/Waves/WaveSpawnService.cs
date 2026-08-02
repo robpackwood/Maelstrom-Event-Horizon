@@ -68,17 +68,18 @@ internal sealed class WaveSpawnService
         game.CometStormRemaining = 0;
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
-        double itemEventChance = lucky ? .8 : 1.0 / 3;
+        double eventChance = lucky ? .8 : 1.0 / 3;
+        double canisterChance = Math.Min(1, eventChance * 1.2);
 
-        game.CanisterTimer = standardWave && game.Random.NextDouble() < itemEventChance
+        game.CanisterTimer = standardWave && game.Random.NextDouble() < canisterChance
             ? 2.5 + game.Random.NextDouble() * 7.5
             : -1;
 
-        game.MultiplierTimer = standardWave && game.Random.NextDouble() < itemEventChance
+        game.MultiplierTimer = standardWave && game.Random.NextDouble() < eventChance
             ? 3 + game.Random.NextDouble() * 7.5
             : -1;
 
-        game.CometTimer = standardWave && (game.CometStormWave || game.Random.NextDouble() < itemEventChance)
+        game.CometTimer = standardWave && (game.CometStormWave || game.Random.NextDouble() < eventChance)
             ? 3.5 + game.Random.NextDouble() * 7.5
             : -1;
 
@@ -142,13 +143,6 @@ internal sealed class WaveSpawnService
 
                 game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3),
                     3, steel, game.Random.Next()));
-            }
-
-            double openingFighterChance = Math.Clamp(.08 + game.Wave * .035, .12, .42);
-
-            if (game.Wave >= 2 && game.Random.NextDouble() < openingFighterChance)
-            {
-                SpawnFighter(game);
             }
 
             if (game.Wave >= 3 && game.Random.NextDouble() < .07)
