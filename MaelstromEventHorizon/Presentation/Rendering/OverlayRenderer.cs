@@ -38,11 +38,15 @@ internal sealed class OverlayRenderer
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(150, 84, 219, 255)), 1), new Point(88, 132),
                 new Point(551, 132));
 
-            string[] menuItems = ["PLAY", "CONTROLS", "MUSIC", "SOUND FX", "FULL SCREEN", "CLEAR HIGH SCORES", "QUIT"];
+            string[] menuItems =
+            [
+                "PLAY", "CONTROLS", "MUSIC", "SOUND FX", "GRAPHICS", "FRAME RATE", "FULL SCREEN",
+                "CLEAR HIGH SCORES", "QUIT"
+            ];
 
             for (int i = 0; i < menuItems.Length; i++)
             {
-                double baseline = 170 + i * 46;
+                double baseline = 158 + i * 38;
                 bool selected = view.Game.TitleMenuSelection == i;
 
                 Brush brush =
@@ -62,6 +66,19 @@ internal sealed class OverlayRenderer
                     DrawVolumeSlider(view, dc, 323, baseline - 12, 176, volume, selected);
                 }
                 else if (i == 4)
+                {
+                    DrawOptionValue(view, dc, view.Game.VisualQuality switch
+                    {
+                        0 => "LOW",
+                        1 => "MEDIUM",
+                        _ => "HIGH"
+                    }, 323, baseline, selected);
+                }
+                else if (i == 5)
+                {
+                    DrawOptionValue(view, dc, $"{view.Game.FrameRateLimit} FPS", 323, baseline, selected);
+                }
+                else if (i == 6)
                 {
                     Rect box = new(363, baseline - 18, 22, 22);
                     dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(175, 3, 15, 27)), new Pen(brush, 1.5), box);
@@ -182,6 +199,13 @@ internal sealed class OverlayRenderer
         }
 
         dc.Pop();
+    }
+
+    private static void DrawOptionValue(GameView view, DrawingContext dc, string value, double x, double baseline,
+        bool selected)
+    {
+        Brush valueBrush = new SolidColorBrush(selected ? Color.FromRgb(255, 222, 110) : Color.FromRgb(137, 178, 195));
+        view.DrawText(dc, $"<  {value}  >", x, baseline, 15, valueBrush, FontWeights.Bold);
     }
 
     private void DrawVolumeSlider(GameView view, DrawingContext dc, double x, double y, double width, double value,

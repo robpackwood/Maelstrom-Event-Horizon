@@ -59,7 +59,7 @@ Waves can also produce a rare spinning rescue ship modeled after the player's cr
 
 Each wave independently has roughly a one-in-three chance to produce one item-canister event, one score multiplier, and one bonus-comet event. Item and comet events each have a 7.5% chance to become a storm with 5-10 arrivals. Standard and storm comets are worth $500, $1,000, $2,000, $3,000, $4,000, or $5,000 and ring up with an on-screen value and cha-ching sound. No event category can trigger more than once in the same wave; Luck of the Irish guarantees any event that has not yet appeared.
 
-Scores are shown as dollars and remain pending during play. After a wave, ordinary earnings and multiplied comet cash are counted into the bank on a summary screen. Deposits over $10,000 trigger a cash-confetti bonus, and every $50,000 in the bank awards an extra life.
+Scores are shown as dollars and remain pending during play. After a wave, ordinary earnings and multiplied comet cash are counted into the bank on a summary screen. Deposits over $10,000 trigger a cash-confetti bonus, and every $100,000 in the bank awards an extra life.
 
 The game keeps a persistent top-ten pilot table. Qualifying players enter a name after the run; scores are stored under the current Windows user's local application data folder.
 

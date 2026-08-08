@@ -32,6 +32,7 @@ internal sealed class WaveSpawnService
             : game.BossOnlyMode
                 ? game.Wave < 6 ? 6 : game.Wave + 5
                 : game.Wave + 1;
+        game.WaveStartedAt = game.TotalTime;
 
         game.IsBonusStage = game.BonusOnlyMode || (!game.BossOnlyMode && game.Wave % 5 == 0);
         game.IsBossStage = game.BossOnlyMode || (game is { BonusOnlyMode: false, Wave: > 1 } && game.Wave % 5 == 1);
@@ -69,7 +70,7 @@ internal sealed class WaveSpawnService
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
         double eventChance = lucky ? .8 : 1.0 / 3;
-        double canisterChance = Math.Min(1, eventChance * 1.2);
+        double canisterChance = lucky ? .96 : .5;
 
         game.CanisterTimer = standardWave && game.Random.NextDouble() < canisterChance
             ? 2.5 + game.Random.NextDouble() * 7.5
@@ -623,6 +624,11 @@ internal sealed class WaveSpawnService
 
     internal void RollDrop(GameEngine game, V2 at, double chance = .09)
     {
+        if (game.TotalTime - game.WaveStartedAt >= 60)
+        {
+            return;
+        }
+
         if (game.Random.NextDouble() < chance * .35)
         {
             SpawnBonusPickup(game, at);

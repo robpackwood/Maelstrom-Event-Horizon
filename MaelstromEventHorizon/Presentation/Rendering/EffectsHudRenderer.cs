@@ -371,6 +371,12 @@ internal sealed class EffectsHudRenderer
         return x >= -padding && x <= GameEngine.Width + padding && y >= -padding && y <= GameEngine.Height + padding;
     }
 
+    private static string BossLabel(GameView view, AlienBoss boss)
+    {
+        string name = view.Game.BossName(boss.Kind);
+        return boss.IsRepeatEncounter ? $"MEGA {name}" : name;
+    }
+
     internal void DrawHud(GameView view, DrawingContext dc)
     {
         if (view.Game.Mode is GameMode.Title or GameMode.Controls)
@@ -401,8 +407,8 @@ internal sealed class EffectsHudRenderer
 
         string stageLabel = activeBoss is not null
             ? view.Game.BossOnlyMode
-                ? $"BOSS ONLY {(view.Game.Wave - 1) / 5:00}  -  {view.Game.BossName(activeBoss.Kind)}  -  TOP 10 DISABLED"
-                : $"BOSS WAVE {view.Game.Wave:00}  -  {view.Game.BossName(activeBoss.Kind)}"
+                ? $"BOSS ONLY {(view.Game.Wave - 1) / 5:00}  -  {BossLabel(view, activeBoss)}  -  TOP 10 DISABLED"
+                : $"BOSS WAVE {view.Game.Wave:00}  -  {BossLabel(view, activeBoss)}"
             : view.Game.BonusOnlyMode
                 ? $"BONUS ONLY {view.Game.Wave / 5:00}  -  {view.Game.BonusStageName}  -  DODGED {view.Game.BonusAsteroidsDodged:00}/{view.Game.BonusAsteroidTotal:00}"
                 : view.Game.IsBonusStage
@@ -425,6 +431,9 @@ internal sealed class EffectsHudRenderer
         }
 
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
+        view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  T{view.HardwareRenderingTier}", 1120, 51, 10,
+            view.Brush(view.HardwareRenderingTier == 0 ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
+            FontWeights.SemiBold);
 
         if (activeBoss is not null)
         {

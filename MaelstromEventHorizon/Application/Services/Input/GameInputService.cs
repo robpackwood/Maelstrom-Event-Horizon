@@ -22,7 +22,7 @@ internal sealed class GameInputService
         game.Wave = 0;
         game.Lives = 3;
         game.Multiplier = 1;
-        game.NextLifeScore = 50_000;
+        game.NextLifeScore = GameEngine.ExtraShipScoreInterval;
         game.Player = new Ship(new V2(GameEngine.Width / 2, GameEngine.Height / 2));
         game.TurnVelocity = 0;
         game.ThrustRamp = 0;
@@ -202,7 +202,21 @@ internal sealed class GameInputService
                 AdjustTitleVolume(game, game.TitleMenuSelection,
                     key == Key.Right ? GameEngine.VolumeStep : -GameEngine.VolumeStep);
             }
-            else if (game.TitleMenuSelection == 4 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
+            else if (game.TitleMenuSelection is 4 or 5 && !isRepeat && key is Key.Left or Key.Right)
+            {
+                if (game.TitleMenuSelection == 4)
+                {
+                    game.AdjustVisualQuality(key == Key.Right ? 1 : -1);
+                }
+                else
+                {
+                    game.AdjustFrameRateLimit(key == Key.Right ? 1 : -1);
+                }
+
+                SavePreferences(game);
+                game.Audio.Play(SoundCue.MenuMove, .72);
+            }
+            else if (game.TitleMenuSelection == 6 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
             {
                 ToggleFullScreen(game);
             }
@@ -216,15 +230,15 @@ internal sealed class GameInputService
                 {
                     game.Mode = GameMode.Controls;
                 }
-                else if (game.TitleMenuSelection == 4)
+                else if (game.TitleMenuSelection == 6)
                 {
                     ToggleFullScreen(game);
                 }
-                else if (game.TitleMenuSelection == 5)
+                else if (game.TitleMenuSelection == 7)
                 {
                     game.Mode = GameMode.ClearHighScoresConfirm;
                 }
-                else if (game.TitleMenuSelection == 6)
+                else if (game.TitleMenuSelection == 8)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
@@ -339,7 +353,9 @@ internal sealed class GameInputService
         {
             FullScreen = game.FullScreenEnabled,
             MusicVolume = game.MusicVolume,
-            EffectsVolume = game.EffectsVolume
+            EffectsVolume = game.EffectsVolume,
+            GraphicsQuality = game.VisualQuality,
+            FrameRateLimit = game.FrameRateLimit
         });
     }
 

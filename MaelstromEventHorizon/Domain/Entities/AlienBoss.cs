@@ -5,6 +5,9 @@ namespace MaelstromEventHorizon.Domain.Entities;
 
 internal sealed class AlienBoss : Body
 {
+    private const int UniqueBossCount = 6;
+    private const double RepeatEncounterScale = 1.3;
+
     public readonly int Encounter;
 
     public readonly AlienBossKind Kind;
@@ -14,20 +17,14 @@ internal sealed class AlienBoss : Body
     public double HurtFlash;
     public double Phase;
     public double SpecialTimer;
+    public readonly double VisualScale;
 
     public AlienBoss(V2 position, AlienBossKind kind, int encounter)
-        : base(position, V2.Zero, kind switch
-        {
-            AlienBossKind.SludgeMaw => 76,
-            AlienBossKind.EyeTyrant => 70,
-            AlienBossKind.BoneBroodmother => 82,
-            AlienBossKind.DreadHarvester => 78,
-            AlienBossKind.SolarWarden => 74,
-            _ => 73
-        })
+        : base(position, V2.Zero, BaseRadius(kind) * EncounterScale(encounter))
     {
         Kind = kind;
         Encounter = encounter;
+        VisualScale = EncounterScale(encounter);
 
         int baseHealth = kind switch
         {
@@ -42,5 +39,22 @@ internal sealed class AlienBoss : Body
         HitPoints = MaxHitPoints = baseHealth + encounter * 4;
         AttackTimer = 3.4;
         SpecialTimer = 5;
+    }
+
+    public bool IsRepeatEncounter => Encounter > UniqueBossCount;
+
+    private static double EncounterScale(int encounter) => encounter > UniqueBossCount ? RepeatEncounterScale : 1;
+
+    private static double BaseRadius(AlienBossKind kind)
+    {
+        return kind switch
+        {
+            AlienBossKind.SludgeMaw => 76,
+            AlienBossKind.EyeTyrant => 70,
+            AlienBossKind.BoneBroodmother => 82,
+            AlienBossKind.DreadHarvester => 78,
+            AlienBossKind.SolarWarden => 74,
+            _ => 73
+        };
     }
 }

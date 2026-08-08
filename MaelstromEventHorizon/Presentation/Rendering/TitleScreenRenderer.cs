@@ -11,30 +11,23 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class TitleScreenRenderer
 {
+    private static readonly DrawingGroup TitleChrome = BuildTitleChrome();
+
     internal void DrawTitleTickers(GameView view, DrawingContext dc)
     {
-        Rect itemBand = new(0, 480, GameEngine.Width, 159);
-        Rect objectiveBand = new(0, 640, GameEngine.Width, 78);
-        dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(228, 2, 11, 20)), null, itemBand);
-        dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(238, 1, 7, 14)), null, objectiveBand);
-        Pen divider = new(new SolidColorBrush(Color.FromArgb(150, 72, 177, 207)), 1);
-        dc.DrawLine(divider, new Point(0, 480), new Point(GameEngine.Width, 480));
-        dc.DrawLine(divider, new Point(0, 640), new Point(GameEngine.Width, 640));
-        dc.DrawLine(divider, new Point(150, 496), new Point(150, 624));
-        dc.DrawLine(divider, new Point(640, 480), new Point(640, 640));
-        dc.DrawLine(divider, new Point(820, 496), new Point(820, 624));
+        dc.DrawDrawing(TitleChrome);
 
         view.DrawCenteredText(dc, "HAZARDS", 75, 549, 15,
-            new SolidColorBrush(Color.FromRgb(255, 137, 112)), FontWeights.Bold);
+            view.Brush(Color.FromRgb(255, 137, 112)), FontWeights.Bold);
 
         view.DrawCenteredText(dc, "THREATS + DANGERS", 75, 574, 9,
-            new SolidColorBrush(Color.FromRgb(174, 111, 102)), FontWeights.SemiBold);
+            view.Brush(Color.FromRgb(174, 111, 102)), FontWeights.SemiBold);
 
         view.DrawCenteredText(dc, "ITEM GUIDE", 730, 549, 15,
-            new SolidColorBrush(Color.FromRgb(119, 227, 255)), FontWeights.Bold);
+            view.Brush(Color.FromRgb(119, 227, 255)), FontWeights.Bold);
 
         view.DrawCenteredText(dc, "PICKUPS + POWERUPS", 730, 574, 9,
-            new SolidColorBrush(Color.FromRgb(99, 153, 177)), FontWeights.SemiBold);
+            view.Brush(Color.FromRgb(99, 153, 177)), FontWeights.SemiBold);
 
         DrawGuideTicker(view, dc, GameView.TitleHazardGuide, new Rect(151, 481, 488, 158), 57, 170);
         DrawGuideTicker(view, dc, GameView.TitleItemGuide, new Rect(821, 481, 458, 158), 62, 0);
@@ -42,10 +35,10 @@ internal sealed class TitleScreenRenderer
         dc.PushClip(new RectangleGeometry(new Rect(0, 641, GameEngine.Width, 76)));
 
         FormattedText objectiveHeader = view.Format("MISSION OBJECTIVES", 12.5,
-            new SolidColorBrush(Color.FromRgb(255, 215, 112)), FontWeights.Bold);
+            view.Brush(Color.FromRgb(255, 215, 112)), FontWeights.Bold);
 
         FormattedText objectives = view.Format(GameView.TitleObjectives, 12.5,
-            new SolidColorBrush(Color.FromRgb(207, 226, 233)), FontWeights.SemiBold);
+            view.Brush(Color.FromRgb(207, 226, 233)), FontWeights.SemiBold);
 
         const double objectiveGap = 120;
         double objectiveCycleWidth = objectiveHeader.Width + 32 + objectives.Width + objectiveGap;
@@ -61,10 +54,37 @@ internal sealed class TitleScreenRenderer
 
         dc.Pop();
 
-        FormattedText version = view.Format("1.5.0", 10,
-            new SolidColorBrush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
+        FormattedText version = view.Format("1.6.0", 10,
+            view.Brush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
 
         dc.DrawText(version, new Point(GameEngine.Width - version.Width - 12, 708 - version.Baseline));
+    }
+
+    private static DrawingGroup BuildTitleChrome()
+    {
+        DrawingGroup group = new();
+        SolidColorBrush itemBand = new(Color.FromArgb(228, 2, 11, 20));
+        SolidColorBrush objectiveBand = new(Color.FromArgb(238, 1, 7, 14));
+        SolidColorBrush dividerBrush = new(Color.FromArgb(150, 72, 177, 207));
+        itemBand.Freeze();
+        objectiveBand.Freeze();
+        dividerBrush.Freeze();
+        Pen divider = new(dividerBrush, 1);
+        divider.Freeze();
+
+        using (DrawingContext dc = group.Open())
+        {
+            dc.DrawRectangle(itemBand, null, new Rect(0, 480, GameEngine.Width, 159));
+            dc.DrawRectangle(objectiveBand, null, new Rect(0, 640, GameEngine.Width, 78));
+            dc.DrawLine(divider, new Point(0, 480), new Point(GameEngine.Width, 480));
+            dc.DrawLine(divider, new Point(0, 640), new Point(GameEngine.Width, 640));
+            dc.DrawLine(divider, new Point(150, 496), new Point(150, 624));
+            dc.DrawLine(divider, new Point(640, 480), new Point(640, 640));
+            dc.DrawLine(divider, new Point(820, 496), new Point(820, 624));
+        }
+
+        group.Freeze();
+        return group;
     }
 
     private void DrawGuideTicker(GameView view, DrawingContext dc,
@@ -85,12 +105,12 @@ internal sealed class TitleScreenRenderer
                 DrawTickerIcon(view, dc, entry.Icon, iconCenter, tint);
                 dc.Pop();
                 x += 42;
-                FormattedText name = view.Format(entry.Name, 14, new SolidColorBrush(tint), FontWeights.Bold);
+                FormattedText name = view.Format(entry.Name, 14, view.Brush(tint), FontWeights.Bold);
                 dc.DrawText(name, new Point(x, 565 - name.Baseline));
                 x += name.Width + 10;
 
                 FormattedText description = view.Format(entry.Description, 13,
-                    new SolidColorBrush(Color.FromRgb(171, 194, 207)), FontWeights.Normal);
+                    view.Brush(Color.FromRgb(171, 194, 207)), FontWeights.Normal);
 
                 dc.DrawText(description, new Point(x, 565 - description.Baseline));
                 x += description.Width + 50;

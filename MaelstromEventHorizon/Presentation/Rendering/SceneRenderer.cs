@@ -34,7 +34,6 @@ internal sealed class SceneRenderer
         view.DrawParticles(dc);
         view.DrawShockwaves(dc);
         view.DrawFloatingTexts(dc);
-        view.DrawWaveCompletionFlyby(dc);
         dc.Pop();
 
         if (waveCameraActive)

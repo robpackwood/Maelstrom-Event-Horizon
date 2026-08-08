@@ -27,7 +27,7 @@ internal sealed partial class CollisionService
             if (asteroid is not null)
             {
                 V2 hitPosition = shot.Position;
-                shot.Alive = !shot.Laser;
+                shot.Alive = shot.Laser;
                 shot.LastPiercedAsteroid = asteroid;
                 game.AwardImmediateScore(100, hitPosition);
                 HitAsteroid(game, asteroid, shot.Damage);
@@ -153,7 +153,9 @@ internal sealed partial class CollisionService
 
                 if (game.Touching(shot, game.Player))
                 {
-                    if (game.ReflectionShieldActive)
+                    bool regularShielding = game.Player is { Shielding: true, Shield: > 0 };
+
+                    if (game.ReflectionShieldActive && !regularShielding)
                     {
                         V2 direction = (game.Player.Position - shot.Position).Normalized;
 
@@ -231,7 +233,9 @@ internal sealed partial class CollisionService
 
             if (danger is not null)
             {
-                if (game.ReflectionShieldActive)
+                bool regularShielding = game.Player is { Shielding: true, Shield: > 0 };
+
+                if (game.ReflectionShieldActive && !regularShielding)
                 {
                     BreakReflectionShield(game, danger.Position);
                     game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, .22);
@@ -243,7 +247,7 @@ internal sealed partial class CollisionService
                     CollapseVortex(game, blackHole, false);
                     DamagePlayer(game, true);
                 }
-                else if (danger is Asteroid asteroid && game.Player is { Shielding: true, Shield: > 0 })
+                else if (danger is Asteroid asteroid && regularShielding)
                 {
                     RamAsteroid(game, asteroid);
                 }
@@ -321,6 +325,7 @@ internal sealed partial class CollisionService
         game.Player.Velocity += deflection * (65 + asteroid.Size * 22);
         game.Player.Invulnerable = .65;
         game.SpawnShockwave(game.Player.Position, .34, 0xff65e7ff, 72 + asteroid.Size * 10);
+        ShowShieldSave(game);
 
         if (asteroid.ExitsArena)
         {
@@ -350,6 +355,11 @@ internal sealed partial class CollisionService
         game.Spark(position, 0xffd9ffff, 18);
         game.Spark(game.Player.Position, 0xff55dfff, 10);
         game.Audio.Play(SoundCue.ShieldImpact, Math.Clamp(strength, 0, 1));
+    }
+
+    private static void ShowShieldSave(GameEngine game)
+    {
+        game.Audio.Play(SoundCue.ShieldSave, .9);
     }
 
     private static void BreakReflectionShield(GameEngine game, V2 position)
@@ -593,6 +603,7 @@ internal sealed partial class CollisionService
             {
                 game.Player.Shield = Math.Max(0, game.Player.Shield - 10);
                 RegisterShieldImpact(game, impactPosition ?? game.Player.Position, .82);
+                ShowShieldSave(game);
             }
 
             game.Player.Invulnerable = .35;
@@ -603,6 +614,7 @@ internal sealed partial class CollisionService
         {
             game.Player.Shield = Math.Max(0, game.Player.Shield - 18);
             RegisterShieldImpact(game, impactPosition ?? game.Player.Position, .92);
+            ShowShieldSave(game);
             return;
         }
 

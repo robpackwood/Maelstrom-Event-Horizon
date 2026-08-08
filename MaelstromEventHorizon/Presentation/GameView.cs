@@ -15,14 +15,13 @@ namespace MaelstromEventHorizon.Presentation;
 
 internal sealed class GameView : FrameworkElement
 {
-    internal const double TargetFrameInterval = 1.0 / 60;
     internal const int BossSpriteFrameCount = 12;
     internal const double BossSpriteFrameRate = 12;
 
     internal const string TitleObjectives =
         "BREAK ASTEROIDS  /  SURVIVE EACH WAVE  /  DESTROY ENEMY SHIPS  /  SHOOT COMETS FOR CASH  /  " +
         "COLLECT POWER-UPS  /  BANK WAVE EARNINGS  /  SURVIVE A NEW DODGE TRIAL EVERY 5 WAVES  /  DEFEAT THE ALIEN BOSS THAT FOLLOWS  /  " +
-        "EARN AN EXTRA SHIP EVERY $50,000  /  CHASE THE HIGHEST SCORE";
+        "EARN AN EXTRA SHIP EVERY $100,000  /  CHASE THE HIGHEST SCORE";
 
     internal static readonly Color[] WaveGrades =
     [
@@ -97,6 +96,10 @@ internal sealed class GameView : FrameworkElement
     internal double NextFrameTime;
     internal double PreviousTime;
     internal int SlowFrameCount;
+    private int renderedFrames;
+    private double frameSampleStarted;
+    internal double FramesPerSecond { get; private set; }
+    internal int HardwareRenderingTier { get; }
 
     public GameView(GameEngine game, IAssetProvider assets, IGameRenderServices renderers)
     {
@@ -105,6 +108,7 @@ internal sealed class GameView : FrameworkElement
         Assets = assets;
         Focusable = true;
         SnapsToDevicePixels = true;
+        HardwareRenderingTier = RenderCapability.Tier >> 16;
         RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.Fant);
 
         AsteroidSprites =
@@ -374,16 +378,19 @@ internal sealed class GameView : FrameworkElement
     private void RenderFrame(object? sender, EventArgs e)
     {
         double now = Clock.Elapsed.TotalSeconds;
+        double targetFrameInterval = 1.0 / Game.FrameRateLimit;
 
         if (now < NextFrameTime)
         {
             return;
         }
 
-        NextFrameTime = now + TargetFrameInterval;
+        NextFrameTime = now + targetFrameInterval;
         double dt = PreviousTime == 0 ? 1.0 / 60 : now - PreviousTime;
         PreviousTime = now;
-        SlowFrameCount = dt > .026 ? SlowFrameCount + 1 : Math.Max(0, SlowFrameCount - 2);
+        SlowFrameCount = dt > Math.Max(.026, targetFrameInterval * 1.35)
+            ? SlowFrameCount + 1
+            : Math.Max(0, SlowFrameCount - 2);
 
         if (SlowFrameCount >= 24 && Game.LowerVisualQualityIfNeeded())
         {
@@ -402,6 +409,18 @@ internal sealed class GameView : FrameworkElement
         }
 
         InvalidateVisual();
+        renderedFrames++;
+
+        if (frameSampleStarted == 0)
+        {
+            frameSampleStarted = now;
+        }
+        else if (now - frameSampleStarted >= .5)
+        {
+            FramesPerSecond = renderedFrames / (now - frameSampleStarted);
+            renderedFrames = 0;
+            frameSampleStarted = now;
+        }
     }
 
     protected override void OnRender(DrawingContext dc)
@@ -439,11 +458,6 @@ internal sealed class GameView : FrameworkElement
     internal void DrawShip(DrawingContext dc)
     {
         Renderers.PlayerAsteroidRenderer.DrawShip(this, dc);
-    }
-
-    internal void DrawWaveCompletionFlyby(DrawingContext dc)
-    {
-        Renderers.PlayerAsteroidRenderer.DrawWaveCompletionFlyby(this, dc);
     }
 
     internal void DrawDetailedShipHull(DrawingContext dc, double time, Color accent, bool armored)

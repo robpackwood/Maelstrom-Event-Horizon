@@ -73,8 +73,8 @@ internal sealed class CombatActorRenderer
                            (boss.Kind == AlienBossKind.EyeTyrant ? 5 : 2.5);
 
             double breathe = Math.Sin(boss.Age * 2.25);
-            double scaleX = 1 + breathe * (boss.Kind == AlienBossKind.VoidLeech ? .025 : .012);
-            double scaleY = 1 - breathe * (boss.Kind == AlienBossKind.SludgeMaw ? .025 : .012);
+            double scaleX = boss.VisualScale * (1 + breathe * (boss.Kind == AlienBossKind.VoidLeech ? .025 : .012));
+            double scaleY = boss.VisualScale * (1 - breathe * (boss.Kind == AlienBossKind.SludgeMaw ? .025 : .012));
             V2 position = new(boss.Position.X, boss.Position.Y + hover);
 
             if (view.Game.BossCountdownActive || view.Game.BossInvulnerability > 0)

@@ -5,6 +5,7 @@ namespace MaelstromEventHorizon.Application.Services.Progression;
 
 internal sealed class ScoreTransitionService
 {
+    private const double WaveExitSpeed = 315;
     internal void AddScore(GameEngine game, int basePoints)
     {
         game.WaveBaseCash += basePoints;
@@ -33,7 +34,7 @@ internal sealed class ScoreTransitionService
         while (game.Score >= game.NextLifeScore)
         {
             game.Lives++;
-            game.NextLifeScore += 50_000;
+            game.NextLifeScore += GameEngine.ExtraShipScoreInterval;
             game.Announce("EXTRA SHIP", 2);
             game.Audio.Play(SoundCue.Life);
         }
@@ -199,19 +200,25 @@ internal sealed class ScoreTransitionService
         game.Mode = GameMode.WaveOutro;
         game.TransitionElapsed = 0;
         game.TransitionAlpha = 0;
-        game.Player.Thrusting = false;
+        SetWaveExitCourse(game);
+        game.Player.Thrusting = true;
         game.Player.Shielding = false;
+        game.Audio.SetThrustIntensity(.62);
     }
 
     internal void UpdateWaveOutro(GameEngine game, double dt)
     {
         game.TransitionElapsed += dt;
-        game.TransitionAlpha = Math.Clamp(game.TransitionElapsed / GameEngine.FadeToSummaryDuration, 0, 1);
+        game.Player.Position += game.Player.Velocity * dt;
+        game.TransitionAlpha = 0;
 
-        if (game.TransitionElapsed < GameEngine.FadeToSummaryDuration)
+        if (!HasExitedArena(game))
         {
             return;
         }
+
+        game.Player.Thrusting = false;
+        game.Audio.SetThrustIntensity(0);
 
         if (game.BonusOnlyMode || game.BossOnlyMode)
         {
@@ -224,6 +231,41 @@ internal sealed class ScoreTransitionService
         }
 
         BeginWaveSummary(game);
+    }
+
+    private static void SetWaveExitCourse(GameEngine game)
+    {
+        V2 position = game.Player.Position;
+        double nearest = position.X;
+        V2 direction = new(-1, 0);
+
+        if (GameEngine.Width - position.X < nearest)
+        {
+            nearest = GameEngine.Width - position.X;
+            direction = new V2(1, 0);
+        }
+
+        if (position.Y < nearest)
+        {
+            nearest = position.Y;
+            direction = new V2(0, -1);
+        }
+
+        if (GameEngine.Height - position.Y < nearest)
+        {
+            direction = new V2(0, 1);
+        }
+
+        game.Player.Velocity = direction * WaveExitSpeed;
+        game.Player.Angle = Math.Atan2(direction.Y, direction.X);
+    }
+
+    private static bool HasExitedArena(GameEngine game)
+    {
+        var ship = game.Player;
+        double margin = ship.Radius + 32;
+        return ship.Position.X < -margin || ship.Position.X > GameEngine.Width + margin ||
+               ship.Position.Y < -margin || ship.Position.Y > GameEngine.Height + margin;
     }
 
     internal void BeginWaveSummaryExit(GameEngine game)

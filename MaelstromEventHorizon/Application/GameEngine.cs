@@ -21,7 +21,8 @@ internal sealed class GameEngine
     internal const double ThreatRetreatDuration = 4;
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
-    internal const int TitleMenuItemCount = 7;
+    internal const int TitleMenuItemCount = 9;
+    internal const int ExtraShipScoreInterval = 100_000;
     internal const double VolumeStep = .05;
     private const int MaxPooledShots = 240;
     private const int MaxPooledParticles = 900;
@@ -77,8 +78,9 @@ internal sealed class GameEngine
     internal GameMode ModeBeforeQuitConfirmation;
     internal bool MultiplierSpawned;
     internal double MultiplierTimer = -1;
-    internal int NextLifeScore = 50_000;
+    internal int NextLifeScore = ExtraShipScoreInterval;
     internal double NextWaveTimer;
+    internal double WaveStartedAt;
     internal bool PendingGameOverHighScore;
     internal double RescueTimer = -1;
     internal double RespawnTimer;
@@ -110,6 +112,8 @@ internal sealed class GameEngine
         FullScreenEnabled = preferences.FullScreen;
         MusicVolume = preferences.MusicVolume;
         EffectsVolume = preferences.EffectsVolume;
+        VisualQuality = preferences.GraphicsQuality;
+        FrameRateLimit = preferences.FrameRateLimit;
         audio.SetVolumes(MusicVolume, EffectsVolume);
         audio.StartTitleMusic();
         HighScores = highScoreRepository.Load();
@@ -221,6 +225,7 @@ internal sealed class GameEngine
     public bool FullScreenEnabled { get; internal set; }
     public double MusicVolume { get; internal set; }
     public double EffectsVolume { get; internal set; }
+    public int FrameRateLimit { get; private set; } = 60;
     public bool IsDemoMode { get; internal set; }
     public bool BonusOnlyMode { get; internal set; }
     public bool BossOnlyMode { get; internal set; }
@@ -445,6 +450,18 @@ internal sealed class GameEngine
 
         VisualQuality--;
         return true;
+    }
+
+    internal void AdjustVisualQuality(int direction)
+    {
+        VisualQuality = (VisualQuality + direction + 3) % 3;
+    }
+
+    internal void AdjustFrameRateLimit(int direction)
+    {
+        int[] options = [30, 45, 60];
+        int index = Array.IndexOf(options, FrameRateLimit);
+        FrameRateLimit = options[(index + direction + options.Length) % options.Length];
     }
 
     internal void RecycleEffects()

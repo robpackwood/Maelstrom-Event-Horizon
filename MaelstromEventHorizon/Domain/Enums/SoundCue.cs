@@ -38,6 +38,7 @@ internal enum SoundCue
     AnnouncerGiantShip,
     Shield,
     ShieldImpact,
+    ShieldSave,
     ReflectionBreak,
     Nova,
     Wave,

@@ -53,7 +53,7 @@ internal sealed class EffectsPhysicsService
     {
         V2 back = -V2.FromAngle(game.Player.Angle);
 
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < EffectCount(game, 2); i++)
         {
             AddParticle(game, game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
                 game.Player.Velocity * .2 + back * game.Random.Next(120, 260) + RandomDirection(game) * 25,
@@ -63,7 +63,7 @@ internal sealed class EffectsPhysicsService
 
     internal void Spark(GameEngine game, V2 position, uint color, int count)
     {
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < EffectCount(game, count); i++)
         {
             AddParticle(game, position, RandomDirection(game) * game.Random.Next(70, 260),
                 .2 + game.Random.NextDouble() * .45, color, 2 + game.Random.NextDouble() * 4);
@@ -72,7 +72,9 @@ internal sealed class EffectsPhysicsService
 
     internal void Explosion(GameEngine game, V2 position, int count, uint color)
     {
-        for (int i = 0; i < count; i++)
+        int effectCount = EffectCount(game, count);
+
+        for (int i = 0; i < effectCount; i++)
         {
             double speed = game.Random.NextDouble() * game.Random.Next(100, 390);
             uint c = i % 4 == 0 ? 0xffffffff : i % 3 == 0 ? 0xffff5a36 : color;
@@ -81,12 +83,14 @@ internal sealed class EffectsPhysicsService
                 .35 + game.Random.NextDouble() * .85, c, 2 + game.Random.NextDouble() * 7);
         }
 
-        AddShockwave(game, position, .38, color, 55 + count * 1.7);
+        AddShockwave(game, position, .38, color, 55 + effectCount * 1.7);
     }
 
     internal void AsteroidBreakup(GameEngine game, V2 position, int count, uint color)
     {
-        for (int i = 0; i < count; i++)
+        int effectCount = EffectCount(game, count);
+
+        for (int i = 0; i < effectCount; i++)
         {
             double speed = game.Random.Next(150, 410);
             uint fragmentColor = i % 5 == 0 ? 0xffffe1a4 : i % 3 == 0 ? 0xffd77542 : color;
@@ -95,12 +99,14 @@ internal sealed class EffectsPhysicsService
                 .16 + game.Random.NextDouble() * .32, fragmentColor, 1.5 + game.Random.NextDouble() * 4.5);
         }
 
-        AddShockwave(game, position, .22, color, 38 + count * 1.15);
+        AddShockwave(game, position, .22, color, 38 + effectCount * 1.15);
     }
 
     private static void AddParticle(GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
     {
-        if (game.Particles.Count >= MaxParticles)
+        int maximum = game.VisualQuality switch { 0 => 250, 1 => 550, _ => MaxParticles };
+
+        if (game.Particles.Count >= maximum)
         {
             game.Particles[0].Alive = false;
         }
@@ -110,12 +116,24 @@ internal sealed class EffectsPhysicsService
 
     private static void AddShockwave(GameEngine game, V2 position, double lifetime, uint color, double maxRadius)
     {
-        if (game.Shockwaves.Count >= MaxShockwaves)
+        int maximum = game.VisualQuality switch { 0 => 8, 1 => 16, _ => MaxShockwaves };
+
+        if (game.Shockwaves.Count >= maximum)
         {
             game.Shockwaves[0].Alive = false;
         }
 
         game.SpawnShockwave(position, lifetime, color, maxRadius);
+    }
+
+    private static int EffectCount(GameEngine game, int count)
+    {
+        return game.VisualQuality switch
+        {
+            0 => Math.Max(1, (count + 3) / 4),
+            1 => Math.Max(1, (count * 3 + 4) / 5),
+            _ => count
+        };
     }
 
     internal void RemoveDead(GameEngine game)

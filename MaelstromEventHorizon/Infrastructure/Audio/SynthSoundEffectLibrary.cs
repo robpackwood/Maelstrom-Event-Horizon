@@ -349,6 +349,7 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         clips[SoundCue.AnnouncerSmartBomb] = clips[SoundCue.Pickup];
         clips[SoundCue.AnnouncerRicochetArena] = clips[SoundCue.Pickup];
         clips[SoundCue.AnnouncerGiantShip] = clips[SoundCue.Pickup];
+        clips[SoundCue.ShieldSave] = clips[SoundCue.BonusVoice];
         clips[SoundCue.ReflectionBreak] = clips[SoundCue.AsteroidExplosion];
         clips[SoundCue.NovaHit] = clips[SoundCue.Nova];
         clips[SoundCue.RicochetBounce] = clips[SoundCue.MenuMove];

@@ -12,6 +12,7 @@ namespace MaelstromEventHorizon.Infrastructure.Audio;
 internal sealed class SynthAudio : IAudioService
 {
     private const int LayeredEffectVoiceCount = 24;
+    private const int TitleMusicWave = 13;
     private readonly string bonusMusicPath;
     private readonly string bossMusicPath;
     private readonly string calmSummaryMusicPath;
@@ -53,7 +54,6 @@ internal sealed class SynthAudio : IAudioService
     {
         clips = soundEffects.Clips;
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
-        titleMusicPath = assets.PathFor("Music", "wave-13-joining-forces.mp3");
         bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
         bossMusicPath = assets.PathFor("Music", "boss-heavy-ominous.mp3");
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
@@ -77,6 +77,7 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-19-anti-entity-original.mp3"),
             assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
+        titleMusicPath = waveMusicPaths[TitleMusicWave - 1];
 
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
@@ -563,6 +564,7 @@ internal sealed class SynthAudio : IAudioService
                          [SoundCue.AnnouncerGiantShip] = "human-level-up.wav",
                          [SoundCue.Shield] = "shield-activation.wav",
                          [SoundCue.ShieldImpact] = "shield-impact.wav",
+                         [SoundCue.ShieldSave] = "shield-save-nice.mp3",
                          [SoundCue.ReflectionBreak] = "sfx_05b.wav",
                          [SoundCue.Nova] = "sfx_09a.wav",
                          [SoundCue.Wave] = "sfx_10a.wav",
@@ -619,7 +621,7 @@ internal sealed class SynthAudio : IAudioService
                         SoundCue.Life or SoundCue.RescueCelebration or SoundCue.ChaChing or
                         SoundCue.CometCelebration or SoundCue.CometSpawn or SoundCue.MultiplierWoohoo or
                         SoundCue.BonusFailed or SoundCue.GiantGrow or SoundCue.GiantShrink or
-                        SoundCue.ShieldImpact or SoundCue.ReflectionBreak or SoundCue.VortexHit or
+                        SoundCue.ShieldImpact or SoundCue.ShieldSave or SoundCue.ReflectionBreak or SoundCue.VortexHit or
                         SoundCue.NovaHit or SoundCue.RicochetBounce or SoundCue.EnemyHit or SoundCue.EnemyDestroyed or
                         SoundCue.MineHit or SoundCue.ShipCrash or SoundCue.ShipBlast or SoundCue.Coin or
                         SoundCue.SludgeMawHit or SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit or
@@ -707,6 +709,7 @@ internal sealed class SynthAudio : IAudioService
         double seconds = cue is SoundCue.Pickup ? .75 :
             cue is SoundCue.BonusVoice ? 1.1 :
             cue is SoundCue.ShieldImpact ? .55 :
+            cue is SoundCue.ShieldSave ? 1.0 :
             cue is SoundCue.RescueCelebration ? .9 :
             cue is SoundCue.SludgeMawHit ? .19 :
             cue is SoundCue.EyeTyrantHit or

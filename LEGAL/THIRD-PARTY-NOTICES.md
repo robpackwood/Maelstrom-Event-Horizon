@@ -23,6 +23,8 @@ https://creativecommons.org/publicdomain/zero/1.0/
   Sources: https://opengameart.org/content/outworld,
   https://opengameart.org/content/gsf-discovery, and
   https://opengameart.org/content/joining-forces
+- Joyful - Hesitant - Nice, by Sadiquecat.
+  Source: https://freesound.org/people/Sadiquecat/sounds/801283/
 
 ## Creative Commons Attribution 4.0 International
 

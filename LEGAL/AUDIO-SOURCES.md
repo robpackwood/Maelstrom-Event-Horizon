@@ -11,6 +11,7 @@ All newly added or enabled audio is commercially usable CC0/public-domain materi
 - **Alarm** by Frenchyboy, CC0 — enemy-arrival danger alert: https://opengameart.org/content/alarm-2
 - **Power Up, Level Up #beansjam** by Quitschie, CC0 — power-up collection: https://opengameart.org/content/power-up-level-up-beansjam
 - **Game Voice** by Tim Rockk, CC0 — power-up, bonus, and arcade-announcer voice clips: https://opengameart.org/content/game-voice
+- **Joyful - Hesitant - Nice** by Sadiquecat, CC0 — shield-save voice: https://freesound.org/people/Sadiquecat/sounds/801283/
 - **Oh Yeah** by n3b, CC-BY 3.0 — 10K wave-success voice shout: https://opengameart.org/content/oh-yeah
 - **Purchasing Sound Effect** by Spring Spring, CC0 — bonus-coin jingle: https://opengameart.org/content/purchasing-sound-effect
 - **English “thank you” pronunciation** from Wikimedia Commons, CC0 — rescue-ship voice: https://commons.wikimedia.org/wiki/File:En-us-thank_you_1.ogg
