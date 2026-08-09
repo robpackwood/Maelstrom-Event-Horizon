@@ -1,5 +1,12 @@
 ﻿# Third-Party Notices
 
+## MIT License
+
+- OpenTK.GLWpfControl 4.3.6 and OpenTK 4.9.4, used for the GPU playfield renderer.
+  Copyright (c) 2022 Team OpenTK.
+  Source: https://github.com/opentk/GLWpfControl
+  License: https://licenses.nuget.org/MIT
+
 Maelstrom - Event Horizon includes the following third-party audio.
 
 ## CC0 1.0 Universal

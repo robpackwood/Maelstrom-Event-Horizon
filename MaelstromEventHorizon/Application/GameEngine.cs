@@ -225,7 +225,7 @@ internal sealed class GameEngine
     public bool FullScreenEnabled { get; internal set; }
     public double MusicVolume { get; internal set; }
     public double EffectsVolume { get; internal set; }
-    public int FrameRateLimit { get; private set; } = 60;
+    public int FrameRateLimit { get; private set; }
     public bool IsDemoMode { get; internal set; }
     public bool BonusOnlyMode { get; internal set; }
     public bool BossOnlyMode { get; internal set; }
@@ -459,7 +459,7 @@ internal sealed class GameEngine
 
     internal void AdjustFrameRateLimit(int direction)
     {
-        int[] options = [30, 45, 60];
+        int[] options = [0, 30, 45, 60];
         int index = Array.IndexOf(options, FrameRateLimit);
         FrameRateLimit = options[(index + direction + options.Length) % options.Length];
     }

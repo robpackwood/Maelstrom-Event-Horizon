@@ -15,11 +15,14 @@ internal sealed class DrawingPrimitiveService
     private const int PenCacheCapacity = 512;
     private readonly ConditionalWeakTable<Asteroid, Geometry> asteroidGeometry = [];
     private readonly Dictionary<uint, SolidColorBrush> brushes = [];
+    private readonly Queue<uint> brushCacheOrder = [];
 
     private readonly Dictionary<(string Text, double Size, uint Color, int FontWeight), FormattedText> formattedText =
         [];
+    private readonly Queue<(string Text, double Size, uint Color, int FontWeight)> textCacheOrder = [];
 
     private readonly Dictionary<(uint Color, double Thickness), Pen> pens = [];
+    private readonly Queue<(uint Color, double Thickness)> penCacheOrder = [];
     private readonly Dictionary<int, Geometry> shipDebrisGeometry = [];
     private readonly Dictionary<double, Geometry> shipGeometry = [];
 
@@ -200,7 +203,8 @@ internal sealed class DrawingPrimitiveService
             return CreateFormattedText(text, size, brush, weight);
         }
 
-        (string text, double size, uint, int) key = (text, size, ColorKey(solid.Color), weight.ToOpenTypeWeight());
+        Color color = QuantizeColor(solid.Color);
+        (string text, double size, uint, int) key = (text, size, ColorKey(color), weight.ToOpenTypeWeight());
 
         if (formattedText.TryGetValue(key, out FormattedText? cached))
         {
@@ -209,16 +213,18 @@ internal sealed class DrawingPrimitiveService
 
         if (formattedText.Count >= TextCacheCapacity)
         {
-            formattedText.Clear();
+            formattedText.Remove(textCacheOrder.Dequeue());
         }
 
-        cached = CreateFormattedText(text, size, Brush(solid.Color), weight);
+        cached = CreateFormattedText(text, size, Brush(color), weight);
         formattedText.Add(key, cached);
+        textCacheOrder.Enqueue(key);
         return cached;
     }
 
     internal SolidColorBrush Brush(Color color)
     {
+        color = QuantizeColor(color);
         uint key = ColorKey(color);
 
         if (brushes.TryGetValue(key, out SolidColorBrush? brush))
@@ -228,17 +234,20 @@ internal sealed class DrawingPrimitiveService
 
         if (brushes.Count >= BrushCacheCapacity)
         {
-            brushes.Clear();
+            brushes.Remove(brushCacheOrder.Dequeue());
         }
 
         brush = new SolidColorBrush(color);
         brush.Freeze();
         brushes.Add(key, brush);
+        brushCacheOrder.Enqueue(key);
         return brush;
     }
 
     internal Pen Pen(Color color, double thickness)
     {
+        color = QuantizeColor(color);
+        thickness = Math.Max(.25, Math.Round(thickness * 4) / 4);
         (uint, double thickness) key = (ColorKey(color), thickness);
 
         if (pens.TryGetValue(key, out Pen? pen))
@@ -248,13 +257,20 @@ internal sealed class DrawingPrimitiveService
 
         if (pens.Count >= PenCacheCapacity)
         {
-            pens.Clear();
+            pens.Remove(penCacheOrder.Dequeue());
         }
 
         pen = new Pen(Brush(color), thickness);
         pen.Freeze();
         pens.Add(key, pen);
+        penCacheOrder.Enqueue(key);
         return pen;
+    }
+
+    private static Color QuantizeColor(Color color)
+    {
+        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A / 17d) * 17, 0, 255);
+        return alpha == color.A ? color : Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 
     private static FormattedText CreateFormattedText(string text, double size, Brush brush, FontWeight weight)

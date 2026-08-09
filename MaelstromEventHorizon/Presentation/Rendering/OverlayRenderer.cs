@@ -76,7 +76,8 @@ internal sealed class OverlayRenderer
                 }
                 else if (i == 5)
                 {
-                    DrawOptionValue(view, dc, $"{view.Game.FrameRateLimit} FPS", 323, baseline, selected);
+                    DrawOptionValue(view, dc, view.Game.FrameRateLimit == 0 ? "UNCAPPED" : $"{view.Game.FrameRateLimit} FPS",
+                        323, baseline, selected);
                 }
                 else if (i == 6)
                 {

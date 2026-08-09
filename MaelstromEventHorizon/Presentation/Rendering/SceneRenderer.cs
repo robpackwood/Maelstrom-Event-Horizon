@@ -106,11 +106,10 @@ internal sealed class SceneRenderer
 
             Color grade = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
 
-            dc.DrawRectangle(
-                new SolidColorBrush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)), null,
-                new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+            dc.DrawRectangle(view.Brush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)),
+                null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
 
-            dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(titleScene ? (byte)30 : (byte)52, 0, 2, 8)), null,
+            dc.DrawRectangle(view.Brush(Color.FromArgb(titleScene ? (byte)30 : (byte)52, 0, 2, 8)), null,
                 new Rect(0, 0, GameEngine.Width, GameEngine.Height));
         }
         else
@@ -192,7 +191,7 @@ internal sealed class SceneRenderer
         {
             for (int i = 1; i < 9; i++)
             {
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(23, guide.R, guide.G, guide.B)), 1),
+                dc.DrawLine(view.Pen(Color.FromArgb(23, guide.R, guide.G, guide.B), 1),
                     new Point(0, i * GameEngine.Height / 9), new Point(GameEngine.Width, i * GameEngine.Height / 9));
             }
         }
@@ -200,8 +199,7 @@ internal sealed class SceneRenderer
         {
             for (int i = 0; i < 5; i++)
             {
-                dc.DrawArc(
-                    new Pen(new SolidColorBrush(Color.FromArgb((byte)(25 + i * 7), guide.R, guide.G, guide.B)), 1.2),
+                dc.DrawArc(view.Pen(Color.FromArgb((byte)(25 + i * 7), guide.R, guide.G, guide.B), 1.2),
                     new Point(GameEngine.Width / 2, GameEngine.Height / 2), 130 + i * 105,
                     view.Game.BonusTravelTime * (12 + i * 2) + i * 43, 215);
             }
@@ -214,7 +212,7 @@ internal sealed class SceneRenderer
             {
                 double y = PositiveModulo(i * 105 + view.Game.BonusTravelTime * 95, GameEngine.Height + 210) - 105;
 
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(25, guide.R, guide.G, guide.B)), 1.2),
+                dc.DrawLine(view.Pen(Color.FromArgb(25, guide.R, guide.G, guide.B), 1.2),
                     new Point(0, y), new Point(GameEngine.Width, y + GameEngine.Width * slope));
             }
         }

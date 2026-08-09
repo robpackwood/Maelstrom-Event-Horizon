@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -30,7 +31,19 @@ internal sealed class GameWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = Brushes.Black;
         SetWindowIcon();
-        Content = view;
+        view.UseGpuPlayfield = true;
+        Grid surface = new();
+        GpuPlayfieldView gpuPlayfield = new(game);
+        gpuPlayfield.Failed += _ =>
+        {
+            view.UseGpuPlayfield = false;
+            surface.Children.Remove(gpuPlayfield);
+            view.InvalidateVisual();
+            view.Focus();
+        };
+        surface.Children.Add(gpuPlayfield);
+        surface.Children.Add(view);
+        Content = surface;
         ApplyFullScreen(display.FullScreen);
         this.game.FullScreenChanged += ApplyFullScreen;
         SourceInitialized += (_, _) => ApplySystemTitleBarTheme();

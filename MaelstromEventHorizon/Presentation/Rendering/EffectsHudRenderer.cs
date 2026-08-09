@@ -431,7 +431,8 @@ internal sealed class EffectsHudRenderer
         }
 
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
-        view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  T{view.HardwareRenderingTier}", 1120, 51, 10,
+        string renderer = view.HardwareRenderingTier == 0 ? "SOFTWARE" : $"GPU T{view.HardwareRenderingTier}";
+        view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  {renderer}", 1120, 51, 10,
             view.Brush(view.HardwareRenderingTier == 0 ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
             FontWeights.SemiBold);
 

@@ -11,6 +11,14 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class PlayerAsteroidRenderer
 {
+    private static readonly LinearGradientBrush ThrustBrush = CreateThrustBrush();
+    private static readonly Pen ThrustOutline = CreateFrozenPen(Color.FromArgb(120, 80, 220, 255), 2);
+    private static readonly StreamGeometry[] ThrustPlumes =
+    [
+        CreateThrustPlume(-28), CreateThrustPlume(-30.3), CreateThrustPlume(-32.6), CreateThrustPlume(-34.9),
+        CreateThrustPlume(-37.1), CreateThrustPlume(-39.4), CreateThrustPlume(-41.7), CreateThrustPlume(-44)
+    ];
+
     internal void DrawShip(GameView view, DrawingContext dc)
     {
         Ship ship = view.Game.Player;
@@ -47,21 +55,8 @@ internal sealed class PlayerAsteroidRenderer
         if (ship.Thrusting)
         {
             dc.PushTransform(new ScaleTransform(visualScale, visualScale));
-            StreamGeometry plume = new();
-
-            using (StreamGeometryContext c = plume.Open())
-            {
-                c.BeginFigure(new Point(-14, -7), true, true);
-                c.LineTo(new Point(-36 - 8 * Math.Sin(view.Game.TotalTime * 38), 0), true, false);
-                c.LineTo(new Point(-14, 7), true, false);
-            }
-
-            Color plumeTip = Color.FromRgb(45, 115, 255);
-
-            LinearGradientBrush plumeBrush = new(Color.FromArgb(245, 245, 255, 255),
-                Color.FromArgb(30, plumeTip.R, plumeTip.G, plumeTip.B), new Point(1, .5), new Point(0, .5));
-
-            dc.DrawGeometry(plumeBrush, new Pen(new SolidColorBrush(Color.FromArgb(120, 80, 220, 255)), 2), plume);
+            int plumeFrame = (int)Math.Round((Math.Sin(view.Game.TotalTime * 38) + 1) * (ThrustPlumes.Length - 1) / 2);
+            dc.DrawGeometry(ThrustBrush, ThrustOutline, ThrustPlumes[plumeFrame]);
             dc.Pop();
         }
 
@@ -70,8 +65,8 @@ internal sealed class PlayerAsteroidRenderer
         dc.DrawImage(hullSprite, new Rect(-hullCanvas / 2, -hullCanvas / 2, hullCanvas, hullCanvas));
         double navPulse = .72 + Math.Sin(view.Game.TotalTime * 8.5) * .18;
 
-        dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(210 * navPulse), 255, 74, 62)),
-            new Pen(new SolidColorBrush(Color.FromRgb(255, 184, 132)), .55 * visualScale),
+        dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(210 * navPulse), 255, 74, 62)),
+            view.Pen(Color.FromRgb(255, 184, 132), .55 * visualScale),
             new Point(10 * visualScale, 0), 2.1 * visualScale, 2.1 * visualScale);
 
         dc.Pop();
@@ -86,8 +81,7 @@ internal sealed class PlayerAsteroidRenderer
             view.DrawGlowEllipse(dc, renderPosition, 29 * visualScale + pulse, shieldColor, 4,
                 spawnShield ? .72 : .55);
 
-            Pen shieldPen = new(new SolidColorBrush(
-                    Color.FromArgb(220, shieldColor.R, shieldColor.G, shieldColor.B)), 1.9);
+            Pen shieldPen = view.Pen(Color.FromArgb(220, shieldColor.R, shieldColor.G, shieldColor.B), 1.9);
 
             dc.DrawEllipse(null, shieldPen, view.Pt(renderPosition), 29 * visualScale + pulse,
                 29 * visualScale + pulse);
@@ -100,7 +94,7 @@ internal sealed class PlayerAsteroidRenderer
             double pulse = 3 + Math.Sin(view.Game.TotalTime * 9) * 2.5;
             Color reflectionColor = Color.FromRgb(255, 194, 82);
             view.DrawGlowEllipse(dc, renderPosition, 34 * visualScale + pulse, reflectionColor, 5, .72);
-            Pen reflectionPen = new(new SolidColorBrush(Color.FromArgb(238, 255, 230, 146)), 2.4);
+            Pen reflectionPen = view.Pen(Color.FromArgb(238, 255, 230, 146), 2.4);
             double radius = 35 * visualScale + pulse;
             dc.DrawArc(reflectionPen, view.Pt(renderPosition), radius, view.Game.TotalTime * -115, 135);
             dc.DrawArc(reflectionPen, view.Pt(renderPosition), radius, view.Game.TotalTime * -115 + 180, 120);
@@ -129,7 +123,7 @@ internal sealed class PlayerAsteroidRenderer
             view.DrawGlowEllipse(dc, view.Game.ShieldImpactPoint, contactRadius, Color.FromRgb(236, 255, 255), 4,
                 intensity);
 
-            dc.DrawEllipse(new SolidColorBrush(Color.FromArgb((byte)(210 * intensity), 228, 255, 255)),
+            dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(210 * intensity), 228, 255, 255)),
                 null, view.Pt(view.Game.ShieldImpactPoint), 2.5 + intensity * 2.5, 2.5 + intensity * 2.5);
         }
     }
@@ -393,5 +387,37 @@ internal sealed class PlayerAsteroidRenderer
             Point p1 = new(Math.Cos(a + .34) * rock.Radius * .72, Math.Sin(a + .34) * rock.Radius * .72);
             dc.DrawLine(vein, p0, p1);
         }
+    }
+
+    private static LinearGradientBrush CreateThrustBrush()
+    {
+        LinearGradientBrush brush = new(Color.FromArgb(245, 245, 255, 255), Color.FromArgb(30, 45, 115, 255),
+            new Point(1, .5), new Point(0, .5));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static Pen CreateFrozenPen(Color color, double thickness)
+    {
+        SolidColorBrush brush = new(color);
+        brush.Freeze();
+        Pen pen = new(brush, thickness);
+        pen.Freeze();
+        return pen;
+    }
+
+    private static StreamGeometry CreateThrustPlume(double tipX)
+    {
+        StreamGeometry plume = new();
+
+        using (StreamGeometryContext context = plume.Open())
+        {
+            context.BeginFigure(new Point(-14, -7), true, true);
+            context.LineTo(new Point(tipX, 0), true, false);
+            context.LineTo(new Point(-14, 7), true, false);
+        }
+
+        plume.Freeze();
+        return plume;
     }
 }

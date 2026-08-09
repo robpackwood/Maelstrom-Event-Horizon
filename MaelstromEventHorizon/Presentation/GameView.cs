@@ -17,6 +17,7 @@ internal sealed class GameView : FrameworkElement
 {
     internal const int BossSpriteFrameCount = 12;
     internal const double BossSpriteFrameRate = 12;
+    private const double FrameSchedulingTolerance = .0015;
 
     internal const string TitleObjectives =
         "BREAK ASTEROIDS  /  SURVIVE EACH WAVE  /  DESTROY ENEMY SHIPS  /  SHOOT COMETS FOR CASH  /  " +
@@ -93,6 +94,7 @@ internal sealed class GameView : FrameworkElement
     internal readonly BitmapSource VortexCoreSprite;
     internal readonly BitmapSource?[] WaveBackgrounds = new BitmapSource?[8];
     internal bool FastBonusSampling;
+    internal bool UseGpuPlayfield { get; set; }
     internal double NextFrameTime;
     internal double PreviousTime;
     internal int SlowFrameCount;
@@ -378,17 +380,39 @@ internal sealed class GameView : FrameworkElement
     private void RenderFrame(object? sender, EventArgs e)
     {
         double now = Clock.Elapsed.TotalSeconds;
-        double targetFrameInterval = 1.0 / Game.FrameRateLimit;
+        bool isCapped = Game.FrameRateLimit > 0;
+        double targetFrameInterval = isCapped ? 1.0 / Game.FrameRateLimit : 0;
 
-        if (now < NextFrameTime)
+        if (isCapped)
         {
-            return;
+            if (NextFrameTime == 0)
+            {
+                NextFrameTime = now;
+            }
+
+            if (now + FrameSchedulingTolerance < NextFrameTime)
+            {
+                return;
+            }
+
+            // Keep the desired cadence anchored to the original deadline. Resetting it from "now"
+            // means a 60 FPS target on a 90 Hz display falls into a 45 FPS every-other-refresh pattern.
+            NextFrameTime += targetFrameInterval;
+
+            // Do not try to render a burst of frames after a debugger pause or an extended stall.
+            if (NextFrameTime < now - targetFrameInterval * 2)
+            {
+                NextFrameTime = now + targetFrameInterval;
+            }
+        }
+        else
+        {
+            NextFrameTime = 0;
         }
 
-        NextFrameTime = now + targetFrameInterval;
         double dt = PreviousTime == 0 ? 1.0 / 60 : now - PreviousTime;
         PreviousTime = now;
-        SlowFrameCount = dt > Math.Max(.026, targetFrameInterval * 1.35)
+        SlowFrameCount = dt > (isCapped ? Math.Max(.026, targetFrameInterval * 1.35) : .026)
             ? SlowFrameCount + 1
             : Math.Max(0, SlowFrameCount - 2);
 
@@ -426,7 +450,10 @@ internal sealed class GameView : FrameworkElement
     protected override void OnRender(DrawingContext dc)
     {
         base.OnRender(dc);
-        dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, ActualWidth, ActualHeight));
+        if (!UseGpuPlayfield)
+        {
+            dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, ActualWidth, ActualHeight));
+        }
 
         if (ActualWidth < 1 || ActualHeight < 1)
         {
@@ -439,10 +466,30 @@ internal sealed class GameView : FrameworkElement
         dc.PushClip(new RectangleGeometry(new Rect(x, y, GameEngine.Width * scale, GameEngine.Height * scale)));
         dc.PushTransform(new TranslateTransform(x, y));
         dc.PushTransform(new ScaleTransform(scale, scale));
-        DrawGameCanvas(dc);
+        if (UseGpuPlayfield)
+        {
+            DrawGpuOverlay(dc);
+        }
+        else
+        {
+            DrawGameCanvas(dc);
+        }
         dc.Pop();
         dc.Pop();
         dc.Pop();
+    }
+
+    private void DrawGpuOverlay(DrawingContext dc)
+    {
+        DrawHud(dc);
+        DrawOverlay(dc);
+
+        if (Game.RicochetArenaActive)
+        {
+            DrawArenaFrame(dc);
+        }
+
+        DrawTransitionCurtain(dc);
     }
 
     internal void DrawGameCanvas(DrawingContext dc)
