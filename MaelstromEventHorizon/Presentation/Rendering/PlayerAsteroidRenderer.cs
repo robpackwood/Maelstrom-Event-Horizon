@@ -268,7 +268,8 @@ internal sealed class PlayerAsteroidRenderer
 
         if (rock.Mega)
         {
-            view.DrawGlowEllipse(dc, new V2(0, 0), rock.Radius * 1.08, Color.FromRgb(255, 124, 68), 8, .48);
+            view.DrawGlowEllipse(dc, new V2(0, 0), rock.Radius * 1.08,
+                rock.Colossal ? Color.FromRgb(255, 62, 133) : Color.FromRgb(255, 124, 68), rock.Colossal ? 10 : 8, .48);
         }
 
         if (rock.Steel)
@@ -338,7 +339,8 @@ internal sealed class PlayerAsteroidRenderer
 
         if (rock.Mega)
         {
-            Pen crack = new(new SolidColorBrush(Color.FromArgb(205, 255, 165, 79)), 2.2);
+            Pen crack = new(new SolidColorBrush(rock.Colossal ? Color.FromArgb(220, 255, 182, 224) : Color.FromArgb(205, 255, 165, 79)),
+                rock.Colossal ? 3 : 2.2);
 
             dc.DrawLine(crack, new Point(-rock.Radius * .56, -rock.Radius * .16),
                 new Point(-rock.Radius * .08, rock.Radius * .04));
@@ -348,6 +350,14 @@ internal sealed class PlayerAsteroidRenderer
 
             dc.DrawLine(crack, new Point(rock.Radius * .07, -rock.Radius * .58),
                 new Point(rock.Radius * .24, -rock.Radius * .08));
+
+            if (rock.Colossal)
+            {
+                dc.DrawLine(crack, new Point(-rock.Radius * .42, rock.Radius * .4),
+                    new Point(rock.Radius * .46, rock.Radius * .18));
+                dc.DrawLine(crack, new Point(-rock.Radius * .24, -rock.Radius * .48),
+                    new Point(rock.Radius * .5, -rock.Radius * .32));
+            }
         }
 
         dc.Pop();
@@ -365,7 +375,7 @@ internal sealed class PlayerAsteroidRenderer
 
     private void DrawRockTexture(GameView view, DrawingContext dc, Asteroid rock)
     {
-        int marks = rock.Mega ? 54 : rock.Size == 3 ? 30 : rock.Size == 2 ? 19 : 11;
+        int marks = rock.Colossal ? 76 : rock.Mega ? 54 : rock.Size == 3 ? 30 : rock.Size == 2 ? 19 : 11;
 
         for (int i = 0; i < marks; i++)
         {

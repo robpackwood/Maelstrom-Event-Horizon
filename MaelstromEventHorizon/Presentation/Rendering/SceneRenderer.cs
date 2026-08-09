@@ -13,6 +13,7 @@ internal sealed class SceneRenderer
 {
     internal void DrawGameCanvas(GameView view, DrawingContext dc)
     {
+        view.TransparentEffects.Reset(view.Game.VisualQuality);
         dc.PushClip(new RectangleGeometry(new Rect(0, 0, GameEngine.Width, GameEngine.Height)));
         bool waveCameraActive = TryPushWaveIntroCamera(view, dc);
         DrawBackdrop(view, dc);

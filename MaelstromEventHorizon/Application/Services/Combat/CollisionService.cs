@@ -310,7 +310,7 @@ internal sealed partial class CollisionService
 
     private void RamAsteroid(GameEngine game, Asteroid asteroid)
     {
-        double shieldCost = asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
+        double shieldCost = asteroid.Colossal ? 48 : asteroid.Mega ? 34 : asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
         game.Player.Shield = Math.Max(0, game.Player.Shield - shieldCost);
 
         V2 deflection = (asteroid.ExitsArena
@@ -395,10 +395,12 @@ internal sealed partial class CollisionService
             }
 
             asteroid.Alive = false;
-            game.AddScore(60);
-            game.AsteroidBreakup(asteroid.Position, 44, 0xffff9b4a);
+            game.AddScore(asteroid.Colossal ? 120 : 60);
+            game.AsteroidBreakup(asteroid.Position, asteroid.Colossal ? 72 : 44, 0xffff9b4a);
 
-            for (int i = 0; i < 3; i++)
+            int fragments = asteroid.Colossal ? 6 : 3;
+
+            for (int i = 0; i < fragments; i++)
             {
                 V2 velocity = asteroid.Velocity * .32 + game.RandomDirection() * game.Random.Next(95, 205);
 

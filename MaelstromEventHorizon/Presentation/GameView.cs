@@ -17,6 +17,8 @@ internal sealed class GameView : FrameworkElement
 {
     internal const int BossSpriteFrameCount = 12;
     internal const double BossSpriteFrameRate = 12;
+    private const double SimulationStep = 1.0 / 120;
+    private const double MaximumSimulationCatchUp = SimulationStep * 8;
     private const double FrameSchedulingTolerance = .0015;
 
     internal const string TitleObjectives =
@@ -93,13 +95,18 @@ internal sealed class GameView : FrameworkElement
     internal readonly BitmapImage? TimeFreezeSprite;
     internal readonly BitmapSource VortexCoreSprite;
     internal readonly BitmapSource?[] WaveBackgrounds = new BitmapSource?[8];
+    internal readonly FrameTimingProfiler FrameTimings = new();
+    internal readonly TransparentEffectBudget TransparentEffects = new();
     internal bool FastBonusSampling;
     internal bool UseGpuPlayfield { get; set; }
     internal double NextFrameTime;
     internal double PreviousTime;
+    private double simulationAccumulator;
     internal int SlowFrameCount;
     private int renderedFrames;
     private double frameSampleStarted;
+    private DrawingGroup? cachedHudFrame;
+    private bool cachedHudFrameIsBonusStage;
     internal double FramesPerSecond { get; private set; }
     internal int HardwareRenderingTier { get; }
 
@@ -380,6 +387,19 @@ internal sealed class GameView : FrameworkElement
     private void RenderFrame(object? sender, EventArgs e)
     {
         double now = Clock.Elapsed.TotalSeconds;
+        double elapsed = PreviousTime == 0 ? SimulationStep : Math.Min(now - PreviousTime, MaximumSimulationCatchUp);
+        PreviousTime = now;
+        simulationAccumulator = Math.Min(simulationAccumulator + elapsed, MaximumSimulationCatchUp);
+        long simulationStartedAt = Stopwatch.GetTimestamp();
+
+        while (simulationAccumulator >= SimulationStep)
+        {
+            Game.Update(SimulationStep);
+            simulationAccumulator -= SimulationStep;
+        }
+
+        FrameTimings.RecordSimulation(simulationStartedAt);
+        Game.RenderInterpolation = simulationAccumulator / SimulationStep;
         bool isCapped = Game.FrameRateLimit > 0;
         double targetFrameInterval = isCapped ? 1.0 / Game.FrameRateLimit : 0;
 
@@ -410,9 +430,7 @@ internal sealed class GameView : FrameworkElement
             NextFrameTime = 0;
         }
 
-        double dt = PreviousTime == 0 ? 1.0 / 60 : now - PreviousTime;
-        PreviousTime = now;
-        SlowFrameCount = dt > (isCapped ? Math.Max(.026, targetFrameInterval * 1.35) : .026)
+        SlowFrameCount = elapsed > (isCapped ? Math.Max(.026, targetFrameInterval * 1.35) : .026)
             ? SlowFrameCount + 1
             : Math.Max(0, SlowFrameCount - 2);
 
@@ -421,7 +439,6 @@ internal sealed class GameView : FrameworkElement
             SlowFrameCount = 0;
         }
 
-        Game.Update(dt);
         bool useFastSampling = Game is { IsBonusStage: true, Mode: GameMode.Playing };
 
         if (useFastSampling != FastBonusSampling)
@@ -433,6 +450,7 @@ internal sealed class GameView : FrameworkElement
         }
 
         InvalidateVisual();
+        Game.PresentedFrame++;
         renderedFrames++;
 
         if (frameSampleStarted == 0)
@@ -466,13 +484,17 @@ internal sealed class GameView : FrameworkElement
         dc.PushClip(new RectangleGeometry(new Rect(x, y, GameEngine.Width * scale, GameEngine.Height * scale)));
         dc.PushTransform(new TranslateTransform(x, y));
         dc.PushTransform(new ScaleTransform(scale, scale));
+        long renderStartedAt = Stopwatch.GetTimestamp();
+
         if (UseGpuPlayfield)
         {
             DrawGpuOverlay(dc);
+            FrameTimings.RecordWpfOverlay(renderStartedAt);
         }
         else
         {
             DrawGameCanvas(dc);
+            FrameTimings.RecordWpfFallback(renderStartedAt);
         }
         dc.Pop();
         dc.Pop();
@@ -614,7 +636,29 @@ internal sealed class GameView : FrameworkElement
 
     internal void DrawHud(DrawingContext dc)
     {
-        Renderers.EffectsHudRenderer.DrawHud(this, dc);
+        if (Game.Mode is GameMode.Title or GameMode.Controls)
+        {
+            return;
+        }
+
+        if (cachedHudFrame is null || cachedHudFrameIsBonusStage != Game.IsBonusStage)
+        {
+            cachedHudFrameIsBonusStage = Game.IsBonusStage;
+            cachedHudFrame = new DrawingGroup();
+
+            using (DrawingContext frame = cachedHudFrame.Open())
+            {
+                Renderers.EffectsHudRenderer.DrawHudFrame(this, frame);
+            }
+
+            if (cachedHudFrame.CanFreeze)
+            {
+                cachedHudFrame.Freeze();
+            }
+        }
+
+        dc.DrawDrawing(cachedHudFrame);
+        Renderers.EffectsHudRenderer.DrawHudValues(this, dc);
     }
 
     internal void DrawOverlay(DrawingContext dc)
@@ -675,7 +719,7 @@ internal sealed class GameView : FrameworkElement
     internal void DrawGlowEllipse(DrawingContext dc, V2 center, double radius, Color color, int layers,
         double intensity)
     {
-        Renderers.DrawingPrimitiveService.DrawGlowEllipse(dc, center, radius, color, layers, intensity);
+        Renderers.DrawingPrimitiveService.DrawGlowEllipse(this, dc, center, radius, color, layers, intensity);
     }
 
     internal void DrawText(DrawingContext dc, string text, double x, double baseline, double size, Brush brush,

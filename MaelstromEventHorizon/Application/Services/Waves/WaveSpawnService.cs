@@ -127,23 +127,44 @@ internal sealed class WaveSpawnService
             int normalRocks = 3 + (game.Wave - 1) / 2;
             int rocks = normalRocks;
 
-            if (game.Wave > 3 && rocks >= 3 && game.Random.Next(3) == 0)
+            if (game.Wave >= 13)
             {
-                V2 position = game.SafeEdgePosition();
+                bool spawnColossal = rocks >= 6 && game.Random.NextDouble() < .22;
 
-                game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
-                    game.Random.Next(), mega: true));
+                if (spawnColossal)
+                {
+                    V2 position = game.SafeEdgePosition();
+                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(18, 42), 3, false,
+                        game.Random.Next(), mega: true, colossal: true));
+                    rocks -= 6;
+                }
 
-                rocks -= 3;
+                while (rocks > 0)
+                {
+                    V2 position = game.SafeEdgePosition();
+                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
+                        game.Random.Next(), mega: true));
+                    rocks -= Math.Min(3, rocks);
+                }
             }
-
-            for (int i = 0; i < rocks; i++)
+            else
             {
-                V2 pos = game.SafeEdgePosition();
-                bool steel = game.Wave >= 4 && i == normalRocks - 1 && game.Wave % 3 == 1;
+                if (game.Wave > 3 && rocks >= 3 && game.Random.Next(3) == 0)
+                {
+                    V2 position = game.SafeEdgePosition();
+                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
+                        game.Random.Next(), mega: true));
+                    rocks -= 3;
+                }
 
-                game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3),
-                    3, steel, game.Random.Next()));
+                for (int i = 0; i < rocks; i++)
+                {
+                    V2 pos = game.SafeEdgePosition();
+                    bool steel = game.Wave >= 4 && i == normalRocks - 1 && game.Wave % 3 == 1;
+
+                    game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3),
+                        3, steel, game.Random.Next()));
+                }
             }
 
             if (game.Wave >= 3 && game.Random.NextDouble() < .07)

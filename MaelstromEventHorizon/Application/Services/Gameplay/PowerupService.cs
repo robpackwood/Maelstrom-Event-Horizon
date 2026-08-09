@@ -261,6 +261,12 @@ internal sealed class PowerupService
                 continue;
             }
 
+            if (asteroid.Mega)
+            {
+                game.HitAsteroid(asteroid, 3);
+                continue;
+            }
+
             if (asteroid.Size <= 1)
             {
                 asteroid.Velocity += game.RandomDirection() * 85;

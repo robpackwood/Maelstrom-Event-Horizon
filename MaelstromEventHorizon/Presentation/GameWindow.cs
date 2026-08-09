@@ -33,10 +33,11 @@ internal sealed class GameWindow : Window
         SetWindowIcon();
         view.UseGpuPlayfield = true;
         Grid surface = new();
-        GpuPlayfieldView gpuPlayfield = new(game);
+        GpuPlayfieldView gpuPlayfield = new(game, view.FrameTimings);
         gpuPlayfield.Failed += _ =>
         {
             view.UseGpuPlayfield = false;
+            view.FrameTimings.ClearGpuPlayfield();
             surface.Children.Remove(gpuPlayfield);
             view.InvalidateVisual();
             view.Focus();

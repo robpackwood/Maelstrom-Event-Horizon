@@ -333,12 +333,16 @@ internal sealed class EffectsHudRenderer
             double r = p.StartSize * (.35 + life * .8);
             dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
 
-            if (r > 3 && view.Game.VisualQuality > 0)
+            double haloScale = r > 3 && view.Game.VisualQuality > 0
+                ? view.TransparentEffects.ReserveDisk(r * 2.8)
+                : 0;
+
+            if (haloScale > 0)
             {
                 dc.DrawEllipse(view.Brush(Color.FromArgb((byte)(45 * life), c.R, c.G, c.B)), null, view.Pt(p.Position),
-                    r * 2.8, r * 2.8);
+                    r * 2.8 * haloScale, r * 2.8 * haloScale);
 
-                if (view.Game.VisualQuality > 1)
+                if (view.Game.VisualQuality > 1 && haloScale > .6)
                 {
                     V2 trail = p.Velocity.Normalized * Math.Min(18, p.Velocity.Length * .045) * life;
 
@@ -356,13 +360,21 @@ internal sealed class EffectsHudRenderer
             double p = ring.Age / ring.Lifetime;
             double r = ring.MaxRadius * view.EaseOut(p);
             Color color = view.FromArgb(ring.Color, (byte)(220 * (1 - p)));
+            double thickness = Math.Max(.7, 5 * (1 - p));
 
             if (!Visible(ring.Position.X, ring.Position.Y, r + 12))
             {
                 continue;
             }
 
-            dc.DrawEllipse(null, view.Pen(color, Math.Max(.7, 5 * (1 - p))), view.Pt(ring.Position), r, r);
+            double scale = view.TransparentEffects.ReserveRing(r, thickness);
+
+            if (scale == 0)
+            {
+                continue;
+            }
+
+            dc.DrawEllipse(null, view.Pen(color, thickness * scale), view.Pt(ring.Position), r, r);
         }
     }
 
@@ -377,7 +389,7 @@ internal sealed class EffectsHudRenderer
         return boss.IsRepeatEncounter ? $"MEGA {name}" : name;
     }
 
-    internal void DrawHud(GameView view, DrawingContext dc)
+    internal void DrawHudFrame(GameView view, DrawingContext dc)
     {
         if (view.Game.Mode is GameMode.Title or GameMode.Controls)
         {
@@ -386,13 +398,27 @@ internal sealed class EffectsHudRenderer
 
         SolidColorBrush dim = view.Brush(Color.FromRgb(137, 168, 191));
         view.DrawText(dc, "SCORE", 30, 29, 12, dim, FontWeights.SemiBold);
-        view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
         view.DrawText(dc, "LEVEL", 274, 29, 12, dim, FontWeights.SemiBold);
+        view.DrawText(dc, view.Game.IsBonusStage ? "SHIELD OFFLINE" : "SHIELD", 30, 682, 12,
+            view.Game.IsBonusStage ? view.Brush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
 
+        double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
+        double shieldBarSpan = view.Game.IsBonusStage ? 132 : 180;
+        dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)), view.Pen(Color.FromRgb(55, 91, 113), 1),
+            new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
+    }
+
+    internal void DrawHudValues(GameView view, DrawingContext dc)
+    {
+        if (view.Game.Mode is GameMode.Title or GameMode.Controls)
+        {
+            return;
+        }
+
+        view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
         Brush levelBrush = view.Brush(view.Game.LevelBonusCash > 1_000
             ? Color.FromRgb(255, 221, 113)
             : Color.FromRgb(142, 169, 181));
-
         view.DrawText(dc, view.Money(view.Game.LevelBonusCash), 332, 31, 20, levelBrush, FontWeights.Bold);
         AlienBoss? activeBoss = null;
 
@@ -431,11 +457,11 @@ internal sealed class EffectsHudRenderer
         }
 
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
-        string renderer = view.HardwareRenderingTier == 0 ? "SOFTWARE" : $"GPU T{view.HardwareRenderingTier}";
+        string renderer = view.UseGpuPlayfield ? "D3D" : view.HardwareRenderingTier == 0 ? "SOFTWARE" : $"WPF T{view.HardwareRenderingTier}";
         view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  {renderer}", 1120, 51, 10,
-            view.Brush(view.HardwareRenderingTier == 0 ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
+            view.Brush(!view.UseGpuPlayfield && view.HardwareRenderingTier == 0
+                ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
             FontWeights.SemiBold);
-
         if (activeBoss is not null)
         {
             const double bossBarWidth = 390;
@@ -464,14 +490,8 @@ internal sealed class EffectsHudRenderer
                 FontWeights.Bold);
         }
 
-        view.DrawText(dc, view.Game.IsBonusStage ? "SHIELD OFFLINE" : "SHIELD", 30, 682, 12,
-            view.Game.IsBonusStage ? view.Brush(Color.FromRgb(255, 132, 103)) : dim, FontWeights.SemiBold);
-
         double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
         double shieldBarSpan = view.Game.IsBonusStage ? 132 : 180;
-
-        dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)), view.Pen(Color.FromRgb(55, 91, 113), 1),
-            new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
 
         double shieldWidth = Math.Max(0, (shieldBarSpan - 4) * view.Game.Player.Shield / 100);
 
@@ -583,7 +603,10 @@ internal sealed class EffectsHudRenderer
                 new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);
         }
 
-        if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing or GameMode.WaveSummary })
+        // Wave summaries provide their own title and status text. Suppress every transient gameplay
+        // banner here so bonus failures, power-ups, and extra ships earned during cash counting
+        // cannot overlap the summary.
+        if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing })
         {
             double alpha = Math.Min(1, view.Game.BannerTime * 2);
             SolidColorBrush b = new(Color.FromArgb((byte)(230 * alpha), 230, 246, 255));

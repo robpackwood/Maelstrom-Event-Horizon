@@ -115,7 +115,7 @@ internal sealed class DrawingPrimitiveService
 
     private Geometry CreateAsteroidGeometry(Asteroid rock)
     {
-        int count = rock.Mega ? 17 : rock.Size == 3 ? 13 : rock.Size == 2 ? 11 : 9;
+        int count = rock.Colossal ? 23 : rock.Mega ? 17 : rock.Size == 3 ? 13 : rock.Size == 2 ? 11 : 9;
         (double x, double y)[] points = new (double x, double y)[count];
 
         for (int i = 0; i < count; i++)
@@ -171,14 +171,16 @@ internal sealed class DrawingPrimitiveService
         }
     }
 
-    internal void DrawGlowEllipse(DrawingContext dc, V2 center, double radius, Color color, int layers,
+    internal void DrawGlowEllipse(GameView view, DrawingContext dc, V2 center, double radius, Color color, int layers,
         double intensity)
     {
-        for (int i = layers; i >= 1; i--)
+        TransparentEffectBudget.GlowDetail detail = view.TransparentEffects.ReserveGlow(radius, layers);
+
+        for (int i = detail.Layers; i >= 1; i--)
         {
-            double r = radius + i * 4;
+            double r = radius * detail.RadiusScale + i * 4;
             byte alpha = (byte)(Math.Clamp(intensity, 0, 1) * 55 / i);
-            dc.DrawEllipse(Brush(Color.FromArgb(alpha, color.R, color.G, color.B)), null, Pt(center), r, r);
+            dc.DrawEllipse(Brush(Color.FromArgb(alpha, color.R, color.G, color.B)), null, view.Pt(center), r, r);
         }
     }
 
