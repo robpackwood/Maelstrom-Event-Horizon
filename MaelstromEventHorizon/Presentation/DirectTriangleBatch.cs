@@ -1,9 +1,8 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Vortice.Direct3D9;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Maintains the small custom-geometry batch used beside the instanced sprite pass.</summary>
 internal sealed class DirectTriangleBatch : IDisposable
 {
     private const int FloatsPerVertex = 6;
@@ -24,6 +23,7 @@ internal sealed class DirectTriangleBatch : IDisposable
     public void Draw(IDirect3DDevice9 device, int totalVertices, int firstVertex, int maximumVertices)
     {
         int vertexCount = Math.Min(totalVertices - firstVertex, maximumVertices);
+
         if (vertexCount < 3)
         {
             return;

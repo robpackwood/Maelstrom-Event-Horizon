@@ -34,6 +34,7 @@ internal sealed class GameWindow : Window
         view.UseGpuPlayfield = true;
         Grid surface = new();
         GpuPlayfieldView gpuPlayfield = new(game, view.FrameTimings);
+
         gpuPlayfield.Failed += _ =>
         {
             view.UseGpuPlayfield = false;
@@ -42,6 +43,7 @@ internal sealed class GameWindow : Window
             view.InvalidateVisual();
             view.Focus();
         };
+
         surface.Children.Add(gpuPlayfield);
         surface.Children.Add(view);
         Content = surface;

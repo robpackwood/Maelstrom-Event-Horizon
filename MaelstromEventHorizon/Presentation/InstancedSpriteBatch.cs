@@ -1,11 +1,9 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Vortice.D3DCompiler;
-using Vortice.Direct3D;
 using Vortice.Direct3D9;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Draws circular sprites from one shared quad and a compact per-instance stream.</summary>
 internal sealed class InstancedSpriteBatch : IDisposable
 {
     private const int MaximumInstances = 2_048;
@@ -22,27 +20,34 @@ internal sealed class InstancedSpriteBatch : IDisposable
     {
         QuadVertex[] quad = [new(-1, -1), new(1, -1), new(1, 1), new(-1, 1)];
         ushort[] indices = [0, 1, 2, 0, 2, 3];
+
         quadBuffer = device.CreateVertexBuffer((uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly,
             VertexFormat.None, Pool.Default);
+
         indexBuffer = device.CreateIndexBuffer((uint)(indices.Length * sizeof(ushort)), Usage.WriteOnly,
             true, Pool.Default);
+
         instanceBuffer = device.CreateVertexBuffer((uint)(MaximumInstances * Marshal.SizeOf<SpriteInstance>()),
             Usage.Dynamic | Usage.WriteOnly, VertexFormat.None, Pool.Default);
+
         Upload(quadBuffer, quad, LockFlags.None);
         Upload(indexBuffer, indices, LockFlags.None);
 
         declaration = device.CreateVertexDeclaration(
         [
-            new VertexElement(0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate, 0),
-            new VertexElement(1, 0, DeclarationType.Float4, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate, 1),
-            new VertexElement(1, 16, DeclarationType.Color, DeclarationMethod.Default, DeclarationUsage.Color, 0),
+            new VertexElement(
+                0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate),
+            new VertexElement(
+                1, 0, DeclarationType.Float4, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate, 1),
+            new VertexElement(
+                1, 16, DeclarationType.Color, DeclarationMethod.Default, DeclarationUsage.Color),
             VertexElement.VertexDeclarationEnd
         ]);
 
         ReadOnlyMemory<byte> vertexCode = Compile(VertexShaderSource, "vs_3_0");
         ReadOnlyMemory<byte> pixelCode = Compile(PixelShaderSource, "ps_3_0");
-        vertexShader = device.CreateVertexShader<uint>(MemoryMarshal.Cast<byte, uint>(vertexCode.Span));
-        pixelShader = device.CreatePixelShader<uint>(MemoryMarshal.Cast<byte, uint>(pixelCode.Span));
+        vertexShader = device.CreateVertexShader(MemoryMarshal.Cast<byte, uint>(vertexCode.Span));
+        pixelShader = device.CreatePixelShader(MemoryMarshal.Cast<byte, uint>(pixelCode.Span));
     }
 
     public void Clear() => count = 0;
@@ -93,28 +98,31 @@ internal sealed class InstancedSpriteBatch : IDisposable
 
     private static ReadOnlyMemory<byte> Compile(string source, string target)
     {
-        return Compiler.Compile(source, "main", "InstancedSpriteBatch", target,
-            ShaderFlags.OptimizationLevel3, EffectFlags.None);
+        return Compiler.Compile(source, "main", "InstancedSpriteBatch", target, ShaderFlags.OptimizationLevel3);
     }
 
     private static unsafe void Upload<T>(IDirect3DVertexBuffer9 buffer, ReadOnlySpan<T> data, LockFlags flags)
         where T : unmanaged
     {
         IntPtr target = buffer.LockToPointer(0, (uint)(data.Length * sizeof(T)), flags);
+
         fixed (T* source = data)
         {
             Buffer.MemoryCopy(source, target.ToPointer(), data.Length * sizeof(T), data.Length * sizeof(T));
         }
+
         buffer.Unlock();
     }
 
     private static unsafe void Upload(IDirect3DIndexBuffer9 buffer, ReadOnlySpan<ushort> data, LockFlags flags)
     {
         IntPtr target = buffer.LockToPointer(0, (uint)(data.Length * sizeof(ushort)), flags);
+
         fixed (ushort* source = data)
         {
             Buffer.MemoryCopy(source, target.ToPointer(), data.Length * sizeof(ushort), data.Length * sizeof(ushort));
         }
+
         buffer.Unlock();
     }
 

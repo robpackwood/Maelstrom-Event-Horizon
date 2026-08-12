@@ -1,8 +1,7 @@
-using Vortice.Direct3D9;
+﻿using Vortice.Direct3D9;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Collects asynchronous Direct3D timestamp queries without stalling the render thread.</summary>
 internal sealed class GpuFrameTimer : IDisposable
 {
     private readonly Sample[] samples;
@@ -17,6 +16,7 @@ internal sealed class GpuFrameTimer : IDisposable
     {
         frequency = device.CreateQuery(QueryType.TimestampFreq);
         frequency.Issue(Issue.End);
+
         samples =
         [
             new(device.CreateQuery(QueryType.Timestamp), device.CreateQuery(QueryType.Timestamp)),
@@ -97,7 +97,9 @@ internal sealed class GpuFrameTimer : IDisposable
 
         foreach (Sample sample in samples)
         {
-            if (!sample.Pending || !sample.Start.GetData(out ulong start, false) || !sample.End.GetData(out ulong end, false))
+            if (!sample.Pending ||
+                !sample.Start.GetData(out ulong start, false) ||
+                !sample.End.GetData(out ulong end, false))
             {
                 continue;
             }

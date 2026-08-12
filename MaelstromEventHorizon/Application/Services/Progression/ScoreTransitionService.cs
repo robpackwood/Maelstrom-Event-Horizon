@@ -133,6 +133,7 @@ internal sealed class ScoreTransitionService
         {
             BankScore(game, delta);
             game.SummaryDeposited += delta;
+
             if (game.CashTickCooldown <= 0)
             {
                 game.Audio.Play(SoundCue.CashRegister, .48);
@@ -252,6 +253,7 @@ internal sealed class ScoreTransitionService
     {
         var ship = game.Player;
         double margin = ship.Radius + 32;
+
         return ship.Position.X < -margin || ship.Position.X > GameEngine.Width + margin ||
                ship.Position.Y < -margin || ship.Position.Y > GameEngine.Height + margin;
     }

@@ -253,7 +253,7 @@ internal sealed class GameEngine
     public List<FloatingText> FloatingTexts { get; } = [];
     public List<ShipDebris> ShipDebrisPieces { get; } = [];
     public List<Star> Stars { get; } = [];
-    internal int VisualQuality { get; private set; } = 2;
+    internal int VisualQuality { get; private set; }
 
     public event Action<bool>? FullScreenChanged;
 

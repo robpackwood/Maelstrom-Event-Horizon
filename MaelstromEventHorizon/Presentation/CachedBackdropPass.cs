@@ -1,14 +1,12 @@
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Domain.Effects;
 using Vortice.D3DCompiler;
-using Vortice.Direct3D;
 using Vortice.Direct3D9;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Draws the wave tint and a prebuilt star texture without rebuilding background geometry.</summary>
 internal sealed class CachedBackdropPass : IDisposable
 {
     private static readonly int TextureWidth = (int)GameEngine.Width;
@@ -22,19 +20,25 @@ internal sealed class CachedBackdropPass : IDisposable
     public CachedBackdropPass(IDirect3DDevice9 device, GameEngine game)
     {
         QuadVertex[] quad = [new(-1, 1, 0, 0), new(1, 1, 1, 0), new(-1, -1, 0, 1), new(1, -1, 1, 1)];
+
         quadBuffer = device.CreateVertexBuffer((uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly,
             VertexFormat.None, Pool.Default);
+
         Upload(quadBuffer, quad);
+
         declaration = device.CreateVertexDeclaration(
         [
-            new VertexElement(0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.Position, 0),
-            new VertexElement(0, 8, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate, 0),
+            new VertexElement(0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.Position),
+            new VertexElement(0, 8, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate),
             VertexElement.VertexDeclarationEnd
         ]);
-        starTexture = device.CreateTexture((uint)TextureWidth, (uint)TextureHeight, 1, Usage.None, Format.A8R8G8B8, Pool.Default);
+
+        starTexture = device.CreateTexture(
+            (uint)TextureWidth, (uint)TextureHeight, 1, Usage.None, Format.A8R8G8B8, Pool.Default);
+
         BuildStars(game.Stars);
-        vertexShader = device.CreateVertexShader<uint>(MemoryMarshal.Cast<byte, uint>(Compile(VertexSource, "vs_3_0").Span));
-        pixelShader = device.CreatePixelShader<uint>(MemoryMarshal.Cast<byte, uint>(Compile(PixelSource, "ps_3_0").Span));
+        vertexShader = device.CreateVertexShader(MemoryMarshal.Cast<byte, uint>(Compile(VertexSource, "vs_3_0").Span));
+        pixelShader = device.CreatePixelShader(MemoryMarshal.Cast<byte, uint>(Compile(PixelSource, "ps_3_0").Span));
         device.SetSamplerState(0, SamplerState.MinFilter, (int)TextureFilter.Point);
         device.SetSamplerState(0, SamplerState.MagFilter, (int)TextureFilter.Point);
         device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.None);
@@ -49,10 +53,12 @@ internal sealed class CachedBackdropPass : IDisposable
         device.VertexDeclaration = declaration;
         device.VertexShader = vertexShader;
         device.PixelShader = pixelShader;
+
         device.SetPixelShaderConstant(0,
         [
             new Vector4(((color >> 16) & 0xff) / 255f, ((color >> 8) & 0xff) / 255f, (color & 0xff) / 255f, 1)
         ]);
+
         device.SetTexture(0, starTexture);
         device.SetStreamSource(0, quadBuffer, 0, (uint)Marshal.SizeOf<QuadVertex>());
         device.DrawPrimitive(PrimitiveType.TriangleStrip, 0, 2);
@@ -82,7 +88,9 @@ internal sealed class CachedBackdropPass : IDisposable
             int red = (int)(180 + star.Depth * 70);
             int green = (int)(205 + star.Depth * 45);
             int alpha = (int)(125 + star.Depth * 105);
-            DrawStar(pixels, (int)Math.Round(star.Position.X), (int)Math.Round(star.Position.Y), radius, red, green, alpha);
+
+            DrawStar(pixels, (int)Math.Round(star.Position.X), (int)Math.Round(star.Position.Y),
+                radius, red, green, alpha);
         }
 
         LockedRectangle target = starTexture.LockRect(0, LockFlags.None);
@@ -121,15 +129,17 @@ internal sealed class CachedBackdropPass : IDisposable
 
     private static ReadOnlyMemory<byte> Compile(string source, string target)
     {
-        return Compiler.Compile(source, "main", "CachedBackdropPass", target, ShaderFlags.OptimizationLevel3, EffectFlags.None);
+        return Compiler.Compile(source, "main", "CachedBackdropPass", target, ShaderFlags.OptimizationLevel3);
     }
 
     private static unsafe void Upload(IDirect3DVertexBuffer9 buffer, ReadOnlySpan<QuadVertex> source)
     {
-        IntPtr target = buffer.LockToPointer(0, (uint)(source.Length * sizeof(QuadVertex)), LockFlags.None);
+        IntPtr target = buffer.LockToPointer(0, (uint)(source.Length * sizeof(QuadVertex)));
+
         fixed (QuadVertex* data = source)
         {
-            Buffer.MemoryCopy(data, target.ToPointer(), source.Length * sizeof(QuadVertex), source.Length * sizeof(QuadVertex));
+            Buffer.MemoryCopy(data, target.ToPointer(), source.Length * sizeof(QuadVertex),
+                source.Length * sizeof(QuadVertex));
         }
 
         buffer.Unlock();

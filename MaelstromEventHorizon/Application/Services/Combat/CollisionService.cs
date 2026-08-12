@@ -67,7 +67,6 @@ internal sealed partial class CollisionService
             if (mine is not null)
             {
                 shot.Alive = false;
-
                 game.Audio.Play(SoundCue.MineHit, .5);
 
                 if ((mine.HitPoints -= shot.Damage) <= 0)
@@ -318,7 +317,12 @@ internal sealed partial class CollisionService
 
     private void RamAsteroid(GameEngine game, Asteroid asteroid)
     {
-        double shieldCost = asteroid.Colossal ? 48 : asteroid.Mega ? 34 : asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
+        double shieldCost = asteroid.Colossal
+            ? 48
+            : asteroid.Mega
+                ? 34
+                : asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
+
         game.Player.Shield = Math.Max(0, game.Player.Shield - shieldCost);
 
         V2 deflection = (asteroid.ExitsArena
@@ -381,7 +385,6 @@ internal sealed partial class CollisionService
         game.Audio.Play(SoundCue.ReflectionBreak, .92);
     }
 
-
     internal void HitAsteroid(GameEngine game, Asteroid asteroid, int damage = 1)
     {
         if (asteroid.ExitsArena)
@@ -405,7 +408,6 @@ internal sealed partial class CollisionService
             asteroid.Alive = false;
             game.AddScore(asteroid.Colossal ? 120 : 60);
             game.AsteroidBreakup(asteroid.Position, asteroid.Colossal ? 72 : 44, 0xffff9b4a);
-
             int fragments = asteroid.Colossal ? 6 : 3;
 
             for (int i = 0; i < fragments; i++)

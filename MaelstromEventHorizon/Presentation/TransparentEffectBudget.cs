@@ -1,8 +1,7 @@
-using MaelstromEventHorizon.Application;
+﻿using MaelstromEventHorizon.Application;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Keeps translucent visuals from repeatedly covering more than a practical share of the playfield.</summary>
 internal sealed class TransparentEffectBudget
 {
     private const double PlayfieldArea = GameEngine.Width * GameEngine.Height;

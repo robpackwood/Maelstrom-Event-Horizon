@@ -9,7 +9,6 @@ internal sealed class AlienBoss : Body
     private const double RepeatEncounterScale = 1.3;
 
     public readonly int Encounter;
-
     public readonly AlienBossKind Kind;
     public readonly int MaxHitPoints;
     public double AttackTimer;

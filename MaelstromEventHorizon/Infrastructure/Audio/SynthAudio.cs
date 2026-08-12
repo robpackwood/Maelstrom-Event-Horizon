@@ -12,7 +12,6 @@ namespace MaelstromEventHorizon.Infrastructure.Audio;
 internal sealed class SynthAudio : IAudioService
 {
     private const int LayeredEffectVoiceCount = 24;
-    // The background atlas contains eight scenes, so regular music must repeat on the same cadence.
     private const int BackgroundThemeCount = 8;
     private const int TitleMusicWave = 13;
     private readonly string bonusMusicPath;
@@ -84,8 +83,8 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-19-anti-entity-original.mp3"),
             assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
-        titleMusicPath = waveMusicPaths[TitleMusicWave - 1];
 
+        titleMusicPath = waveMusicPaths[TitleMusicWave - 1];
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
         canisterPulseTimer.Tick += (_, _) => PlayCanisterPulse();
@@ -363,11 +362,6 @@ internal sealed class SynthAudio : IAudioService
         StartTrack(normalMusicPath, true);
     }
 
-    private void StartBonusMusic()
-    {
-        StartTrack(File.Exists(bonusMusicPath) ? bonusMusicPath : normalMusicPath, true);
-    }
-
     private void StartTrack(string path, bool restart, double volume = .32, TimeSpan? loopStart = null, bool loop = true)
     {
         bool wasRequested = musicRequested;
@@ -429,6 +423,7 @@ internal sealed class SynthAudio : IAudioService
                     music.Position = requestedMusicLoopStart;
                     music.Play();
                 };
+
                 music.MediaFailed += (_, _) =>
                 {
                     if (string.Equals(requestedMusicPath, titleMusicPath, StringComparison.OrdinalIgnoreCase) &&
@@ -437,6 +432,7 @@ internal sealed class SynthAudio : IAudioService
                         StartTrack(normalMusicPath, true, .30);
                     }
                 };
+
                 musicEndedHandlerAttached = true;
             }
 
@@ -642,8 +638,6 @@ internal sealed class SynthAudio : IAudioService
             {
                 string path = assets.PathFor("SoundEffects", recorded.Value);
 
-                // Individually curated CC0 recordings: only the events that benefit from a real,
-                // distinctive sound replace their prior synthesized cue.
                 if (File.Exists(path) && recorded.Key is SoundCue.EnemyFire or
                         SoundCue.EnemyWarning or SoundCue.BossAlarm or SoundCue.Pickup or SoundCue.BonusVoice or
                         SoundCue.AnnouncerWarning or SoundCue.AnnouncerBossDown or SoundCue.AnnouncerExtraShip or
@@ -827,7 +821,6 @@ internal sealed class SynthAudio : IAudioService
     {
         Trace.TraceWarning("Unable to {0}: {1}", operation, exception.Message);
     }
-
 
     private static byte[] Scale(byte[] source, double volume)
     {

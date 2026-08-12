@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -12,7 +12,6 @@ using Vortice.Direct3D9;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Direct3D-backed playfield that remains composable below WPF menus and the HUD.</summary>
 internal sealed class GpuPlayfieldView : Image
 {
     private const int FloatsPerVertex = 6;
@@ -54,6 +53,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             IntPtr windowHandle = new WindowInteropHelper(Window.GetWindow(this)!).Handle;
             D3D9.Direct3DCreate9Ex(out direct3D).CheckError();
+
             PresentParameters presentation = new()
             {
                 Windowed = true,
@@ -64,12 +64,16 @@ internal sealed class GpuPlayfieldView : Image
                 BackBufferHeight = SurfaceHeight,
                 PresentationInterval = PresentInterval.Immediate
             };
+
             device = direct3D.CreateDeviceEx(0, DeviceType.Hardware, windowHandle,
                 CreateFlags.HardwareVertexProcessing | CreateFlags.Multithreaded | CreateFlags.FpuPreserve,
                 presentation, new DisplayModeEx());
+
             IntPtr sharedHandle = IntPtr.Zero;
-            surface = device.CreateRenderTarget(SurfaceWidth, SurfaceHeight, Format.A8R8G8B8, MultisampleType.None,
-                0, false, ref sharedHandle);
+
+            surface = device.CreateRenderTarget(
+                SurfaceWidth, SurfaceHeight, Format.A8R8G8B8, MultisampleType.None, 0, false, ref sharedHandle);
+
             image = new D3DImage();
             image.Lock();
             image.SetBackBuffer(D3DResourceType.IDirect3DSurface9, surface.NativePointer);
@@ -126,7 +130,9 @@ internal sealed class GpuPlayfieldView : Image
             image.Unlock();
             double gpuMilliseconds = 0;
             bool hardwareTiming = gpuFrameTimer is not null && gpuFrameTimer.TryGetLatest(out gpuMilliseconds);
-            frameTimings.RecordGpuPlayfield(hardwareTiming ? gpuMilliseconds : FrameTimingProfiler.ElapsedMilliseconds(submissionStartedAt),
+
+            frameTimings.RecordGpuPlayfield(hardwareTiming
+                    ? gpuMilliseconds : FrameTimingProfiler.ElapsedMilliseconds(submissionStartedAt),
                 hardwareTiming);
         }
         catch (Exception error)
@@ -188,9 +194,17 @@ internal sealed class GpuPlayfieldView : Image
     {
         foreach (Asteroid asteroid in game.Asteroids)
         {
-            uint color = asteroid.Steel ? 0xff8faec2 : asteroid.Colossal ? 0xffff3c7d : asteroid.Mega ? 0xffff704d : 0xff98796b;
+            uint color = asteroid.Steel
+                ? 0xff8faec2
+                : asteroid.Colossal
+                    ? 0xffff3c7d
+                    : asteroid.Mega
+                        ? 0xffff704d
+                        : 0xff98796b;
+
             V2 position = RenderPosition(asteroid) + shake;
             AddCircle(position.X, position.Y, asteroid.Radius, color, .96, 12);
+
             AddEffectRing(position.X, position.Y, asteroid.Radius * .88,
                 asteroid.Steel ? 0xffd8f5ff : asteroid.Colossal ? 0xffffd8e5 : 0xffd6ad8c, .7, 12, 1.2);
         }
@@ -263,6 +277,7 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Pickup pickup in game.Pickups)
         {
             V2 position = RenderPosition(pickup) + shake;
+
             uint color = pickup.Kind switch
             {
                 PickupKind.RescueShip => 0xff76ffbe,
@@ -273,6 +288,7 @@ internal sealed class GpuPlayfieldView : Image
                 PickupKind.RicochetArena => 0xff76f2ce,
                 _ => 0xff5eeaff
             };
+
             AddDiamond(position.X, position.Y, pickup.Radius * 1.25, color, .96);
             AddEffectRing(position.X, position.Y, pickup.Radius * 1.5, color, .36, 8, 1);
         }
@@ -332,6 +348,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             double life = Math.Clamp(1 - particle.Age / particle.Lifetime, 0, 1);
             V2 position = RenderPosition(particle) + shake;
+
             AddEffectCircle(position.X, position.Y,
                 Math.Max(1, particle.StartSize * (.3 + life * .7)), particle.Color, life, 6);
         }
@@ -342,7 +359,9 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Shockwave ring in game.Shockwaves)
         {
             double progress = ring.Age / ring.Lifetime;
-            AddEffectRing(ring.Position.X + shake.X, ring.Position.Y + shake.Y, ring.MaxRadius * (1 - Math.Pow(1 - progress, 3)),
+
+            AddEffectRing(ring.Position.X + shake.X, ring.Position.Y + shake.Y,
+                ring.MaxRadius * (1 - Math.Pow(1 - progress, 3)),
                 ring.Color, .82 * (1 - progress), 20, Math.Max(1, 4 * (1 - progress)));
         }
     }
@@ -351,6 +370,7 @@ internal sealed class GpuPlayfieldView : Image
     {
         V2 forward = V2.FromAngle(angle);
         V2 side = new(-forward.Y, forward.X);
+
         AddTriangle(position + forward * radius, position - forward * radius * .78 + side * radius * .66,
             position - forward * radius * .78 - side * radius * .66, color, alpha);
     }
@@ -373,6 +393,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             double first = i * Math.PI * 2 / sides;
             double second = (i + 1) * Math.PI * 2 / sides;
+
             AddTriangle(new V2(x, y), new V2(x + Math.Cos(first) * radius, y + Math.Sin(first) * radius),
                 new V2(x + Math.Cos(second) * radius, y + Math.Sin(second) * radius), color, alpha);
         }
@@ -381,6 +402,7 @@ internal sealed class GpuPlayfieldView : Image
     private void AddEffectCircle(double x, double y, double radius, uint color, double alpha, int sides)
     {
         double scale = transparentEffects.ReserveDisk(radius);
+
         if (scale > 0)
         {
             AddCircle(x, y, radius * scale, color, alpha, sides);
@@ -393,6 +415,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             double first = i * Math.PI * 2 / sides;
             double second = (i + 1) * Math.PI * 2 / sides;
+
             AddLine(x + Math.Cos(first) * radius, y + Math.Sin(first) * radius,
                 x + Math.Cos(second) * radius, y + Math.Sin(second) * radius, color, alpha, thickness);
         }
@@ -401,6 +424,7 @@ internal sealed class GpuPlayfieldView : Image
     private void AddEffectRing(double x, double y, double radius, uint color, double alpha, int sides, double thickness)
     {
         double scale = transparentEffects.ReserveRing(radius, thickness);
+
         if (scale > 0)
         {
             AddRing(x, y, radius, color, alpha, Math.Max(6, (int)Math.Round(sides * scale)), thickness * scale);
@@ -420,6 +444,7 @@ internal sealed class GpuPlayfieldView : Image
 
         double nx = -dy / length * thickness / 2;
         double ny = dx / length * thickness / 2;
+
         AddQuad(new V2(x0 + nx, y0 + ny), new V2(x1 + nx, y1 + ny), new V2(x1 - nx, y1 - ny),
             new V2(x0 - nx, y0 - ny), color, alpha);
     }

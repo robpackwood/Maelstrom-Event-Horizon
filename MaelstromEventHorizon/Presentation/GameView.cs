@@ -415,11 +415,8 @@ internal sealed class GameView : FrameworkElement
                 return;
             }
 
-            // Keep the desired cadence anchored to the original deadline. Resetting it from "now"
-            // means a 60 FPS target on a 90 Hz display falls into a 45 FPS every-other-refresh pattern.
             NextFrameTime += targetFrameInterval;
 
-            // Do not try to render a burst of frames after a debugger pause or an extended stall.
             if (NextFrameTime < now - targetFrameInterval * 2)
             {
                 NextFrameTime = now + targetFrameInterval;
@@ -468,6 +465,7 @@ internal sealed class GameView : FrameworkElement
     protected override void OnRender(DrawingContext dc)
     {
         base.OnRender(dc);
+
         if (!UseGpuPlayfield)
         {
             dc.DrawRectangle(Brushes.Black, null, new Rect(0, 0, ActualWidth, ActualHeight));
@@ -496,6 +494,7 @@ internal sealed class GameView : FrameworkElement
             DrawGameCanvas(dc);
             FrameTimings.RecordWpfFallback(renderStartedAt);
         }
+
         dc.Pop();
         dc.Pop();
         dc.Pop();

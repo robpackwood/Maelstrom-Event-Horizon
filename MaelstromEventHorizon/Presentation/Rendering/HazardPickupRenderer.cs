@@ -55,8 +55,8 @@ internal sealed class HazardPickupRenderer
             double pulse = Math.Sin(view.Game.TotalTime * 4 + vortex.Position.X) * 3;
             double distortion = 74 + pulse + Math.Sin(view.Game.TotalTime * 7) * 5;
 
-            dc.DrawEllipse(null, view.Pen(Color.FromArgb(48, 165, 103, 255), 1.2), view.Pt(vortex.Position), distortion,
-                distortion * .64);
+            dc.DrawEllipse(null, view.Pen(Color.FromArgb(48, 165, 103, 255), 1.2), view.Pt(vortex.Position),
+                distortion, distortion * .64);
 
             for (int i = 6; i >= 0; i--)
             {

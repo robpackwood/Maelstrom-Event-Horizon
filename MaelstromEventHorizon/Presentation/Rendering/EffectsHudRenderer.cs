@@ -404,7 +404,9 @@ internal sealed class EffectsHudRenderer
 
         double shieldBarX = view.Game.IsBonusStage ? 139 : 91;
         double shieldBarSpan = view.Game.IsBonusStage ? 132 : 180;
-        dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)), view.Pen(Color.FromRgb(55, 91, 113), 1),
+
+        dc.DrawRoundedRectangle(view.Brush(Color.FromArgb(125, 5, 17, 29)),
+            view.Pen(Color.FromRgb(55, 91, 113), 1),
             new Rect(shieldBarX, 683, shieldBarSpan, 12), 3, 3);
     }
 
@@ -416,9 +418,11 @@ internal sealed class EffectsHudRenderer
         }
 
         view.DrawText(dc, view.Money(view.Game.Score), 88, 31, 20, Brushes.White, FontWeights.Bold);
+
         Brush levelBrush = view.Brush(view.Game.LevelBonusCash > 1_000
             ? Color.FromRgb(255, 221, 113)
             : Color.FromRgb(142, 169, 181));
+
         view.DrawText(dc, view.Money(view.Game.LevelBonusCash), 332, 31, 20, levelBrush, FontWeights.Bold);
         AlienBoss? activeBoss = null;
 
@@ -457,11 +461,18 @@ internal sealed class EffectsHudRenderer
         }
 
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
-        string renderer = view.UseGpuPlayfield ? "D3D" : view.HardwareRenderingTier == 0 ? "SOFTWARE" : $"WPF T{view.HardwareRenderingTier}";
+
+        string renderer = view.UseGpuPlayfield
+            ? "D3D"
+            : view.HardwareRenderingTier == 0
+                ? "SOFTWARE"
+                : $"WPF T{view.HardwareRenderingTier}";
+
         view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  {renderer}", 1120, 51, 10,
             view.Brush(!view.UseGpuPlayfield && view.HardwareRenderingTier == 0
                 ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
             FontWeights.SemiBold);
+
         if (activeBoss is not null)
         {
             const double bossBarWidth = 390;
@@ -603,9 +614,6 @@ internal sealed class EffectsHudRenderer
                 new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);
         }
 
-        // Wave summaries provide their own title and status text. Suppress every transient gameplay
-        // banner here so bonus failures, power-ups, and extra ships earned during cash counting
-        // cannot overlap the summary.
         if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing })
         {
             double alpha = Math.Min(1, view.Game.BannerTime * 2);

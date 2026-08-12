@@ -32,10 +32,12 @@ internal sealed class WaveSpawnService
             : game.BossOnlyMode
                 ? game.Wave < 6 ? 6 : game.Wave + 5
                 : game.Wave + 1;
+
         game.WaveStartedAt = game.TotalTime;
 
         game.IsBonusStage = game.BonusOnlyMode ||
                             (!game.BossOnlyMode && game.BonusStagesEnabled && game.Wave % 5 == 0);
+
         game.IsBossStage = game.BossOnlyMode ||
                            (game is { BonusOnlyMode: false, Wave: > 1 } && game.BossFightsEnabled && game.Wave % 5 == 1);
 
@@ -138,16 +140,20 @@ internal sealed class WaveSpawnService
                 if (spawnColossal)
                 {
                     V2 position = game.SafeEdgePosition();
+
                     game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(18, 42), 3, false,
                         game.Random.Next(), mega: true, colossal: true));
+
                     rocks -= 6;
                 }
 
                 while (rocks > 0)
                 {
                     V2 position = game.SafeEdgePosition();
+
                     game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
                         game.Random.Next(), mega: true));
+
                     rocks -= Math.Min(3, rocks);
                 }
             }
@@ -156,8 +162,10 @@ internal sealed class WaveSpawnService
                 if (game.Wave > 3 && rocks >= 3 && game.Random.Next(3) == 0)
                 {
                     V2 position = game.SafeEdgePosition();
+
                     game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
                         game.Random.Next(), mega: true));
+
                     rocks -= 3;
                 }
 
@@ -284,6 +292,7 @@ internal sealed class WaveSpawnService
         {
             V2 aim = game.Player.Position + game.Player.Velocity * .3 +
                      game.RandomDirection() * game.Random.Next(8, 42);
+
             target = origin + (aim - origin).Normalized * 1700;
         }
         else
@@ -486,7 +495,6 @@ internal sealed class WaveSpawnService
 
         game.CanisterSpawned = true;
         game.CanisterTimer = -1;
-
         SpawnCanisterEntity(game);
         game.Announce("UPGRADE AVAILABLE", 1.25);
     }
@@ -509,14 +517,13 @@ internal sealed class WaveSpawnService
 
     internal void SpawnRarePowerup(GameEngine game)
     {
-        if (game.RarePowerupScheduled is not PickupKind kind)
+        if (game.RarePowerupScheduled is not { } kind)
         {
             return;
         }
 
         game.RarePowerupScheduled = null;
         game.RarePowerupTimer = -1;
-
         SpawnRarePowerupEntity(game, kind);
     }
 

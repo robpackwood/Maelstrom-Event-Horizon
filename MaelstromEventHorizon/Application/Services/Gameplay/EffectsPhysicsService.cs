@@ -40,6 +40,7 @@ internal sealed class EffectsPhysicsService
             V2 direction = RandomDirection(game);
             double speed = game.Random.Next(18, 118);
             uint color = i % 5 == 0 ? 0xffff9c5a : i % 3 == 0 ? 0xff6bd9e9 : 0xff8b9ca2;
+
             AddParticle(game, game.Player.Position + direction * game.Random.NextDouble() * 12,
                 game.Player.Velocity * .12 + direction * speed,
                 .48 + game.Random.NextDouble() * .55, color, game.Random.Next(5, 13));

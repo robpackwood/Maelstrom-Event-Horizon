@@ -1,7 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Domain.Entities;
 using MaelstromEventHorizon.Domain.Enums;
 using MaelstromEventHorizon.Domain.Math;
@@ -13,6 +12,7 @@ internal sealed class PlayerAsteroidRenderer
 {
     private static readonly LinearGradientBrush ThrustBrush = CreateThrustBrush();
     private static readonly Pen ThrustOutline = CreateFrozenPen(Color.FromArgb(120, 80, 220, 255), 2);
+
     private static readonly StreamGeometry[] ThrustPlumes =
     [
         CreateThrustPlume(-28), CreateThrustPlume(-30.3), CreateThrustPlume(-32.6), CreateThrustPlume(-34.9),
@@ -268,7 +268,9 @@ internal sealed class PlayerAsteroidRenderer
         if (rock.Mega)
         {
             view.DrawGlowEllipse(dc, new V2(0, 0), rock.Radius * 1.08,
-                rock.Colossal ? Color.FromRgb(255, 62, 133) : Color.FromRgb(255, 124, 68), rock.Colossal ? 10 : 8, .48);
+                rock.Colossal
+                    ? Color.FromRgb(255, 62, 133)
+                    : Color.FromRgb(255, 124, 68), rock.Colossal ? 10 : 8, .48);
         }
 
         if (rock.Steel)
@@ -402,6 +404,7 @@ internal sealed class PlayerAsteroidRenderer
     {
         LinearGradientBrush brush = new(Color.FromArgb(245, 245, 255, 255), Color.FromArgb(30, 45, 115, 255),
             new Point(1, .5), new Point(0, .5));
+
         brush.Freeze();
         return brush;
     }

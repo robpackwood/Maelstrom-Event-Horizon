@@ -34,7 +34,6 @@ internal sealed class PlayerSimulationService
         if (!wasShielding || game.ShieldHumTimer <= 0)
         {
             game.Audio.Play(SoundCue.Shield);
-            // Reinforce the activation cue so it remains clear over the active music and combat mix.
             game.Audio.Play(SoundCue.Shield, .92);
             game.ShieldHumTimer = 2.25;
         }
@@ -320,7 +319,6 @@ internal sealed class PlayerSimulationService
         }
 
         UpdateShieldHum(game, wasShielding, dt);
-
         game.DemoFireCooldown -= dt;
         bool weaponReady = game.FireCooldown <= 0;
 
@@ -421,8 +419,6 @@ internal sealed class PlayerSimulationService
 
         if (game.TripleFireActive)
         {
-            // Triple Fire supplements a Rift Volley with two plain diagonal shots,
-            // rather than producing a complete rift pair for every spread shot.
             Add(-.17, !game.RiftVolleyActive);
             Add(.17, !game.RiftVolleyActive);
         }
@@ -491,25 +487,21 @@ internal sealed class PlayerSimulationService
             bool retreating = game.PlayerRespawning || game.ThreatRetreatTime > 0;
             V2 pursuit = retreating ? -toShip.Normalized : toShip.Normalized;
 
-            // Interceptors are the smaller fighters. They still weave, but no
-            // longer zip around asteroid fields faster than the larger raiders.
             V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 68 : 72) +
                          tangent.Normalized * weave * (fighter.Kind == FighterKind.Interceptor ? 38 : 68);
 
-            // Give fighters room to pass around asteroids instead of steering straight
-            // through them while pursuing the player.
             desired += AsteroidAvoidance(game, fighter, desired);
-
             fighter.Velocity += (desired - fighter.Velocity) * Math.Min(1, dt * 1.15);
             const double enemyShotSpeed = 335;
+
             V2 predictedAim = game.PredictAim(
                 fighter.Position, game.Player.Position, game.Player.Velocity, enemyShotSpeed);
+
             double desiredAngle = Math.Atan2(predictedAim.Y, predictedAim.X);
+
             double angleError = Math.Atan2(Math.Sin(desiredAngle - fighter.Angle),
                 Math.Cos(desiredAngle - fighter.Angle));
 
-            // Fighters rotate at half the player's top turning speed, so they must
-            // commit to a firing direction before they can take an accurate shot.
             fighter.Angle += Math.Clamp(angleError, -1.74 * dt, 1.74 * dt);
             fighter.Position = game.MoveBody(fighter, fighter.Position + fighter.Velocity * dt);
             fighter.FireDelay -= dt;
@@ -638,15 +630,16 @@ internal sealed class PlayerSimulationService
 
             V2 asteroidDirection = toAsteroid / distance;
             double proximity = 1 - distance / lookAhead;
+
             double ahead = Math.Max(0, asteroidDirection.X * travelDirection.X +
                                        asteroidDirection.Y * travelDirection.Y);
+
             V2 away = -asteroidDirection;
+
             V2 around = travelDirection.X * toAsteroid.Y - travelDirection.Y * toAsteroid.X >= 0
                 ? new V2(asteroidDirection.Y, -asteroidDirection.X)
                 : new V2(-asteroidDirection.Y, asteroidDirection.X);
 
-            // The radial part prevents overlap; the lateral part chooses a side and
-            // produces a smooth route around asteroids lying in the fighter's path.
             double force = (fighter.Kind == FighterKind.Interceptor ? 62 : 82) * proximity;
             avoidance += away * force + around * (force * ahead * 1.8);
         }

@@ -19,6 +19,7 @@ internal sealed class DrawingPrimitiveService
 
     private readonly Dictionary<(string Text, double Size, uint Color, int FontWeight), FormattedText> formattedText =
         [];
+
     private readonly Queue<(string Text, double Size, uint Color, int FontWeight)> textCacheOrder = [];
 
     private readonly Dictionary<(uint Color, double Thickness), Pen> pens = [];

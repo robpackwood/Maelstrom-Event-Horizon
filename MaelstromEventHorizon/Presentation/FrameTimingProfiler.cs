@@ -1,8 +1,7 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace MaelstromEventHorizon.Presentation;
 
-/// <summary>Maintains short moving averages for the independently scheduled game and render phases.</summary>
 internal sealed class FrameTimingProfiler
 {
     private const double Smoothing = .14;
@@ -13,7 +12,8 @@ internal sealed class FrameTimingProfiler
     internal double WpfFallbackMilliseconds { get; private set; }
     internal bool HasHardwareGpuTiming { get; private set; }
 
-    internal void RecordSimulation(long startedAt) => SimulationMilliseconds = Smooth(SimulationMilliseconds, ElapsedMilliseconds(startedAt));
+    internal void RecordSimulation(long startedAt) =>
+        SimulationMilliseconds = Smooth(SimulationMilliseconds, ElapsedMilliseconds(startedAt));
 
     internal void RecordGpuPlayfield(double milliseconds, bool hardwareTiming)
     {
@@ -21,9 +21,11 @@ internal sealed class FrameTimingProfiler
         HasHardwareGpuTiming |= hardwareTiming;
     }
 
-    internal void RecordWpfOverlay(long startedAt) => WpfOverlayMilliseconds = Smooth(WpfOverlayMilliseconds, ElapsedMilliseconds(startedAt));
+    internal void RecordWpfOverlay(long startedAt) =>
+        WpfOverlayMilliseconds = Smooth(WpfOverlayMilliseconds, ElapsedMilliseconds(startedAt));
 
-    internal void RecordWpfFallback(long startedAt) => WpfFallbackMilliseconds = Smooth(WpfFallbackMilliseconds, ElapsedMilliseconds(startedAt));
+    internal void RecordWpfFallback(long startedAt) =>
+        WpfFallbackMilliseconds = Smooth(WpfFallbackMilliseconds, ElapsedMilliseconds(startedAt));
 
     internal void ClearGpuPlayfield()
     {
@@ -31,7 +33,9 @@ internal sealed class FrameTimingProfiler
         HasHardwareGpuTiming = false;
     }
 
-    internal static double ElapsedMilliseconds(long startedAt) => (Stopwatch.GetTimestamp() - startedAt) * 1000.0 / Stopwatch.Frequency;
+    internal static double ElapsedMilliseconds(long startedAt) =>
+        (Stopwatch.GetTimestamp() - startedAt) * 1000.0 / Stopwatch.Frequency;
 
-    private static double Smooth(double current, double sample) => current == 0 ? sample : current + (sample - current) * Smoothing;
+    private static double Smooth(double current, double sample) =>
+        current == 0 ? sample : current + (sample - current) * Smoothing;
 }
