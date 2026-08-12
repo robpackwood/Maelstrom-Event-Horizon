@@ -15,8 +15,8 @@ internal sealed class SceneRenderer
     {
         view.TransparentEffects.Reset(view.Game.VisualQuality);
         dc.PushClip(new RectangleGeometry(new Rect(0, 0, GameEngine.Width, GameEngine.Height)));
-        bool waveCameraActive = TryPushWaveIntroCamera(view, dc);
         DrawBackdrop(view, dc);
+        bool waveCameraActive = TryPushWaveTransitionCamera(view, dc);
         V2 shake = view.Game.ScreenShakeOffset;
         dc.PushTransform(new TranslateTransform(shake.X, shake.Y));
         DrawStars(view, dc);
@@ -54,21 +54,34 @@ internal sealed class SceneRenderer
         view.DrawTransitionCurtain(dc);
     }
 
-    private static bool TryPushWaveIntroCamera(GameView view, DrawingContext dc)
+    private static bool TryPushWaveTransitionCamera(GameView view, DrawingContext dc)
     {
-        if (view.Game.Mode != GameMode.WaveIntro)
+        if (view.Game.Mode is not (GameMode.WaveIntro or GameMode.WaveOutro))
         {
             return false;
         }
 
-        double progress = Math.Clamp(view.Game.TransitionElapsed / GameEngine.WaveFadeInDuration, 0, 1);
+        bool outro = view.Game.Mode == GameMode.WaveOutro;
+        double duration = outro ? 2.1 : GameEngine.WaveFadeInDuration;
+        double elapsed = outro ? view.Game.TransitionElapsed - GameEngine.WaveExitDelay : view.Game.TransitionElapsed;
+        double progress = Math.Clamp(elapsed / duration, 0, 1);
         double easedProgress = progress * progress * (3 - 2 * progress);
-        double zoom = 3.1 - 2.1 * easedProgress;
+        double zoom = outro ? 1 + 2.5 * easedProgress : 3.1 - 2.1 * easedProgress;
         V2 ship = view.Game.Player.Position;
+        double focusX = ship.X;
+        double focusY = ship.Y;
+
+        if (outro && view.Game.TransitionElapsed < GameEngine.WaveExitDelay)
+        {
+            double panProgress = Math.Clamp(view.Game.TransitionElapsed / GameEngine.WaveExitDelay, 0, 1);
+            double easedPan = panProgress * panProgress * (3 - 2 * panProgress);
+            focusX = GameEngine.Width * .5 + (ship.X - GameEngine.Width * .5) * easedPan;
+            focusY = GameEngine.Height * .5 + (ship.Y - GameEngine.Height * .5) * easedPan;
+        }
 
         dc.PushTransform(new MatrixTransform(new Matrix(zoom, 0, 0, zoom,
-            GameEngine.Width * .5 - ship.X * zoom,
-            GameEngine.Height * .5 - ship.Y * zoom)));
+            GameEngine.Width * .5 - focusX * zoom,
+            GameEngine.Height * .5 - focusY * zoom)));
 
         return true;
     }
@@ -122,6 +135,14 @@ internal sealed class SceneRenderer
         }
 
         dc.DrawRectangle(GameView.VignetteBrush, null, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+
+        if (view.Game.Mode == GameMode.WaveOutro)
+        {
+            double progress = Math.Clamp((view.Game.TransitionElapsed - GameEngine.WaveExitDelay) / 2.1, 0, 1);
+            byte alpha = (byte)(148 * progress * progress);
+            dc.DrawRectangle(view.Brush(Color.FromArgb(alpha, 0, 2, 8)), null,
+                new Rect(0, 0, GameEngine.Width, GameEngine.Height));
+        }
     }
 
     private void DrawStars(GameView view, DrawingContext dc)

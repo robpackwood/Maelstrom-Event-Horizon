@@ -138,46 +138,54 @@ internal sealed partial class CollisionService
             }
         }
 
-        if (!game.PlayerRespawning)
+        int enemyShotCount = game.Shots.Count;
+
+        for (int shotIndex = 0; shotIndex < enemyShotCount; shotIndex++)
         {
-            int enemyShotCount = game.Shots.Count;
+            Shot shot = game.Shots[shotIndex];
 
-            for (int shotIndex = 0; shotIndex < enemyShotCount; shotIndex++)
+            if (!shot.Alive || !shot.Enemy)
             {
-                Shot shot = game.Shots[shotIndex];
-
-                if (!shot.Alive || !shot.Enemy)
-                {
-                    continue;
-                }
-
-                if (game.Touching(shot, game.Player))
-                {
-                    bool regularShielding = game.Player is { Shielding: true, Shield: > 0 };
-
-                    if (game.ReflectionShieldActive && !regularShielding)
-                    {
-                        V2 direction = (game.Player.Position - shot.Position).Normalized;
-
-                        if (direction.Length <= 0)
-                        {
-                            direction = V2.FromAngle(game.Player.Angle);
-                        }
-
-                        double speed = Math.Max(420, shot.Velocity.Length * 1.2);
-                        shot.Enemy = false;
-                        shot.BossShot = false;
-                        shot.Damage = Math.Max(2, shot.Damage);
-                        shot.Position = game.Wrap(game.Player.Position + direction * (game.Player.Radius + 10));
-                        shot.Velocity = direction * speed + game.Player.Velocity * .25;
-                        BreakReflectionShield(game, shot.Position);
-                        continue;
-                    }
-
-                    shot.Alive = false;
-                    DamagePlayer(game, false, shot.Position);
-                }
+                continue;
             }
+
+            Asteroid? asteroid = FindHitAsteroid(game, shot, spatialHash);
+
+            if (asteroid is not null)
+            {
+                shot.Alive = false;
+                HitAsteroid(game, asteroid, shot.Damage);
+                continue;
+            }
+
+            if (game.PlayerRespawning || !game.Touching(shot, game.Player))
+            {
+                continue;
+            }
+
+            bool regularShielding = game.Player is { Shielding: true, Shield: > 0 };
+
+            if (game.ReflectionShieldActive && !regularShielding)
+            {
+                V2 direction = (game.Player.Position - shot.Position).Normalized;
+
+                if (direction.Length <= 0)
+                {
+                    direction = V2.FromAngle(game.Player.Angle);
+                }
+
+                double speed = Math.Max(420, shot.Velocity.Length * 1.2);
+                shot.Enemy = false;
+                shot.BossShot = false;
+                shot.Damage = Math.Max(2, shot.Damage);
+                shot.Position = game.Wrap(game.Player.Position + direction * (game.Player.Radius + 10));
+                shot.Velocity = direction * speed + game.Player.Velocity * .25;
+                BreakReflectionShield(game, shot.Position);
+                continue;
+            }
+
+            shot.Alive = false;
+            DamagePlayer(game, false, shot.Position);
         }
 
         if (!game.PlayerRespawning)
@@ -190,7 +198,7 @@ internal sealed partial class CollisionService
 
                 if (!pickup.Alive || pickup.Kind is not (PickupKind.Canister or PickupKind.RescueShip
                         or PickupKind.TimeFreeze or PickupKind.SmartBomb or PickupKind.RicochetArena) ||
-                    !game.Touching(pickup, game.Player))
+                    !game.TouchingPickup(pickup))
                 {
                     continue;
                 }
@@ -637,13 +645,9 @@ internal sealed partial class CollisionService
         game.ClearEquippedPowerups();
         game.LastPowerupTime = 0;
         game.Audio.SetThrustIntensity(0);
-        game.Explosion(game.Player.Position, 76, 0xff62e6ff);
-        game.SpawnShockwave(game.Player.Position, 1.05, 0xffff6b5e, 265);
-        game.SpawnShockwave(game.Player.Position, .68, 0xffffc06a, 145);
-        game.Spark(game.Player.Position, 0xffffffff, 28);
-        game.Audio.Play(SoundCue.ShipCrash);
-        game.Audio.Play(SoundCue.ShipBlast);
-        game.Audio.Play(SoundCue.Explosion, .95);
+        game.SpawnShipDestructionCloud();
+        game.Audio.Play(SoundCue.EnemyDestroyed);
+        game.Audio.Play(SoundCue.Explosion, .55);
 
         if (noShipsRemaining)
         {

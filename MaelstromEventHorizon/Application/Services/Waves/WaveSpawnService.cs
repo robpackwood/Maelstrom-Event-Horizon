@@ -34,8 +34,10 @@ internal sealed class WaveSpawnService
                 : game.Wave + 1;
         game.WaveStartedAt = game.TotalTime;
 
-        game.IsBonusStage = game.BonusOnlyMode || (!game.BossOnlyMode && game.Wave % 5 == 0);
-        game.IsBossStage = game.BossOnlyMode || (game is { BonusOnlyMode: false, Wave: > 1 } && game.Wave % 5 == 1);
+        game.IsBonusStage = game.BonusOnlyMode ||
+                            (!game.BossOnlyMode && game.BonusStagesEnabled && game.Wave % 5 == 0);
+        game.IsBossStage = game.BossOnlyMode ||
+                           (game is { BonusOnlyMode: false, Wave: > 1 } && game.BossFightsEnabled && game.Wave % 5 == 1);
 
         if (game.IsBonusStage && game.Player.Giant)
         {
@@ -60,6 +62,8 @@ internal sealed class WaveSpawnService
         game.WaveCometCash = 0;
         game.Multiplier = 1;
         game.CanisterSpawned = false;
+        game.RarePowerupScheduled = null;
+        game.RarePowerupTimer = -1;
         game.MultiplierSpawned = false;
         game.CometSpawned = false;
         game.BlackHoleSpawned = false;
@@ -70,10 +74,10 @@ internal sealed class WaveSpawnService
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
         double eventChance = lucky ? .8 : 1.0 / 3;
-        double canisterChance = lucky ? .96 : .5;
+        double canisterChance = .5;
 
         game.CanisterTimer = standardWave && game.Random.NextDouble() < canisterChance
-            ? 2.5 + game.Random.NextDouble() * 7.5
+            ? 3 + game.Random.NextDouble() * 30
             : -1;
 
         game.MultiplierTimer = standardWave && game.Random.NextDouble() < eventChance
@@ -167,9 +171,10 @@ internal sealed class WaveSpawnService
                 }
             }
 
-            if (game.Wave >= 3 && game.Random.NextDouble() < .07)
+            if (game.Random.NextDouble() < .20)
             {
-                SpawnRarePowerup(game, (PickupKind)(game.Random.Next(3) + (int)PickupKind.TimeFreeze));
+                game.RarePowerupScheduled = (PickupKind)(game.Random.Next(3) + (int)PickupKind.TimeFreeze);
+                game.RarePowerupTimer = 5 + game.Random.NextDouble() * 9;
             }
 
             game.EventTimer = 6 + game.Random.NextDouble() * 4;
@@ -502,7 +507,20 @@ internal sealed class WaveSpawnService
         game.Pickups.Add(new Pickup(position, velocity, PickupKind.Canister));
     }
 
-    private static void SpawnRarePowerup(GameEngine game, PickupKind kind)
+    internal void SpawnRarePowerup(GameEngine game)
+    {
+        if (game.RarePowerupScheduled is not PickupKind kind)
+        {
+            return;
+        }
+
+        game.RarePowerupScheduled = null;
+        game.RarePowerupTimer = -1;
+
+        SpawnRarePowerupEntity(game, kind);
+    }
+
+    private static void SpawnRarePowerupEntity(GameEngine game, PickupKind kind)
     {
         if (kind == PickupKind.RicochetArena && game.RicochetArenaActive)
         {

@@ -27,6 +27,8 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
                 MusicVolume = Math.Clamp(preferences.MusicVolume, 0, 1),
                 EffectsVolume = Math.Clamp(preferences.EffectsVolume, 0, 1),
                 GraphicsQuality = Math.Clamp(preferences.GraphicsQuality, 0, 2),
+                BonusStagesEnabled = preferences.BonusStagesEnabled,
+                BossFightsEnabled = preferences.BossFightsEnabled,
                 FrameRateLimit = preferences.FrameRateLimit is 0 or 30 or 45 or 60 ? preferences.FrameRateLimit : 0
             };
         }

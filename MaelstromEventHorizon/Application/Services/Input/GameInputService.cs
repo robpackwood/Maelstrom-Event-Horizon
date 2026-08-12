@@ -220,6 +220,10 @@ internal sealed class GameInputService
             {
                 ToggleFullScreen(game);
             }
+            else if (game.TitleMenuSelection is 7 or 8 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
+            {
+                ToggleTitleEvent(game, game.TitleMenuSelection);
+            }
             else if (key == Key.Enter && !isRepeat)
             {
                 if (game.TitleMenuSelection == 0)
@@ -236,9 +240,17 @@ internal sealed class GameInputService
                 }
                 else if (game.TitleMenuSelection == 7)
                 {
-                    game.Mode = GameMode.ClearHighScoresConfirm;
+                    ToggleTitleEvent(game, game.TitleMenuSelection);
                 }
                 else if (game.TitleMenuSelection == 8)
+                {
+                    ToggleTitleEvent(game, game.TitleMenuSelection);
+                }
+                else if (game.TitleMenuSelection == 9)
+                {
+                    game.Mode = GameMode.ClearHighScoresConfirm;
+                }
+                else if (game.TitleMenuSelection == 10)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
@@ -355,8 +367,25 @@ internal sealed class GameInputService
             MusicVolume = game.MusicVolume,
             EffectsVolume = game.EffectsVolume,
             GraphicsQuality = game.VisualQuality,
+            BonusStagesEnabled = game.BonusStagesEnabled,
+            BossFightsEnabled = game.BossFightsEnabled,
             FrameRateLimit = game.FrameRateLimit
         });
+    }
+
+    private void ToggleTitleEvent(GameEngine game, int selection)
+    {
+        if (selection == 7)
+        {
+            game.BonusStagesEnabled = !game.BonusStagesEnabled;
+        }
+        else
+        {
+            game.BossFightsEnabled = !game.BossFightsEnabled;
+        }
+
+        SavePreferences(game);
+        game.Audio.Play(SoundCue.MenuMove, .72);
     }
 
     private void BeginQuitConfirmation(GameEngine game)

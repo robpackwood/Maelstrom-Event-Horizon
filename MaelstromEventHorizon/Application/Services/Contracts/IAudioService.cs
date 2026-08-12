@@ -8,6 +8,7 @@ internal interface IAudioService
     void StartWaveMusic(int wave, bool intense);
     void StartBossMusic();
     void StartSummaryMusic(bool earnedCashBonus);
+    void PlayWaveSuccessFanfare();
     void StartGameOverMusic();
     void SetVolumes(double musicLevel, double effectsLevel);
     void StopMusic(bool stopEffects = true);
@@ -15,4 +16,5 @@ internal interface IAudioService
     void ResumeAll();
     void Play(SoundCue cue, double volume = 1);
     void SetThrustIntensity(double intensity);
+    void SetCanisterPulseActive(bool active);
 }

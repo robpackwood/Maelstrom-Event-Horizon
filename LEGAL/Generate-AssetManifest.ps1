@@ -25,6 +25,14 @@ $sources = @{
         Source = 'https://opengameart.org/content/singularity-0'
         Note = 'Exact SHA-256 match to source MP3.'
     }
+    'MaelstromEventHorizon\Assets\Music\level-complete-victory-party.mp3' = @{
+        Status = 'VERIFIED_EXACT'
+        Work = 'Victory Party'
+        Author = 'Of Far Different Nature'
+        License = 'CC-BY-4.0'
+        Source = 'https://opengameart.org/content/victory-party'
+        Note = 'Exact SHA-256 match to source MP3; renamed.'
+    }
     'MaelstromEventHorizon\Assets\Music\wave-01-our-expanse.mp3' = @{
         Status = 'VERIFIED_EXACT'
         Work = 'Our Expanse (loop version)'

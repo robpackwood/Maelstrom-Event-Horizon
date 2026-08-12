@@ -17,20 +17,20 @@ internal sealed class TitleScreenRenderer
     {
         dc.DrawDrawing(TitleChrome);
 
-        view.DrawCenteredText(dc, "HAZARDS", 75, 549, 15,
+        view.DrawCenteredText(dc, "HAZARDS", 75, 593, 15,
             view.Brush(Color.FromRgb(255, 137, 112)), FontWeights.Bold);
 
-        view.DrawCenteredText(dc, "THREATS + DANGERS", 75, 574, 9,
+        view.DrawCenteredText(dc, "THREATS + DANGERS", 75, 611, 9,
             view.Brush(Color.FromRgb(174, 111, 102)), FontWeights.SemiBold);
 
-        view.DrawCenteredText(dc, "ITEM GUIDE", 730, 549, 15,
+        view.DrawCenteredText(dc, "ITEM GUIDE", 730, 593, 15,
             view.Brush(Color.FromRgb(119, 227, 255)), FontWeights.Bold);
 
-        view.DrawCenteredText(dc, "PICKUPS + POWERUPS", 730, 574, 9,
+        view.DrawCenteredText(dc, "PICKUPS + POWERUPS", 730, 611, 9,
             view.Brush(Color.FromRgb(99, 153, 177)), FontWeights.SemiBold);
 
-        DrawGuideTicker(view, dc, GameView.TitleHazardGuide, new Rect(151, 481, 488, 158), 57, 170);
-        DrawGuideTicker(view, dc, GameView.TitleItemGuide, new Rect(821, 481, 458, 158), 62, 0);
+        DrawGuideTicker(view, dc, GameView.TitleHazardGuide, new Rect(151, 572, 488, 52), 57, 170);
+        DrawGuideTicker(view, dc, GameView.TitleItemGuide, new Rect(821, 572, 458, 52), 62, 0);
 
         dc.PushClip(new RectangleGeometry(new Rect(0, 641, GameEngine.Width, 76)));
 
@@ -54,7 +54,7 @@ internal sealed class TitleScreenRenderer
 
         dc.Pop();
 
-        FormattedText version = view.Format("1.8.0", 10,
+        FormattedText version = view.Format("1.9.0", 10,
             view.Brush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
 
         dc.DrawText(version, new Point(GameEngine.Width - version.Width - 12, 708 - version.Baseline));
@@ -74,13 +74,13 @@ internal sealed class TitleScreenRenderer
 
         using (DrawingContext dc = group.Open())
         {
-            dc.DrawRectangle(itemBand, null, new Rect(0, 480, GameEngine.Width, 159));
+            dc.DrawRectangle(itemBand, null, new Rect(0, 556, GameEngine.Width, 84));
             dc.DrawRectangle(objectiveBand, null, new Rect(0, 640, GameEngine.Width, 78));
-            dc.DrawLine(divider, new Point(0, 480), new Point(GameEngine.Width, 480));
+            dc.DrawLine(divider, new Point(0, 556), new Point(GameEngine.Width, 556));
             dc.DrawLine(divider, new Point(0, 640), new Point(GameEngine.Width, 640));
-            dc.DrawLine(divider, new Point(150, 496), new Point(150, 624));
-            dc.DrawLine(divider, new Point(640, 480), new Point(640, 640));
-            dc.DrawLine(divider, new Point(820, 496), new Point(820, 624));
+            dc.DrawLine(divider, new Point(150, 572), new Point(150, 624));
+            dc.DrawLine(divider, new Point(640, 556), new Point(640, 640));
+            dc.DrawLine(divider, new Point(820, 572), new Point(820, 624));
         }
 
         group.Freeze();
@@ -94,25 +94,26 @@ internal sealed class TitleScreenRenderer
         dc.PushClip(new RectangleGeometry(clip));
         double cycleWidth = MeasureGuideCycle(view, entries);
         double x = clip.X + 20 - view.PositiveModulo(view.Game.TotalTime * speed + phase, cycleWidth);
+        double centerY = clip.Y + clip.Height / 2;
 
         while (x < clip.Right)
         {
             foreach ((GameView.TickerIcon Icon, string Name, string Description, uint Tint) entry in entries)
             {
                 Color tint = view.FromArgb(entry.Tint);
-                Point iconCenter = new(x + 17, 560);
+                Point iconCenter = new(x + 17, centerY);
                 dc.PushTransform(new ScaleTransform(1.2, 1.2, iconCenter.X, iconCenter.Y));
                 DrawTickerIcon(view, dc, entry.Icon, iconCenter, tint);
                 dc.Pop();
                 x += 42;
                 FormattedText name = view.Format(entry.Name, 14, view.Brush(tint), FontWeights.Bold);
-                dc.DrawText(name, new Point(x, 565 - name.Baseline));
+                dc.DrawText(name, new Point(x, centerY + 5 - name.Baseline));
                 x += name.Width + 10;
 
                 FormattedText description = view.Format(entry.Description, 13,
                     view.Brush(Color.FromRgb(171, 194, 207)), FontWeights.Normal);
 
-                dc.DrawText(description, new Point(x, 565 - description.Baseline));
+                dc.DrawText(description, new Point(x, centerY + 5 - description.Baseline));
                 x += description.Width + 50;
             }
         }

@@ -54,5 +54,7 @@ https://creativecommons.org/licenses/by/4.0/
 - Robotic, by Fato Shadow, and Stillness of Space, by Leonardo Paz. Sources:
   https://opengameart.org/content/robotic-soundtrack and
   https://opengameart.org/content/outer-space-music-pack
+- Victory Party, by Of Far Different Nature.
+  Source: https://opengameart.org/content/victory-party
 
 No author listed above endorses this game or its publisher.

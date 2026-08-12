@@ -13,14 +13,14 @@ internal sealed class EffectsPhysicsService
 
     internal void SpawnShipWreck(GameEngine game)
     {
-        V2[] offsets = [new(15, 0), new(-4, -10), new(-4, 10), new(-12, 0), new(3, 0)];
+        V2[] offsets = [new(15, 0), new(-4, -10), new(-4, 10), new(-12, 0), new(3, 0), new(-13, -11), new(-13, 11)];
 
         for (int i = 0; i < offsets.Length; i++)
         {
             V2 outward = Rotate(offsets[i], game.Player.Angle);
 
-            V2 velocity = game.Player.Velocity * .32 + outward.Normalized * game.Random.Next(85, 185) +
-                          RandomDirection(game) * game.Random.Next(20, 75);
+            V2 velocity = game.Player.Velocity * .32 + outward.Normalized * game.Random.Next(70, 165) +
+                          RandomDirection(game) * game.Random.Next(15, 65);
 
             double spin = (game.Random.NextDouble() * 2 - 1) * (2.8 + game.Random.NextDouble() * 5.2);
 
@@ -28,6 +28,21 @@ internal sealed class EffectsPhysicsService
                 game.Player.Position + outward * game.Player.VisualScale, velocity, i, game.Player.Angle, spin);
 
             piece.Position = MoveBody(game, piece, piece.Position, false);
+        }
+    }
+
+    internal void SpawnShipDestructionCloud(GameEngine game)
+    {
+        int count = EffectCount(game, 30);
+
+        for (int i = 0; i < count; i++)
+        {
+            V2 direction = RandomDirection(game);
+            double speed = game.Random.Next(18, 118);
+            uint color = i % 5 == 0 ? 0xffff9c5a : i % 3 == 0 ? 0xff6bd9e9 : 0xff8b9ca2;
+            AddParticle(game, game.Player.Position + direction * game.Random.NextDouble() * 12,
+                game.Player.Velocity * .12 + direction * speed,
+                .48 + game.Random.NextDouble() * .55, color, game.Random.Next(5, 13));
         }
     }
 
@@ -239,6 +254,20 @@ internal sealed class EffectsPhysicsService
         return delta.LengthSquared < Math.Pow(a.Radius + b.Radius, 2);
     }
 
+    internal bool TouchingPickup(GameEngine game, Pickup pickup)
+    {
+        V2 delta = ArenaDelta(game, game.Player.Position, pickup.Position);
+        V2 forward = V2.FromAngle(game.Player.Angle);
+        V2 side = new(-forward.Y, forward.X);
+        double along = delta.X * forward.X + delta.Y * forward.Y;
+        double across = delta.X * side.X + delta.Y * side.Y;
+        double padding = pickup.Radius + 5;
+        double length = 43 * game.Player.VisualScale + padding;
+        double width = 24 * game.Player.VisualScale + padding;
+
+        return along * along / (length * length) + across * across / (width * width) <= 1;
+    }
+
     internal bool TouchingComet(GameEngine game, Shot shot, Comet comet)
     {
         V2 fromHead = ArenaDelta(game, comet.Position, shot.Position);
@@ -312,10 +341,10 @@ internal sealed class EffectsPhysicsService
 
         body.Velocity = new V2(vx, vy);
 
-        if (bounced && game.RicochetBounceSoundCooldown <= 0)
+        if (bounced && body is Ship or Fighter && game.RicochetBounceSoundCooldown <= 0)
         {
-            game.RicochetBounceSoundCooldown = .075;
-            game.Audio.Play(SoundCue.RicochetBounce, body is Shot ? .36 : .6);
+            game.RicochetBounceSoundCooldown = .10;
+            game.Audio.Play(SoundCue.RicochetBounce, .62);
         }
 
         return new V2(Math.Clamp(x, minX, maxX), Math.Clamp(y, minY, maxY));

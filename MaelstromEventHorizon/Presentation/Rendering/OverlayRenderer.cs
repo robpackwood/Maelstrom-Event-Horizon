@@ -41,7 +41,7 @@ internal sealed class OverlayRenderer
             string[] menuItems =
             [
                 "PLAY", "CONTROLS", "MUSIC", "SOUND FX", "GRAPHICS", "FRAME RATE", "FULL SCREEN",
-                "CLEAR HIGH SCORES", "QUIT"
+                "BONUS STAGES", "BOSS FIGHTS", "CLEAR HIGH SCORES", "QUIT"
             ];
 
             for (int i = 0; i < menuItems.Length; i++)
@@ -79,12 +79,19 @@ internal sealed class OverlayRenderer
                     DrawOptionValue(view, dc, view.Game.FrameRateLimit == 0 ? "UNCAPPED" : $"{view.Game.FrameRateLimit} FPS",
                         323, baseline, selected);
                 }
-                else if (i == 6)
+                else if (i is 6 or 7 or 8)
                 {
                     Rect box = new(363, baseline - 18, 22, 22);
                     dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(175, 3, 15, 27)), new Pen(brush, 1.5), box);
 
-                    if (view.Game.FullScreenEnabled)
+                    bool enabled = i switch
+                    {
+                        6 => view.Game.FullScreenEnabled,
+                        7 => view.Game.BonusStagesEnabled,
+                        _ => view.Game.BossFightsEnabled
+                    };
+
+                    if (enabled)
                     {
                         Pen check = new(new SolidColorBrush(Color.FromRgb(255, 222, 110)), 2.6)
                         {
@@ -99,7 +106,7 @@ internal sealed class OverlayRenderer
             }
 
             dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(100, 84, 155, 184)), 1), new Point(642, 38),
-                new Point(642, 466));
+                new Point(642, 542));
 
             DrawTitleHighScores(view, dc);
             view.DrawTitleTickers(dc);

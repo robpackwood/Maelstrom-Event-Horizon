@@ -18,10 +18,12 @@ All newly added or enabled audio is commercially usable CC0/public-domain materi
 - **8bit fanfare jingle “The Lick”** by Haley Halcyon, CC0 — 50K extra-ship award: https://opengameart.org/content/8bit-fanfare-jingle-the-lick
 - **Dynamite sound effect** by Listener, CC0 — player-ship destruction blast: https://opengameart.org/content/dynamite-sound-effect
 - **Mechanical Explosion** by Spring Spring, CC0 — enemy-ship destruction blast: https://opengameart.org/content/mechanical-explosion
+- **Boings** by EZduzziteh, CC0 — Ricochet Arena ship wall impacts: https://opengameart.org/content/boings
 
 ## Music
 
 - **Our Expanse** by Bobjt, CC0 — celebratory wave-summary music: https://opengameart.org/content/our-expanse
+- **Victory Party** by Of Far Different Nature, CC BY 4.0 — level-complete music: https://opengameart.org/content/victory-party
 - **Space Music** by Nia Mi, CC0 — calm wave-summary music: https://opengameart.org/content/space-music-3
 - **Magic Space** by CodeManu, CC0 — included as an ambient/warning option: https://opengameart.org/content/magic-space
 - **Heavy Boss Battle 1** by MintoDog, CC0 — ominous boss-stage music: https://opengameart.org/content/heavy-boss-battle-1

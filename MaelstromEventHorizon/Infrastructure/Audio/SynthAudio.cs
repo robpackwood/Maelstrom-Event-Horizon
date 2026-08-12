@@ -12,6 +12,8 @@ namespace MaelstromEventHorizon.Infrastructure.Audio;
 internal sealed class SynthAudio : IAudioService
 {
     private const int LayeredEffectVoiceCount = 24;
+    // The background atlas contains eight scenes, so regular music must repeat on the same cadence.
+    private const int BackgroundThemeCount = 8;
     private const int TitleMusicWave = 13;
     private readonly string bonusMusicPath;
     private readonly string bossMusicPath;
@@ -27,13 +29,16 @@ internal sealed class SynthAudio : IAudioService
     private readonly List<LayeredEffectVoice> layeredEffectVoices = [];
     private readonly MediaPlayer music = new();
     private readonly string normalMusicPath;
+    private readonly string waveSuccessCelebrationPath;
     private readonly MediaPlayer thrustLoop = new();
     private readonly MediaPlayer thrustLoopSecondary = new();
     private readonly DispatcherTimer thrustLoopTimer = new() { Interval = TimeSpan.FromSeconds(.66) };
+    private readonly DispatcherTimer canisterPulseTimer = new() { Interval = TimeSpan.FromSeconds(.76) };
     private readonly string titleMusicPath;
     private readonly Lock playerGate = new();
     private readonly string[] waveMusicPaths;
     private bool audioPaused;
+    private bool canisterPulseActive;
     private double effectsVolume = 1;
     private long layeredEffectOrder;
     private bool musicEndedHandlerAttached;
@@ -43,6 +48,7 @@ internal sealed class SynthAudio : IAudioService
     private string? openedMusicPath;
     private TimeSpan pausedMusicPosition;
     private TimeSpan requestedMusicLoopStart;
+    private bool requestedMusicLoops;
     private string? requestedMusicPath;
     private double requestedMusicVolume = .32;
     private bool thrustLoopActive;
@@ -59,6 +65,7 @@ internal sealed class SynthAudio : IAudioService
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
         celebrationSummaryMusicPath = assets.PathFor("Music", "summary-celebration-our-expanse.mp3");
         gameOverMusicPath = assets.PathFor("Music", "game-over-alone.mp3");
+        waveSuccessCelebrationPath = assets.PathFor("Music", "level-complete-victory-party.mp3");
 
         waveMusicPaths =
         [
@@ -81,6 +88,7 @@ internal sealed class SynthAudio : IAudioService
 
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
+        canisterPulseTimer.Tick += (_, _) => PlayCanisterPulse();
     }
 
     public void StartTitleMusic()
@@ -94,7 +102,7 @@ internal sealed class SynthAudio : IAudioService
 
         try
         {
-            int trackIndex = (Math.Max(1, wave) - 1) % waveMusicPaths.Length;
+            int trackIndex = (Math.Max(1, wave) - 1) % BackgroundThemeCount;
             string path = waveMusicPaths[trackIndex];
 
             if (!File.Exists(path))
@@ -106,14 +114,7 @@ internal sealed class SynthAudio : IAudioService
         }
         catch
         {
-            if (intense)
-            {
-                StartBonusMusic();
-            }
-            else
-            {
-                StartMusic();
-            }
+            StartMusic();
         }
     }
 
@@ -123,6 +124,14 @@ internal sealed class SynthAudio : IAudioService
         string preferred = earnedCashBonus ? celebrationSummaryMusicPath : calmSummaryMusicPath;
         string fallback = earnedCashBonus ? bonusMusicPath : normalMusicPath;
         StartTrack(File.Exists(preferred) ? preferred : fallback, true, earnedCashBonus ? .34 : .22);
+    }
+
+    public void PlayWaveSuccessFanfare()
+    {
+        if (File.Exists(waveSuccessCelebrationPath))
+        {
+            StartTrack(waveSuccessCelebrationPath, true, .40, loop: false);
+        }
     }
 
     public void StartGameOverMusic()
@@ -330,6 +339,25 @@ internal sealed class SynthAudio : IAudioService
         }
     }
 
+    public void SetCanisterPulseActive(bool active)
+    {
+        if (canisterPulseActive == active)
+        {
+            return;
+        }
+
+        canisterPulseActive = active;
+
+        if (!active)
+        {
+            canisterPulseTimer.Stop();
+            return;
+        }
+
+        PlayCanisterPulse();
+        canisterPulseTimer.Start();
+    }
+
     private void StartMusic()
     {
         StartTrack(normalMusicPath, true);
@@ -340,7 +368,7 @@ internal sealed class SynthAudio : IAudioService
         StartTrack(File.Exists(bonusMusicPath) ? bonusMusicPath : normalMusicPath, true);
     }
 
-    private void StartTrack(string path, bool restart, double volume = .32, TimeSpan? loopStart = null)
+    private void StartTrack(string path, bool restart, double volume = .32, TimeSpan? loopStart = null, bool loop = true)
     {
         bool wasRequested = musicRequested;
         bool trackChanged = !string.Equals(openedMusicPath, path, StringComparison.OrdinalIgnoreCase);
@@ -360,6 +388,7 @@ internal sealed class SynthAudio : IAudioService
         requestedMusicPath = path;
         requestedMusicVolume = volume;
         requestedMusicLoopStart = loopStart ?? TimeSpan.Zero;
+        requestedMusicLoops = loop;
         musicRequested = true;
         audioPaused = false;
         pausedMusicPosition = TimeSpan.Zero;
@@ -392,7 +421,7 @@ internal sealed class SynthAudio : IAudioService
             {
                 music.MediaEnded += (_, _) =>
                 {
-                    if (!musicRequested || audioPaused)
+                    if (!musicRequested || audioPaused || !requestedMusicLoops)
                     {
                         return;
                     }
@@ -458,6 +487,15 @@ internal sealed class SynthAudio : IAudioService
             }
 
             StopThrustLoop();
+            SetCanisterPulseActive(false);
+        }
+    }
+
+    private void PlayCanisterPulse()
+    {
+        if (canisterPulseActive && !audioPaused)
+        {
+            Play(SoundCue.CanisterPulse, .22);
         }
     }
 
@@ -583,7 +621,7 @@ internal sealed class SynthAudio : IAudioService
                          [SoundCue.GiantShrink] = "sfx_19b.wav",
                          [SoundCue.VortexHit] = "sfx_13b.wav",
                          [SoundCue.NovaHit] = "sfx_09b.wav",
-                         [SoundCue.RicochetBounce] = "sfx_03b.wav",
+                         [SoundCue.RicochetBounce] = "ricochet-boing.mp3",
                          [SoundCue.EnemyHit] = "sfx_06b.wav",
                          [SoundCue.EnemyDestroyed] = "enemy-mechanical-explosion.wav",
                          [SoundCue.MineHit] = "sfx_12b.wav",

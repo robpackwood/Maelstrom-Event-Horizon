@@ -236,15 +236,14 @@ internal sealed class PlayerAsteroidRenderer
             dc.PushTransform(new RotateTransform(piece.Angle * 180 / Math.PI));
             dc.PushTransform(new ScaleTransform(Ship.BaseVisualScale, Ship.BaseVisualScale));
             Geometry shape = view.ShipDebrisGeometry(piece.Kind);
-            Color fill = piece.Kind == 4 ? Color.FromArgb(alpha, 67, 160, 181) : Color.FromArgb(alpha, 108, 126, 132);
-            Color edge = Color.FromArgb(alpha, 222, 234, 231);
-            dc.DrawGeometry(new SolidColorBrush(fill), new Pen(new SolidColorBrush(edge), 1.2), shape);
+            dc.PushClip(shape);
+            dc.PushOpacity(alpha / 255.0);
+            dc.DrawImage(view.PlayerShipSprite, new Rect(-48, -18, 96, 36));
+            dc.Pop();
+            dc.Pop();
 
-            if (piece.Kind is 1 or 2)
-            {
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(alpha, 255, 106, 60)), 1.3),
-                    new Point(-4, 0), new Point(6, 0));
-            }
+            Color edge = Color.FromArgb((byte)(alpha * .78), 181, 239, 247);
+            dc.DrawGeometry(null, new Pen(new SolidColorBrush(edge), .9), shape);
 
             dc.Pop();
             dc.Pop();

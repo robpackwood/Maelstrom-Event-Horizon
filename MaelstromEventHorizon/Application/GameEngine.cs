@@ -21,7 +21,7 @@ internal sealed class GameEngine
     internal const double ThreatRetreatDuration = 4;
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
-    internal const int TitleMenuItemCount = 9;
+    internal const int TitleMenuItemCount = 11;
     internal const int ExtraShipScoreInterval = 100_000;
     internal const double VolumeStep = .05;
     private const int MaxPooledShots = 240;
@@ -30,6 +30,8 @@ internal sealed class GameEngine
     private const int MaxPooledFloatingTexts = 24;
     internal const double FadeToSummaryDuration = .7;
     internal const double SummaryFadeInDuration = .55;
+    internal const double WaveExitDelay = 5;
+    internal const double WaveExitSpeed = 315;
     private const double SummaryInputDelay = 2;
     internal const double FadeToWaveDuration = .55;
     internal const double WaveFadeInDuration = .8;
@@ -83,6 +85,8 @@ internal sealed class GameEngine
     internal double WaveStartedAt;
     internal bool PendingGameOverHighScore;
     internal double RescueTimer = -1;
+    internal PickupKind? RarePowerupScheduled;
+    internal double RarePowerupTimer = -1;
     internal double RespawnTimer;
     internal double RicochetBounceSoundCooldown;
     internal double ScreenShakeDuration;
@@ -113,6 +117,8 @@ internal sealed class GameEngine
         MusicVolume = preferences.MusicVolume;
         EffectsVolume = preferences.EffectsVolume;
         VisualQuality = preferences.GraphicsQuality;
+        BonusStagesEnabled = preferences.BonusStagesEnabled;
+        BossFightsEnabled = preferences.BossFightsEnabled;
         FrameRateLimit = preferences.FrameRateLimit;
         audio.SetVolumes(MusicVolume, EffectsVolume);
         audio.StartTitleMusic();
@@ -223,6 +229,8 @@ internal sealed class GameEngine
     public int ControlSelection { get; internal set; }
     public bool WaitingForBinding { get; internal set; }
     public bool FullScreenEnabled { get; internal set; }
+    public bool BonusStagesEnabled { get; internal set; }
+    public bool BossFightsEnabled { get; internal set; }
     public double MusicVolume { get; internal set; }
     public double EffectsVolume { get; internal set; }
     public int FrameRateLimit { get; private set; }
@@ -345,6 +353,7 @@ internal sealed class GameEngine
         UpdateWorld(dt);
         HandleCollisions();
         RemoveDead();
+        UpdateCanisterPulse();
 
         if (Mode != GameMode.Playing)
         {
@@ -757,6 +766,11 @@ internal sealed class GameEngine
         services.WaveSpawnService.SpawnCanisterEntity(this);
     }
 
+    internal void SpawnRarePowerup()
+    {
+        services.WaveSpawnService.SpawnRarePowerup(this);
+    }
+
     internal void SpawnComet()
     {
         services.WaveSpawnService.SpawnComet(this);
@@ -900,6 +914,26 @@ internal sealed class GameEngine
     internal void ClearWorld()
     {
         services.EffectsPhysicsService.ClearWorld(this);
+        Audio.SetCanisterPulseActive(false);
+    }
+
+    internal void SpawnShipDestructionCloud()
+    {
+        services.EffectsPhysicsService.SpawnShipDestructionCloud(this);
+    }
+
+    private void UpdateCanisterPulse()
+    {
+        for (int i = 0; i < Pickups.Count; i++)
+        {
+            if (Pickups[i] is { Alive: true, Kind: PickupKind.Canister })
+            {
+                Audio.SetCanisterPulseActive(true);
+                return;
+            }
+        }
+
+        Audio.SetCanisterPulseActive(false);
     }
 
     internal void TriggerScreenShake(double duration, double magnitude)
@@ -925,6 +959,11 @@ internal sealed class GameEngine
     internal bool Touching(Body a, Body b)
     {
         return services.EffectsPhysicsService.Touching(this, a, b);
+    }
+
+    internal bool TouchingPickup(Pickup pickup)
+    {
+        return services.EffectsPhysicsService.TouchingPickup(this, pickup);
     }
 
     internal bool TouchingComet(Shot shot, Comet comet)

@@ -5,7 +5,6 @@ namespace MaelstromEventHorizon.Application.Services.Progression;
 
 internal sealed class ScoreTransitionService
 {
-    private const double WaveExitSpeed = 315;
     internal void AddScore(GameEngine game, int basePoints)
     {
         game.WaveBaseCash += basePoints;
@@ -96,6 +95,7 @@ internal sealed class ScoreTransitionService
 
     private void ClearCompletedWaveObjects(GameEngine game)
     {
+        game.Audio.SetCanisterPulseActive(false);
         game.Pickups.Clear();
         game.Comets.Clear();
         game.Bosses.Clear();
@@ -155,7 +155,7 @@ internal sealed class ScoreTransitionService
             game.LevelBonusCash = Math.Max(0, game.LevelBonusCash - 50);
             game.LevelBonusCountdown += 5;
 
-            if (game is { LevelBonusCash: <= 1_000, BonusSpawnsDisabled: false })
+            if (game is { LevelBonusCash: <= 1_600, BonusSpawnsDisabled: false })
             {
                 DisableBonusSpawns(game);
             }
@@ -192,23 +192,32 @@ internal sealed class ScoreTransitionService
             return;
         }
 
-        if (game.IsBonusStage || game.IsBossStage)
-        {
-            game.Audio.StopMusic(false);
-        }
-
         game.Mode = GameMode.WaveOutro;
         game.TransitionElapsed = 0;
         game.TransitionAlpha = 0;
-        SetWaveExitCourse(game);
-        game.Player.Thrusting = true;
+        game.Player.Velocity = V2.Zero;
+        game.Player.Thrusting = false;
         game.Player.Shielding = false;
-        game.Audio.SetThrustIntensity(.62);
+        game.Audio.SetThrustIntensity(0);
+        game.Audio.PlayWaveSuccessFanfare();
     }
 
     internal void UpdateWaveOutro(GameEngine game, double dt)
     {
         game.TransitionElapsed += dt;
+
+        if (game.TransitionElapsed <= GameEngine.WaveExitDelay)
+        {
+            return;
+        }
+
+        if (game.TransitionElapsed - dt < GameEngine.WaveExitDelay)
+        {
+            SetWaveExitCourse(game);
+            game.Player.Thrusting = true;
+            game.Audio.SetThrustIntensity(.62);
+        }
+
         game.Player.Position += game.Player.Velocity * dt;
         game.TransitionAlpha = 0;
 
@@ -235,29 +244,8 @@ internal sealed class ScoreTransitionService
 
     private static void SetWaveExitCourse(GameEngine game)
     {
-        V2 position = game.Player.Position;
-        double nearest = position.X;
-        V2 direction = new(-1, 0);
-
-        if (GameEngine.Width - position.X < nearest)
-        {
-            nearest = GameEngine.Width - position.X;
-            direction = new V2(1, 0);
-        }
-
-        if (position.Y < nearest)
-        {
-            nearest = position.Y;
-            direction = new V2(0, -1);
-        }
-
-        if (GameEngine.Height - position.Y < nearest)
-        {
-            direction = new V2(0, 1);
-        }
-
-        game.Player.Velocity = direction * WaveExitSpeed;
-        game.Player.Angle = Math.Atan2(direction.Y, direction.X);
+        V2 direction = V2.FromAngle(game.Player.Angle);
+        game.Player.Velocity = direction * GameEngine.WaveExitSpeed;
     }
 
     private static bool HasExitedArena(GameEngine game)

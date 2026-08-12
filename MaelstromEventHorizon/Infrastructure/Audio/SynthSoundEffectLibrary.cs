@@ -73,6 +73,15 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 return attack * release * blow;
             }, .03, .22),
 
+            [SoundCue.CanisterPulse] = Build(.42, t =>
+            {
+                double envelope = Envelope(t, .42, .012, 1.65);
+                double wobble = Math.Sin(t * Math.PI * 2 * 4.2) * 8;
+                double tone = .26 * Osc(118 + wobble, t) + .12 * Osc(236 + wobble * 2, t);
+                double shimmer = .045 * Osc(710 + wobble * 4, t);
+                return envelope * (tone + shimmer);
+            }, .16, .55),
+
             [SoundCue.Explosion] = Build(.92, t =>
             {
                 double body = Math.Exp(-3.6 * t);
@@ -258,6 +267,19 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
 
                 return strike + bell;
             }, .32, .82),
+            [SoundCue.PlayerShipDestruction] = Build(2.05, t =>
+            {
+                double impact = Envelope(t, .26, .003, 2.3) *
+                                (.12 * Noise(t, 310, 591) + .52 * Osc(54, t) + .27 * Osc(32, t));
+                double combustion = Envelope(t, 1.8, .015, 1.12) *
+                                    (.14 * Noise(t, Math.Max(80, 320 - t * 90), 593) +
+                                     .28 * Osc(Math.Max(22, 48 - t * 11), t));
+                double rumble = Envelope(t, 2.05, .02, .92) *
+                                (.31 * Osc(Math.Max(16, 39 - t * 9), t) + .08 * Noise(t, 95, 599));
+                double glow = Envelope(t, 1.1, .012, 1.45) *
+                              (.075 * Osc(147, t) + .045 * Osc(220, t) + .025 * Osc(294, t));
+                return impact + combustion + rumble + glow;
+            }, .52, .92),
             [SoundCue.ShipCrash] = BuildShipCrashFallback(),
             [SoundCue.ShipBlast] = Build(2.35, t =>
             {

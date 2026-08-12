@@ -30,6 +30,14 @@ https://creativecommons.org/licenses/by/4.0/
 Changes: selected source OGG tracks were transcoded to MP3 for game playback
 and may have been trimmed or loop-prepared.
 
+Victory Party
+Music by Of Far Different Nature
+Source: https://opengameart.org/content/victory-party
+
+Released under Creative Commons Attribution 4.0 International.
+https://creativecommons.org/licenses/by/4.0/
+Changes: the source MP3 is redistributed under a project-specific filename.
+
 Our Expanse
 Music by Bobjt
 Source: https://opengameart.org/content/our-expanse

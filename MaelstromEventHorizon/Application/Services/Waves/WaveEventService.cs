@@ -60,6 +60,16 @@ internal sealed class WaveEventService
             }
         }
 
+        if (game.RarePowerupTimer > 0)
+        {
+            game.RarePowerupTimer -= dt;
+
+            if (game.RarePowerupTimer <= 0)
+            {
+                game.SpawnRarePowerup();
+            }
+        }
+
         if (game.CanisterTimer > 0)
         {
             game.CanisterTimer -= dt;
