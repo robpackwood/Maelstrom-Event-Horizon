@@ -8,8 +8,6 @@ internal sealed class EffectsPhysicsService
 {
     private const int MaxParticles = 900;
     private const int MaxShockwaves = 24;
-    private const int MaxShots = 240;
-    private const int MaxFloatingTexts = 24;
 
     internal void SpawnShipWreck(GameEngine game)
     {
@@ -120,7 +118,7 @@ internal sealed class EffectsPhysicsService
 
     private static void AddParticle(GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
     {
-        int maximum = game.VisualQuality switch { 0 => 250, 1 => 550, _ => MaxParticles };
+        int maximum = game.VisualQuality switch { 0 => 160, 1 => 400, _ => MaxParticles };
 
         if (game.Particles.Count >= maximum)
         {
@@ -132,7 +130,7 @@ internal sealed class EffectsPhysicsService
 
     private static void AddShockwave(GameEngine game, V2 position, double lifetime, uint color, double maxRadius)
     {
-        int maximum = game.VisualQuality switch { 0 => 8, 1 => 16, _ => MaxShockwaves };
+        int maximum = game.VisualQuality switch { 0 => 6, 1 => 12, _ => MaxShockwaves };
 
         if (game.Shockwaves.Count >= maximum)
         {
@@ -146,8 +144,8 @@ internal sealed class EffectsPhysicsService
     {
         return game.VisualQuality switch
         {
-            0 => Math.Max(1, (count + 3) / 4),
-            1 => Math.Max(1, (count * 3 + 4) / 5),
+            0 => Math.Max(1, (count + 5) / 6),
+            1 => Math.Max(1, (count + 1) / 2),
             _ => count
         };
     }
@@ -164,18 +162,6 @@ internal sealed class EffectsPhysicsService
         game.Comets.RemoveAll(x => !x.Alive);
         game.RecycleEffects();
         game.RecycleShipDebris();
-        TrimOldest(game.Shots, MaxShots);
-        TrimOldest(game.FloatingTexts, MaxFloatingTexts);
-    }
-
-    private static void TrimOldest<T>(List<T> items, int maximum)
-    {
-        int excess = items.Count - maximum;
-
-        if (excess > 0)
-        {
-            items.RemoveRange(0, excess);
-        }
     }
 
     internal void ClearWorld(GameEngine game)

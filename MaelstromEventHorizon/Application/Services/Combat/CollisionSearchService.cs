@@ -37,96 +37,61 @@ internal sealed partial class CollisionService
         return null;
     }
 
-    private static Fighter? FindHitFighter(GameEngine game, Shot shot, CollisionSpatialHash hash)
+    private static Body? FindPlayerShotTarget(GameEngine game, Shot shot, CollisionSpatialHash hash)
     {
+        Asteroid? asteroid = null;
+        Fighter? fighter = null;
+        AlienBoss? boss = null;
+        HomingMine? mine = null;
+        GravityVortex? vortex = null;
+        Nova? nova = null;
+        Comet? comet = null;
+        Pickup? prize = null;
+
+
         foreach (Body body in hash.Nearby(shot))
         {
-            if (body is Fighter fighter && game.Touching(shot, fighter))
+            switch (body)
             {
-                return fighter;
+                case Asteroid candidate when asteroid is null && candidate.Alive && candidate != shot.LastPiercedAsteroid &&
+                                             game.Touching(shot, candidate):
+                    asteroid = candidate;
+                    break;
+                case Fighter candidate when fighter is null && candidate.Alive && game.Touching(shot, candidate):
+                    fighter = candidate;
+                    break;
+                case AlienBoss candidate when boss is null && candidate.Alive && game.Touching(shot, candidate):
+                    boss = candidate;
+                    break;
+                case HomingMine candidate when mine is null && candidate.Alive && game.Touching(shot, candidate):
+                    mine = candidate;
+                    break;
+                case GravityVortex candidate when vortex is null && candidate.Alive && game.Touching(shot, candidate):
+                    vortex = candidate;
+                    break;
+                case Nova candidate when nova is null && candidate is { Alive: true, Detonated: false } &&
+                                         game.Touching(shot, candidate):
+                    nova = candidate;
+                    break;
+                case Comet candidate when comet is null && candidate.Alive && game.TouchingComet(shot, candidate):
+                    comet = candidate;
+                    break;
+                case Pickup candidate when prize is null &&
+                                            candidate is { Alive: true, Kind: PickupKind.Multiplier or PickupKind.Bonus } &&
+                                            game.Touching(shot, candidate):
+                    prize = candidate;
+                    break;
             }
         }
 
-        return null;
-    }
-
-    private static AlienBoss? FindHitBoss(GameEngine game, Shot shot, CollisionSpatialHash hash)
-    {
-        foreach (Body body in hash.Nearby(shot))
-        {
-            if (body is AlienBoss boss && game.Touching(shot, boss))
-            {
-                return boss;
-            }
-        }
-
-        return null;
-    }
-
-    private static HomingMine? FindHitMine(GameEngine game, Shot shot, CollisionSpatialHash hash)
-    {
-        foreach (Body body in hash.Nearby(shot))
-        {
-            if (body is HomingMine mine && game.Touching(shot, mine))
-            {
-                return mine;
-            }
-        }
-
-        return null;
-    }
-
-    private static GravityVortex? FindHitVortex(GameEngine game, Shot shot, CollisionSpatialHash hash)
-    {
-        foreach (Body body in hash.Nearby(shot))
-        {
-            if (body is GravityVortex vortex && game.Touching(shot, vortex))
-            {
-                return vortex;
-            }
-        }
-
-        return null;
-    }
-
-    private static Nova? FindHitNova(GameEngine game, Shot shot, CollisionSpatialHash hash)
-    {
-        foreach (Body body in hash.Nearby(shot))
-        {
-            if (body is Nova nova && !nova.Detonated && game.Touching(shot, nova))
-            {
-                return nova;
-            }
-        }
-
-        return null;
-    }
-
-    private static Comet? FindHitComet(GameEngine game, Shot shot)
-    {
-        foreach (Comet comet in game.Comets)
-        {
-            if (comet.Alive && game.TouchingComet(shot, comet))
-            {
-                return comet;
-            }
-        }
-
-        return null;
-    }
-
-    private static Pickup? FindHitPrize(GameEngine game, Shot shot)
-    {
-        foreach (Pickup pickup in game.Pickups)
-        {
-            if (pickup is { Alive: true, Kind: PickupKind.Multiplier or PickupKind.Bonus } &&
-                game.Touching(shot, pickup))
-            {
-                return pickup;
-            }
-        }
-
-        return null;
+        if (asteroid is not null) return asteroid;
+        if (fighter is not null) return fighter;
+        if (boss is not null) return boss;
+        if (mine is not null) return mine;
+        if (vortex is not null) return vortex;
+        if (nova is not null) return nova;
+        if (comet is not null) return comet;
+        return prize;
     }
 
     private static Body? FindPlayerDanger(GameEngine game)

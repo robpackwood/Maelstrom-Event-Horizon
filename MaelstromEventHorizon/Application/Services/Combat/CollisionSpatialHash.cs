@@ -23,6 +23,8 @@ internal sealed class CollisionSpatialHash
         Add(game.Mines);
         Add(game.Vortices);
         Add(game.Novas);
+        Add(game.Comets);
+        Add(game.Pickups);
     }
 
     internal List<Body> Nearby(Body body)

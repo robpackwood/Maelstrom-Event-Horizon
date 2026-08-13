@@ -650,7 +650,7 @@ internal sealed class PlayerSimulationService
     private static void UpdateShots(GameEngine game, double dt, bool playerShotsOnly)
     {
         List<Shot>? splittingSludge = null;
-        List<Shot>? riftShots = null;
+        List<(V2 Position, V2 Velocity, double Lifetime, double Radius, int Damage, int PowerLevel)>? riftShots = null;
 
         foreach (Shot shot in game.Shots)
         {
@@ -696,19 +696,11 @@ internal sealed class PlayerSimulationService
                 double remainingLifetime = Math.Max(.12, shot.Lifetime - shot.Age);
                 riftShots ??= [];
 
-                riftShots.Add(new Shot(shot.Position - direction * 46 - offset, shot.Velocity, false, remainingLifetime)
-                {
-                    Radius = shot.Radius,
-                    Damage = shot.Damage,
-                    PowerLevel = Math.Max(1, shot.PowerLevel)
-                });
+                riftShots.Add((shot.Position - direction * 46 - offset, shot.Velocity, remainingLifetime,
+                    shot.Radius, shot.Damage, Math.Max(1, shot.PowerLevel)));
 
-                riftShots.Add(new Shot(shot.Position - direction * 46 + offset, shot.Velocity, false, remainingLifetime)
-                {
-                    Radius = shot.Radius,
-                    Damage = shot.Damage,
-                    PowerLevel = Math.Max(1, shot.PowerLevel)
-                });
+                riftShots.Add((shot.Position - direction * 46 + offset, shot.Velocity, remainingLifetime,
+                    shot.Radius, shot.Damage, Math.Max(1, shot.PowerLevel)));
 
                 game.SpawnShockwave(shot.Position - direction * 46 - offset, .18, 0xffa774ff, 28);
                 game.SpawnShockwave(shot.Position - direction * 46 + offset, .18, 0xffa774ff, 28);
@@ -725,7 +717,13 @@ internal sealed class PlayerSimulationService
 
         if (riftShots is not null)
         {
-            game.Shots.AddRange(riftShots);
+            foreach ((V2 position, V2 velocity, double lifetime, double radius, int damage, int powerLevel) in riftShots)
+            {
+                Shot riftShot = game.SpawnShot(position, velocity, false, lifetime);
+                riftShot.Radius = radius;
+                riftShot.Damage = damage;
+                riftShot.PowerLevel = powerLevel;
+            }
         }
     }
 

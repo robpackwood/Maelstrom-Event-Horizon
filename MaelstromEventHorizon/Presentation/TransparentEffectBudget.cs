@@ -9,7 +9,7 @@ internal sealed class TransparentEffectBudget
 
     internal void Reset(int visualQuality)
     {
-        remainingCoverage = PlayfieldArea * (visualQuality switch { 0 => .45, 1 => .9, _ => 1.45 });
+        remainingCoverage = PlayfieldArea * (visualQuality switch { 0 => .28, 1 => .68, _ => 1.2 });
     }
 
     internal double ReserveDisk(double radius)

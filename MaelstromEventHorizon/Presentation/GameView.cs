@@ -427,11 +427,11 @@ internal sealed class GameView : FrameworkElement
             NextFrameTime = 0;
         }
 
-        SlowFrameCount = elapsed > (isCapped ? Math.Max(.026, targetFrameInterval * 1.35) : .026)
+        SlowFrameCount = elapsed > (isCapped ? Math.Max(.022, targetFrameInterval * 1.15) : .022)
             ? SlowFrameCount + 1
             : Math.Max(0, SlowFrameCount - 2);
 
-        if (SlowFrameCount >= 24 && Game.LowerVisualQualityIfNeeded())
+        if (SlowFrameCount >= 12 && Game.LowerVisualQualityIfNeeded())
         {
             SlowFrameCount = 0;
         }

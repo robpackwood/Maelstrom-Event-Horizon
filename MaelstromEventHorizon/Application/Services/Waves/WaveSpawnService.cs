@@ -119,7 +119,7 @@ internal sealed class WaveSpawnService
             game.Player.SpawnShieldTime = 0;
             game.Player.Invulnerable = 0;
             game.ShieldReleaseTimer = 0;
-            game.Shots.RemoveAll(shot => !shot.Enemy);
+            game.RecyclePlayerShots();
         }
         else if (game.IsBossStage)
         {
@@ -192,13 +192,19 @@ internal sealed class WaveSpawnService
 
         game.NextWaveTimer = 0;
 
-        if (game.IsBossStage)
+        // A disabled stage remains a normal wave, including its background music.
+        // The explicit preference checks also cover a setting changed while a
+        // transition is pending.
+        bool playBossMusic = game.IsBossStage && (game.BossOnlyMode || game.BossFightsEnabled);
+        bool playBonusMusic = game.IsBonusStage && (game.BonusOnlyMode || game.BonusStagesEnabled);
+
+        if (playBossMusic)
         {
             game.Audio.StartBossMusic();
         }
         else
         {
-            game.Audio.StartWaveMusic(game.Wave, game.IsBonusStage);
+            game.Audio.StartWaveMusic(game.Wave, playBonusMusic);
         }
 
         if (game.IsBossStage)

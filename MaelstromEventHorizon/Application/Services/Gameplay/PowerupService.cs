@@ -37,9 +37,7 @@ internal sealed class PowerupService
         }
 
         game.UpdateShipDebris(dt);
-        game.Particles.RemoveAll(particle => !particle.Alive);
-        game.Shockwaves.RemoveAll(ring => !ring.Alive);
-        game.FloatingTexts.RemoveAll(text => !text.Alive);
+        game.RecycleEffects();
     }
 
     internal void RespawnPlayer(GameEngine game)

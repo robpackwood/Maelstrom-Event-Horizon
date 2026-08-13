@@ -15,8 +15,10 @@ namespace MaelstromEventHorizon.Presentation;
 internal sealed class GpuPlayfieldView : Image
 {
     private const int FloatsPerVertex = 6;
+    private const int MaximumCircleSegments = 20;
     private const int SurfaceWidth = 1280;
     private const int SurfaceHeight = 720;
+    private static readonly V2[][] unitCirclePoints = CreateUnitCirclePoints();
     private readonly GameEngine game;
     private readonly FrameTimingProfiler frameTimings;
     private readonly TransparentEffectBudget transparentEffects = new();
@@ -157,6 +159,18 @@ internal sealed class GpuPlayfieldView : Image
 
     private V2 RenderPosition(Body body) => body.Position + body.Velocity * (game.RenderInterpolation / 120);
 
+    private static bool IsWithinPlayfield(V2 position, double extent) =>
+        position.X + extent >= 0 && position.X - extent <= GameEngine.Width &&
+        position.Y + extent >= 0 && position.Y - extent <= GameEngine.Height;
+
+    private double TrailDetailScale => game.VisualQuality switch { 0 => .45, 1 => .7, _ => 1 };
+
+    private int ScaleSegmentCount(int sides)
+    {
+        double scale = game.VisualQuality switch { 0 => .55, 1 => .75, _ => 1 };
+        return Math.Clamp(Math.Max(6, (int)Math.Ceiling(sides * scale)), 3, MaximumCircleSegments);
+    }
+
     private void DisposeRenderer(object? sender, RoutedEventArgs e)
     {
         CompositionTarget.Rendering -= RenderFrame;
@@ -203,6 +217,11 @@ internal sealed class GpuPlayfieldView : Image
                         : 0xff98796b;
 
             V2 position = RenderPosition(asteroid) + shake;
+            if (!IsWithinPlayfield(position, asteroid.Radius * 1.1))
+            {
+                continue;
+            }
+
             AddCircle(position.X, position.Y, asteroid.Radius, color, .96, 12);
 
             AddEffectRing(position.X, position.Y, asteroid.Radius * .88,
@@ -215,7 +234,12 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Fighter fighter in game.Fighters)
         {
             uint color = fighter.Kind == FighterKind.Interceptor ? 0xff5eeaff : 0xffff4f85;
-            AddShip(RenderPosition(fighter) + shake, fighter.Angle, fighter.Radius * 1.1, color, .95);
+            V2 position = RenderPosition(fighter) + shake;
+
+            if (IsWithinPlayfield(position, fighter.Radius * 1.1))
+            {
+                AddShip(position, fighter.Angle, fighter.Radius * 1.1, color, .95);
+            }
         }
     }
 
@@ -225,9 +249,19 @@ internal sealed class GpuPlayfieldView : Image
         {
             uint color = BossColor(boss.Kind);
             V2 position = RenderPosition(boss) + shake;
+            if (!IsWithinPlayfield(position, boss.Radius * 1.2))
+            {
+                continue;
+            }
+
             AddCircle(position.X, position.Y, boss.Radius, color, .94, 18);
             AddEffectRing(position.X, position.Y, boss.Radius * .88, 0xffefffff, .58, 18, 1.5);
-            AddEffectRing(position.X, position.Y, boss.Radius * 1.08, color, .22, 18, 3);
+
+            if (game.VisualQuality > 0)
+            {
+                AddEffectRing(position.X, position.Y, boss.Radius * 1.08, color,
+                    game.VisualQuality == 1 ? .14 : .22, 18, 3);
+            }
         }
     }
 
@@ -236,6 +270,11 @@ internal sealed class GpuPlayfieldView : Image
         foreach (HomingMine mine in game.Mines)
         {
             V2 position = RenderPosition(mine) + shake;
+            if (!IsWithinPlayfield(position, mine.Radius * 1.4))
+            {
+                continue;
+            }
+
             AddCircle(position.X, position.Y, mine.Radius, 0xffffd84e, .95, 10);
             AddEffectRing(position.X, position.Y, mine.Radius * 1.24, 0xffff643d, .62, 10, 1.4);
         }
@@ -246,8 +285,17 @@ internal sealed class GpuPlayfieldView : Image
         foreach (GravityVortex vortex in game.Vortices)
         {
             V2 position = RenderPosition(vortex) + shake;
+            if (!IsWithinPlayfield(position, vortex.Radius * 1.25))
+            {
+                continue;
+            }
+
             AddEffectCircle(position.X, position.Y, vortex.Radius, 0xff5b1e80, .7, 16);
-            AddEffectRing(position.X, position.Y, vortex.Radius * 1.15, 0xffcc8cff, .7, 16, 2);
+
+            if (game.VisualQuality > 0)
+            {
+                AddEffectRing(position.X, position.Y, vortex.Radius * 1.15, 0xffcc8cff, .7, 16, 2);
+            }
         }
     }
 
@@ -256,6 +304,11 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Nova nova in game.Novas)
         {
             V2 position = RenderPosition(nova) + shake;
+            if (!IsWithinPlayfield(position, nova.Radius * 1.5))
+            {
+                continue;
+            }
+
             AddEffectCircle(position.X, position.Y, nova.Radius * 1.45, 0xffff613c, .85, 12);
             AddCircle(position.X, position.Y, nova.Radius * .55, 0xffffefa7, 1, 10);
         }
@@ -266,7 +319,13 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Comet comet in game.Comets)
         {
             V2 position = RenderPosition(comet) + shake;
-            V2 tail = position - comet.Velocity.Normalized * Comet.TrailLength;
+            double trailLength = Comet.TrailLength * TrailDetailScale;
+            if (!IsWithinPlayfield(position, trailLength + comet.Radius))
+            {
+                continue;
+            }
+
+            V2 tail = position - comet.Velocity.Normalized * trailLength;
             AddLine(tail.X, tail.Y, position.X, position.Y, 0xffa7e8ff, .42, 7);
             AddCircle(position.X, position.Y, comet.Radius, comet.Tint, .98, 12);
         }
@@ -277,6 +336,10 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Pickup pickup in game.Pickups)
         {
             V2 position = RenderPosition(pickup) + shake;
+            if (!IsWithinPlayfield(position, pickup.Radius * 1.6))
+            {
+                continue;
+            }
 
             uint color = pickup.Kind switch
             {
@@ -290,7 +353,10 @@ internal sealed class GpuPlayfieldView : Image
             };
 
             AddDiamond(position.X, position.Y, pickup.Radius * 1.25, color, .96);
-            AddEffectRing(position.X, position.Y, pickup.Radius * 1.5, color, .36, 8, 1);
+            if (game.VisualQuality > 0)
+            {
+                AddEffectRing(position.X, position.Y, pickup.Radius * 1.5, color, .36, 8, 1);
+            }
         }
     }
 
@@ -299,16 +365,22 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Shot shot in game.Shots)
         {
             V2 position = RenderPosition(shot) + shake;
+            double radius = shot.BossShot ? Math.Max(6, shot.Radius) : Math.Max(3.8, shot.Radius);
+            double trailLength = shot.Laser ? 30 * TrailDetailScale : 0;
+            if (!IsWithinPlayfield(position, trailLength + radius))
+            {
+                continue;
+            }
+
             uint color = shot.BossShot ? shot.Tint : shot.Enemy ? 0xff5877ff : PlayerShotColor(shot.PowerLevel);
 
             if (shot.Laser)
             {
-                V2 tail = position - shot.Velocity.Normalized * 30;
+                V2 tail = position - shot.Velocity.Normalized * trailLength;
                 AddLine(tail.X, tail.Y, position.X, position.Y, color, .62, 5);
             }
 
-            AddCircle(position.X, position.Y, shot.BossShot ? Math.Max(6, shot.Radius) : Math.Max(3.8, shot.Radius),
-                color, .96, 8);
+            AddCircle(position.X, position.Y, radius, color, .96, 8);
         }
     }
 
@@ -322,10 +394,14 @@ internal sealed class GpuPlayfieldView : Image
         }
 
         V2 position = RenderPosition(ship) + shake;
+        if (!IsWithinPlayfield(position, Math.Max(45 * ship.VisualScale, 40)))
+        {
+            return;
+        }
 
         if (ship.Thrusting)
         {
-            V2 tail = position - V2.FromAngle(ship.Angle) * 45 * ship.VisualScale;
+            V2 tail = position - V2.FromAngle(ship.Angle) * 45 * ship.VisualScale * TrailDetailScale;
             AddLine(tail.X, tail.Y, position.X, position.Y, 0xff61dfff, .8, 10);
         }
 
@@ -348,9 +424,13 @@ internal sealed class GpuPlayfieldView : Image
         {
             double life = Math.Clamp(1 - particle.Age / particle.Lifetime, 0, 1);
             V2 position = RenderPosition(particle) + shake;
+            double radius = Math.Max(1, particle.StartSize * (.3 + life * .7));
+            if (!IsWithinPlayfield(position, radius))
+            {
+                continue;
+            }
 
-            AddEffectCircle(position.X, position.Y,
-                Math.Max(1, particle.StartSize * (.3 + life * .7)), particle.Color, life, 6);
+            AddEffectCircle(position.X, position.Y, radius, particle.Color, life, 6);
         }
     }
 
@@ -359,9 +439,14 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Shockwave ring in game.Shockwaves)
         {
             double progress = ring.Age / ring.Lifetime;
+            double radius = ring.MaxRadius * (1 - Math.Pow(1 - progress, 3));
+            V2 position = ring.Position + shake;
+            if (!IsWithinPlayfield(position, radius + 4))
+            {
+                continue;
+            }
 
-            AddEffectRing(ring.Position.X + shake.X, ring.Position.Y + shake.Y,
-                ring.MaxRadius * (1 - Math.Pow(1 - progress, 3)),
+            AddEffectRing(position.X, position.Y, radius,
                 ring.Color, .82 * (1 - progress), 20, Math.Max(1, 4 * (1 - progress)));
         }
     }
@@ -383,19 +468,23 @@ internal sealed class GpuPlayfieldView : Image
 
     private void AddCircle(double x, double y, double radius, uint color, double alpha, int sides)
     {
+        sides = ScaleSegmentCount(sides);
+
         if (sides <= 12)
         {
             spriteBatch!.Add(x, y, radius, color, alpha);
             return;
         }
 
+        V2[] points = unitCirclePoints[sides];
+
         for (int i = 0; i < sides; i++)
         {
-            double first = i * Math.PI * 2 / sides;
-            double second = (i + 1) * Math.PI * 2 / sides;
+            V2 first = points[i];
+            V2 second = points[(i + 1) % sides];
 
-            AddTriangle(new V2(x, y), new V2(x + Math.Cos(first) * radius, y + Math.Sin(first) * radius),
-                new V2(x + Math.Cos(second) * radius, y + Math.Sin(second) * radius), color, alpha);
+            AddTriangle(new V2(x, y), new V2(x + first.X * radius, y + first.Y * radius),
+                new V2(x + second.X * radius, y + second.Y * radius), color, alpha);
         }
     }
 
@@ -411,14 +500,37 @@ internal sealed class GpuPlayfieldView : Image
 
     private void AddRing(double x, double y, double radius, uint color, double alpha, int sides, double thickness)
     {
+        sides = ScaleSegmentCount(sides);
+        V2[] points = unitCirclePoints[sides];
+
         for (int i = 0; i < sides; i++)
         {
-            double first = i * Math.PI * 2 / sides;
-            double second = (i + 1) * Math.PI * 2 / sides;
+            V2 first = points[i];
+            V2 second = points[(i + 1) % sides];
 
-            AddLine(x + Math.Cos(first) * radius, y + Math.Sin(first) * radius,
-                x + Math.Cos(second) * radius, y + Math.Sin(second) * radius, color, alpha, thickness);
+            AddLine(x + first.X * radius, y + first.Y * radius,
+                x + second.X * radius, y + second.Y * radius, color, alpha, thickness);
         }
+    }
+
+    private static V2[][] CreateUnitCirclePoints()
+    {
+        V2[][] pointsBySegmentCount = new V2[MaximumCircleSegments + 1][];
+
+        for (int sides = 3; sides <= MaximumCircleSegments; sides++)
+        {
+            V2[] points = new V2[sides];
+
+            for (int i = 0; i < sides; i++)
+            {
+                double angle = i * Math.PI * 2 / sides;
+                points[i] = new V2(Math.Cos(angle), Math.Sin(angle));
+            }
+
+            pointsBySegmentCount[sides] = points;
+        }
+
+        return pointsBySegmentCount;
     }
 
     private void AddEffectRing(double x, double y, double radius, uint color, double alpha, int sides, double thickness)

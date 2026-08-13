@@ -147,6 +147,11 @@ internal sealed class SceneRenderer
 
     private void DrawStars(GameView view, DrawingContext dc)
     {
+        // The outro/intro camera can look outside the playfield as it follows the ship.
+        // Repeat the star field in every direction so that space continues beyond the
+        // original screen-sized field instead of revealing an empty area.
+        int starFieldTiles = view.Game.Mode is GameMode.WaveIntro or GameMode.WaveOutro ? 1 : 0;
+
         foreach (Star star in view.Game.Stars)
         {
             double depthSpeed = .45 + star.Depth * .72;
@@ -174,22 +179,30 @@ internal sealed class SceneRenderer
             SolidColorBrush brush = view.Brush(Color.FromArgb(alpha,
                 (byte)(180 + star.Depth * 70), (byte)(205 + star.Depth * 45), 255));
 
-            Point position = new(x, y);
-            dc.DrawEllipse(brush, null, position, size, size);
-
-            if (view.Game.Player.Thrusting && star.Depth > .56 && !view.Game.IsBonusStage)
+            for (int tileY = -starFieldTiles; tileY <= starFieldTiles; tileY++)
             {
-                double streak = (star.Depth - .45) * 20;
+                for (int tileX = -starFieldTiles; tileX <= starFieldTiles; tileX++)
+                {
+                    double starX = x + tileX * GameEngine.Width;
+                    double starY = y + tileY * GameEngine.Height;
+                    Point position = new(starX, starY);
+                    dc.DrawEllipse(brush, null, position, size, size);
 
-                dc.DrawLine(view.Pen(Color.FromArgb((byte)(alpha * .38), 146, 212, 255), .55 + star.Depth * .6),
-                    new Point(x - streak, y), new Point(x + size, y));
-            }
+                    if (view.Game.Player.Thrusting && star.Depth > .56 && !view.Game.IsBonusStage)
+                    {
+                        double streak = (star.Depth - .45) * 20;
 
-            if (star.Depth > .82 && twinkle > .78)
-            {
-                Pen pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);
-                dc.DrawLine(pen, new Point(x - size * 3, y), new Point(x + size * 3, y));
-                dc.DrawLine(pen, new Point(x, y - size * 3), new Point(x, y + size * 3));
+                        dc.DrawLine(view.Pen(Color.FromArgb((byte)(alpha * .38), 146, 212, 255), .55 + star.Depth * .6),
+                            new Point(starX - streak, starY), new Point(starX + size, starY));
+                    }
+
+                    if (star.Depth > .82 && twinkle > .78)
+                    {
+                        Pen pen = view.Pen(Color.FromArgb((byte)(alpha / 2), 160, 205, 255), .7);
+                        dc.DrawLine(pen, new Point(starX - size * 3, starY), new Point(starX + size * 3, starY));
+                        dc.DrawLine(pen, new Point(starX, starY - size * 3), new Point(starX, starY + size * 3));
+                    }
+                }
             }
         }
     }

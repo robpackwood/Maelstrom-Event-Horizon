@@ -22,118 +22,93 @@ internal sealed partial class CollisionService
                 continue;
             }
 
-            Asteroid? asteroid = FindHitAsteroid(game, shot, spatialHash);
+            Body? target = FindPlayerShotTarget(game, shot, spatialHash);
 
-            if (asteroid is not null)
+            switch (target)
             {
-                V2 hitPosition = shot.Position;
-                shot.Alive = shot.Laser;
-                shot.LastPiercedAsteroid = asteroid;
-                game.AwardImmediateScore(100, hitPosition);
-                HitAsteroid(game, asteroid, shot.Damage);
-                continue;
-            }
+                case Asteroid asteroid:
+                    V2 hitPosition = shot.Position;
+                    shot.Alive = shot.Laser;
+                    shot.LastPiercedAsteroid = asteroid;
+                    game.AwardImmediateScore(100, hitPosition);
+                    HitAsteroid(game, asteroid, shot.Damage);
+                    break;
 
-            Fighter? fighter = FindHitFighter(game, shot, spatialHash);
+                case Fighter fighter:
+                    shot.Alive = false;
+                    game.Audio.Play(SoundCue.EnemyHit, .48);
 
-            if (fighter is not null)
-            {
-                shot.Alive = false;
-                game.Audio.Play(SoundCue.EnemyHit, .48);
-
-                if ((fighter.HitPoints -= shot.Damage) <= 0)
-                {
-                    DestroyFighter(game, fighter);
-                }
-                else
-                {
-                    game.Spark(fighter.Position, 0xfff0a060, 4 + shot.Damage * 2);
-                }
-
-                continue;
-            }
-
-            AlienBoss? boss = FindHitBoss(game, shot, spatialHash);
-
-            if (boss is not null)
-            {
-                shot.Alive = false;
-                DamageBoss(game, boss, shot.Damage, shot.Position, true);
-                continue;
-            }
-
-            HomingMine? mine = FindHitMine(game, shot, spatialHash);
-
-            if (mine is not null)
-            {
-                shot.Alive = false;
-                game.Audio.Play(SoundCue.MineHit, .5);
-
-                if ((mine.HitPoints -= shot.Damage) <= 0)
-                {
-                    DestroyMine(game, mine);
-                }
-
-                continue;
-            }
-
-            GravityVortex? vortex = FindHitVortex(game, shot, spatialHash);
-
-            if (vortex is not null)
-            {
-                shot.Alive = false;
-                DestroyVortex(game, vortex);
-                continue;
-            }
-
-            Nova? nova = FindHitNova(game, shot, spatialHash);
-
-            if (nova is not null)
-            {
-                shot.Alive = false;
-                game.NeutralizeNova(nova);
-                continue;
-            }
-
-            Comet? comet = FindHitComet(game, shot);
-
-            if (comet is not null)
-            {
-                V2 hitPosition = shot.Position;
-                shot.Alive = false;
-                comet.Alive = false;
-                game.AddCometCash(comet.Value);
-                game.Explosion(hitPosition, 28, comet.Tint);
-                game.SpawnShockwave(hitPosition, .55, comet.Tint, 125);
-                game.SpawnFloatingText(hitPosition, $"+${comet.Value:N0}", comet.Tint);
-                game.Audio.Play(SoundCue.CometCelebration);
-                game.Audio.Play(SoundCue.ShipBlast, .78);
-                continue;
-            }
-
-            Pickup? prize = FindHitPrize(game, shot);
-
-            if (prize is not null)
-            {
-                shot.Alive = false;
-                prize.Alive = false;
-
-                if (prize.Kind == PickupKind.Multiplier)
-                {
-                    game.Multiplier = Math.Max(game.Multiplier, prize.Value);
-                    game.ShowBanner($"{prize.Value}X MULTIPLIER", 1.8);
-                    game.Audio.Play(SoundCue.MultiplierWoohoo, .78);
-                }
-                else
-                {
-                    game.AddScore(prize.Value);
-                    game.Audio.Play(SoundCue.Coin, .82);
-
-                    if (prize.Kind == PickupKind.Bonus)
+                    if ((fighter.HitPoints -= shot.Damage) <= 0)
                     {
-                        game.Audio.Play(SoundCue.ShipBlast, .82);
+                        DestroyFighter(game, fighter);
                     }
-                }
+                    else
+                    {
+                        game.Spark(fighter.Position, 0xfff0a060, 4 + shot.Damage * 2);
+                    }
+
+                    break;
+
+                case AlienBoss boss:
+                    shot.Alive = false;
+                    DamageBoss(game, boss, shot.Damage, shot.Position, true);
+                    break;
+
+                case HomingMine mine:
+                    shot.Alive = false;
+                    game.Audio.Play(SoundCue.MineHit, .5);
+
+                    if ((mine.HitPoints -= shot.Damage) <= 0)
+                    {
+                        DestroyMine(game, mine);
+                    }
+
+                    break;
+
+                case GravityVortex vortex:
+                    shot.Alive = false;
+                    DestroyVortex(game, vortex);
+                    break;
+
+                case Nova nova:
+                    shot.Alive = false;
+                    game.NeutralizeNova(nova);
+                    break;
+
+                case Comet comet:
+                    V2 cometHitPosition = shot.Position;
+                    shot.Alive = false;
+                    comet.Alive = false;
+                    game.AddCometCash(comet.Value);
+                    game.Explosion(cometHitPosition, 28, comet.Tint);
+                    game.SpawnShockwave(cometHitPosition, .55, comet.Tint, 125);
+                    game.SpawnFloatingText(cometHitPosition, $"+${comet.Value:N0}", comet.Tint);
+                    game.Audio.Play(SoundCue.CometCelebration);
+                    game.Audio.Play(SoundCue.ShipBlast, .78);
+                    break;
+
+                case Pickup prize:
+                    shot.Alive = false;
+                    prize.Alive = false;
+
+                    if (prize.Kind == PickupKind.Multiplier)
+                    {
+                        game.Multiplier = Math.Max(game.Multiplier, prize.Value);
+                        game.ShowBanner($"{prize.Value}X MULTIPLIER", 1.8);
+                        game.Audio.Play(SoundCue.MultiplierWoohoo, .78);
+                    }
+                    else
+                    {
+                        game.AddScore(prize.Value);
+                        game.Audio.Play(SoundCue.Coin, .82);
+
+                        if (prize.Kind == PickupKind.Bonus)
+                        {
+                            game.Audio.Play(SoundCue.ShipBlast, .82);
+                        }
+                    }
+
+                    break;
             }
         }
 

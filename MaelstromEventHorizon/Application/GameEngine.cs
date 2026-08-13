@@ -491,6 +491,18 @@ internal sealed class GameEngine
         }
     }
 
+    internal void RecyclePlayerShots()
+    {
+        for (int i = Shots.Count - 1; i >= 0; i--)
+        {
+            if (!Shots[i].Enemy)
+            {
+                shotPool.Push(Shots[i]);
+                Shots.RemoveAt(i);
+            }
+        }
+    }
+
     internal void RecycleAllEffects()
     {
         foreach (Shot item in Shots)
