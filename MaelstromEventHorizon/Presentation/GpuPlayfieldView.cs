@@ -239,6 +239,11 @@ internal sealed class GpuPlayfieldView : Image
             if (IsWithinPlayfield(position, fighter.Radius * 1.1))
             {
                 AddShip(position, fighter.Angle, fighter.Radius * 1.1, color, .95);
+
+                if (fighter.Elite)
+                {
+                    AddEffectRing(position.X, position.Y, fighter.Radius * 1.28, 0xffffdc60, .45, 12, 1.3);
+                }
             }
         }
     }

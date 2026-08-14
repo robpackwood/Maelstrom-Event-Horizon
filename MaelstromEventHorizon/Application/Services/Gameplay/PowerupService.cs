@@ -7,6 +7,8 @@ namespace MaelstromEventHorizon.Application.Services.Gameplay;
 
 internal sealed class PowerupService
 {
+    internal const int UpgradeDurationWaves = 3;
+
     internal void UpdateDeathEffects(GameEngine game, double dt)
     {
         foreach (Particle particle in game.Particles)
@@ -125,6 +127,11 @@ internal sealed class PowerupService
                 break;
         }
 
+        if (IsTemporaryUpgrade(power))
+        {
+            game.UpgradeWavesRemaining[power] = UpgradeDurationWaves;
+        }
+
         game.ShowBanner(PowerupAnnouncementText(power), 2.2);
         game.Audio.Play(SoundCue.Pickup, .9);
 
@@ -220,6 +227,7 @@ internal sealed class PowerupService
     internal void ShrinkGiantShip(GameEngine game, V2 impactPosition)
     {
         game.Player.SetGiant(false);
+        game.UpgradeWavesRemaining.Remove(PowerupKind.GiantShip);
         game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, 1.2);
         game.Player.Velocity *= .58;
         game.SpawnShockwave(game.Player.Position, .7, 0xffffb44f, 155);
@@ -244,6 +252,47 @@ internal sealed class PowerupService
         game.RicochetArenaActive = false;
         game.Player.SetGiant(false);
         game.FreezeTime = 0;
+        game.UpgradeWavesRemaining.Clear();
+    }
+
+    internal void AdvanceTemporaryUpgrades(GameEngine game)
+    {
+        foreach (PowerupKind power in game.UpgradeWavesRemaining.Keys.ToArray())
+        {
+            int waves = game.UpgradeWavesRemaining[power] - 1;
+
+            if (waves > 0)
+            {
+                game.UpgradeWavesRemaining[power] = waves;
+                continue;
+            }
+
+            game.UpgradeWavesRemaining.Remove(power);
+            DeactivateTemporaryUpgrade(game, power);
+        }
+    }
+
+    private static bool IsTemporaryUpgrade(PowerupKind power)
+    {
+        return power is PowerupKind.AirBrakes or PowerupKind.Luck or PowerupKind.TripleFire or
+            PowerupKind.RiftVolley or PowerupKind.LongRange or PowerupKind.LaserShots or
+            PowerupKind.DoubleShotSize or PowerupKind.ReflectionShield or PowerupKind.GiantShip;
+    }
+
+    private static void DeactivateTemporaryUpgrade(GameEngine game, PowerupKind power)
+    {
+        switch (power)
+        {
+            case PowerupKind.AirBrakes: game.AirBrakesActive = false; break;
+            case PowerupKind.Luck: game.LuckActive = false; break;
+            case PowerupKind.TripleFire: game.TripleFireActive = false; break;
+            case PowerupKind.RiftVolley: game.RiftVolleyActive = false; break;
+            case PowerupKind.LongRange: game.LongRangeActive = false; break;
+            case PowerupKind.LaserShots: game.LaserShotsActive = false; break;
+            case PowerupKind.DoubleShotSize: game.DoubleShotSizeActive = false; break;
+            case PowerupKind.ReflectionShield: game.ReflectionShieldActive = false; break;
+            case PowerupKind.GiantShip: game.Player.SetGiant(false); break;
+        }
     }
 
     private void SmartBomb(GameEngine game)

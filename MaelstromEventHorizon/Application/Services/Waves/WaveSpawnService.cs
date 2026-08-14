@@ -34,6 +34,7 @@ internal sealed class WaveSpawnService
                 : game.Wave + 1;
 
         game.WaveStartedAt = game.TotalTime;
+        game.AdvanceTemporaryUpgrades();
 
         game.IsBonusStage = game.BonusOnlyMode ||
                             (!game.BossOnlyMode && game.BonusStagesEnabled && game.Wave % 5 == 0);
@@ -192,11 +193,10 @@ internal sealed class WaveSpawnService
 
         game.NextWaveTimer = 0;
 
-        // A disabled stage remains a normal wave, including its background music.
-        // The explicit preference checks also cover a setting changed while a
-        // transition is pending.
+        // Only an enabled boss stage may replace the wave background. Bonus
+        // stages retain their wave's background music, and disabled modes can
+        // never select a special-stage track.
         bool playBossMusic = game.IsBossStage && (game.BossOnlyMode || game.BossFightsEnabled);
-        bool playBonusMusic = game.IsBonusStage && (game.BonusOnlyMode || game.BonusStagesEnabled);
 
         if (playBossMusic)
         {
@@ -204,7 +204,7 @@ internal sealed class WaveSpawnService
         }
         else
         {
-            game.Audio.StartWaveMusic(game.Wave, playBonusMusic);
+            game.Audio.StartWaveMusic(game.Wave);
         }
 
         if (game.IsBossStage)
@@ -398,7 +398,7 @@ internal sealed class WaveSpawnService
             : FighterKind.Raider;
 
         V2 pos = game.SafeEdgePosition();
-        game.Fighters.Add(new Fighter(pos, game.RandomDirection() * 80, kind));
+        game.Fighters.Add(CreateFighter(game, pos, game.RandomDirection() * 80, kind));
         game.Announce("ENEMY INBOUND", 1.5);
         game.Audio.Play(SoundCue.EnemyWarning, .68);
     }
@@ -418,13 +418,20 @@ internal sealed class WaveSpawnService
                 ? FighterKind.Interceptor
                 : FighterKind.Raider;
 
-            game.Fighters.Add(
-                new Fighter(game.SafeEdgePosition(), game.RandomDirection() * game.Random.Next(70, 105), kind));
+            game.Fighters.Add(CreateFighter(game, game.SafeEdgePosition(),
+                game.RandomDirection() * game.Random.Next(70, 105), kind));
         }
 
         game.Announce("ENEMY ASSAULT — THREE HOSTILES", 2.2);
         game.Audio.Play(SoundCue.EnemyWarning);
         game.Audio.Play(SoundCue.BossAlarm, .9);
+    }
+
+    private static Fighter CreateFighter(GameEngine game, V2 position, V2 velocity, FighterKind kind)
+    {
+        // Elite variants are driven solely by wave number, not player upgrades.
+        bool elite = game.Wave >= 7 && game.Random.NextDouble() < Math.Min(.65, .12 + (game.Wave - 7) * .04);
+        return new Fighter(position, velocity, kind, elite);
     }
 
     internal void SpawnMine(GameEngine game)

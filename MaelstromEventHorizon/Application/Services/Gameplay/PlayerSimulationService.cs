@@ -487,8 +487,9 @@ internal sealed class PlayerSimulationService
             bool retreating = game.PlayerRespawning || game.ThreatRetreatTime > 0;
             V2 pursuit = retreating ? -toShip.Normalized : toShip.Normalized;
 
-            V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 68 : 72) +
-                         tangent.Normalized * weave * (fighter.Kind == FighterKind.Interceptor ? 38 : 68);
+            double eliteScale = fighter.Elite ? 1.18 : 1;
+            V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 68 : 72) * eliteScale +
+                         tangent.Normalized * weave * (fighter.Kind == FighterKind.Interceptor ? 38 : 68) * eliteScale;
 
             desired += AsteroidAvoidance(game, fighter, desired);
             fighter.Velocity += (desired - fighter.Velocity) * Math.Min(1, dt * 1.15);
@@ -513,9 +514,9 @@ internal sealed class PlayerSimulationService
                 direction = game.Rotate(direction, (game.Random.NextDouble() * 2 - 1) * spread);
                 game.SpawnShot(fighter.Position + direction * 22, direction * enemyShotSpeed, true, 2.35);
 
-                fighter.FireDelay = fighter.Kind == FighterKind.Interceptor
+                fighter.FireDelay = (fighter.Kind == FighterKind.Interceptor
                     ? 1.2 + game.Random.NextDouble() * .65
-                    : 1.85 + game.Random.NextDouble() * .9;
+                    : 1.85 + game.Random.NextDouble() * .9) * (fighter.Elite ? .78 : 1);
 
                 game.Audio.Play(SoundCue.EnemyFire, .55);
             }
@@ -640,7 +641,7 @@ internal sealed class PlayerSimulationService
                 ? new V2(asteroidDirection.Y, -asteroidDirection.X)
                 : new V2(-asteroidDirection.Y, asteroidDirection.X);
 
-            double force = (fighter.Kind == FighterKind.Interceptor ? 62 : 82) * proximity;
+            double force = (fighter.Kind == FighterKind.Interceptor ? 62 : 82) * (fighter.Elite ? 1.16 : 1) * proximity;
             avoidance += away * force + around * (force * ahead * 1.8);
         }
 

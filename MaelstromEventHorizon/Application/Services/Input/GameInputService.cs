@@ -202,25 +202,17 @@ internal sealed class GameInputService
                 AdjustTitleVolume(game, game.TitleMenuSelection,
                     key == Key.Right ? GameEngine.VolumeStep : -GameEngine.VolumeStep);
             }
-            else if (game.TitleMenuSelection is 4 or 5 && !isRepeat && key is Key.Left or Key.Right)
+            else if (game.TitleMenuSelection == 4 && !isRepeat && key is Key.Left or Key.Right)
             {
-                if (game.TitleMenuSelection == 4)
-                {
-                    game.AdjustVisualQuality(key == Key.Right ? 1 : -1);
-                }
-                else
-                {
-                    game.AdjustFrameRateLimit(key == Key.Right ? 1 : -1);
-                }
-
+                game.AdjustVisualQuality(key == Key.Right ? 1 : -1);
                 SavePreferences(game);
                 game.Audio.Play(SoundCue.MenuMove, .72);
             }
-            else if (game.TitleMenuSelection == 6 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
+            else if (game.TitleMenuSelection == 5 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
             {
                 ToggleFullScreen(game);
             }
-            else if (game.TitleMenuSelection is 7 or 8 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
+            else if (game.TitleMenuSelection is 6 or 7 && !isRepeat && key is Key.Space or Key.Left or Key.Right)
             {
                 ToggleTitleEvent(game, game.TitleMenuSelection);
             }
@@ -234,9 +226,13 @@ internal sealed class GameInputService
                 {
                     game.Mode = GameMode.Controls;
                 }
-                else if (game.TitleMenuSelection == 6)
+                else if (game.TitleMenuSelection == 5)
                 {
                     ToggleFullScreen(game);
+                }
+                else if (game.TitleMenuSelection == 6)
+                {
+                    ToggleTitleEvent(game, game.TitleMenuSelection);
                 }
                 else if (game.TitleMenuSelection == 7)
                 {
@@ -244,13 +240,9 @@ internal sealed class GameInputService
                 }
                 else if (game.TitleMenuSelection == 8)
                 {
-                    ToggleTitleEvent(game, game.TitleMenuSelection);
-                }
-                else if (game.TitleMenuSelection == 9)
-                {
                     game.Mode = GameMode.ClearHighScoresConfirm;
                 }
-                else if (game.TitleMenuSelection == 10)
+                else if (game.TitleMenuSelection == 9)
                 {
                     System.Windows.Application.Current.Shutdown();
                 }
@@ -375,7 +367,7 @@ internal sealed class GameInputService
 
     private void ToggleTitleEvent(GameEngine game, int selection)
     {
-        if (selection == 7)
+        if (selection == 6)
         {
             game.BonusStagesEnabled = !game.BonusStagesEnabled;
         }

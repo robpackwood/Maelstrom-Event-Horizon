@@ -12,9 +12,9 @@ namespace MaelstromEventHorizon.Infrastructure.Audio;
 internal sealed class SynthAudio : IAudioService
 {
     private const int LayeredEffectVoiceCount = 24;
-    private const int BackgroundThemeCount = 8;
     private const int TitleMusicWave = 13;
     private readonly string bonusMusicPath;
+    private readonly string[] backgroundWaveMusicPaths;
     private readonly string bossMusicPath;
     private readonly string calmSummaryMusicPath;
     private readonly string celebrationSummaryMusicPath;
@@ -84,6 +84,16 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
         ];
 
+        // Keep numbered backgrounds aligned with their waves. The special
+        // Singularity track formerly occupied wave three, so wave three uses
+        // the next regular background without shifting every later wave.
+        backgroundWaveMusicPaths =
+        [
+            waveMusicPaths[0], waveMusicPaths[1], waveMusicPaths[3], waveMusicPaths[3], waveMusicPaths[4],
+            waveMusicPaths[5], waveMusicPaths[6], waveMusicPaths[7], waveMusicPaths[8], waveMusicPaths[9],
+            waveMusicPaths[10], waveMusicPaths[11], waveMusicPaths[12], waveMusicPaths[13], waveMusicPaths[14]
+        ];
+
         titleMusicPath = waveMusicPaths[TitleMusicWave - 1];
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
@@ -95,21 +105,21 @@ internal sealed class SynthAudio : IAudioService
         StartTrack(File.Exists(titleMusicPath) ? titleMusicPath : normalMusicPath, true, .30);
     }
 
-    public void StartWaveMusic(int wave, bool intense)
+    public void StartWaveMusic(int wave)
     {
         StopActiveEffects();
 
         try
         {
-            int trackIndex = (Math.Max(1, wave) - 1) % BackgroundThemeCount;
-            string path = waveMusicPaths[trackIndex];
+            int trackIndex = (Math.Max(1, wave) - 1) % backgroundWaveMusicPaths.Length;
+            string path = backgroundWaveMusicPaths[trackIndex];
 
             if (!File.Exists(path))
             {
                 throw new FileNotFoundException("Wave _music asset was not extracted.", path);
             }
 
-            StartTrack(path, true, intense ? .36 : .30);
+            StartTrack(path, true, .30);
         }
         catch
         {

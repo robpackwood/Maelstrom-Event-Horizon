@@ -5,7 +5,7 @@ namespace MaelstromEventHorizon.Application.Services.Contracts;
 internal interface IAudioService
 {
     void StartTitleMusic();
-    void StartWaveMusic(int wave, bool intense);
+    void StartWaveMusic(int wave);
     void StartBossMusic();
     void StartSummaryMusic(bool earnedCashBonus);
     void PlayWaveSuccessFanfare();

@@ -21,7 +21,7 @@ internal sealed class GameEngine
     internal const double ThreatRetreatDuration = 4;
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
-    internal const int TitleMenuItemCount = 11;
+    internal const int TitleMenuItemCount = 10;
     internal const int ExtraShipScoreInterval = 100_000;
     internal const double VolumeStep = .05;
     private const int MaxPooledShots = 240;
@@ -196,6 +196,7 @@ internal sealed class GameEngine
     public bool LaserShotsActive { get; internal set; }
     public bool DoubleShotSizeActive { get; internal set; }
     public bool RicochetArenaActive { get; internal set; }
+    internal Dictionary<PowerupKind, int> UpgradeWavesRemaining { get; } = [];
     public double TotalTime { get; private set; }
     public double BonusTravelTime { get; internal set; }
     public double ShieldImpactTime { get; internal set; }
@@ -468,13 +469,6 @@ internal sealed class GameEngine
         VisualQuality = (VisualQuality + direction + 3) % 3;
     }
 
-    internal void AdjustFrameRateLimit(int direction)
-    {
-        int[] options = [0, 30, 45, 60];
-        int index = Array.IndexOf(options, FrameRateLimit);
-        FrameRateLimit = options[(index + direction + options.Length) % options.Length];
-    }
-
     internal void RecycleEffects()
     {
         RecycleDead(Shots, shotPool);
@@ -706,6 +700,11 @@ internal sealed class GameEngine
     internal void ClearEquippedPowerups()
     {
         services.PowerupService.ClearEquippedPowerups(this);
+    }
+
+    internal void AdvanceTemporaryUpgrades()
+    {
+        services.PowerupService.AdvanceTemporaryUpgrades(this);
     }
 
     internal void DetonateNova(Nova nova)

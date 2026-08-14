@@ -28,7 +28,7 @@ internal sealed class EffectsHudRenderer
         new(GameEngine.Width - 15, GameEngine.Height - 15)
     ];
 
-    private readonly List<string> activePowerupLabels = new(9);
+    private readonly List<(string Text, Color Color)> activePowerupLabels = new(9);
     private readonly Dictionary<(Color Color, int Power), Pen> shotOrbitPens = [];
     private readonly Dictionary<(Color Color, bool Enhanced), (Brush Glow, Brush Body, Pen Outline)> shotVisuals = [];
 
@@ -462,17 +462,6 @@ internal sealed class EffectsHudRenderer
 
         view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
 
-        string renderer = view.UseGpuPlayfield
-            ? "D3D"
-            : view.HardwareRenderingTier == 0
-                ? "SOFTWARE"
-                : $"WPF T{view.HardwareRenderingTier}";
-
-        view.DrawText(dc, $"{view.FramesPerSecond:0} FPS  {renderer}", 1120, 51, 10,
-            view.Brush(!view.UseGpuPlayfield && view.HardwareRenderingTier == 0
-                ? Color.FromRgb(255, 164, 114) : Color.FromRgb(137, 210, 230)),
-            FontWeights.SemiBold);
-
         if (activeBoss is not null)
         {
             const double bossBarWidth = 390;
@@ -530,77 +519,76 @@ internal sealed class EffectsHudRenderer
                 new SolidColorBrush(Color.FromArgb(alpha, 187, 239, 252)), FontWeights.Bold);
         }
 
-        List<string> active = activePowerupLabels;
+        List<(string Text, Color Color)> active = activePowerupLabels;
         active.Clear();
 
         if (view.Game.ReflectionShieldActive)
         {
-            active.Add("REFLECTION SHIELD");
+            AddTimedPowerup(view.Game, active, PowerupKind.ReflectionShield, "REFLECTION SHIELD");
         }
 
         if (view.Game.AirBrakesActive)
         {
-            active.Add("AIR BRAKES");
+            AddTimedPowerup(view.Game, active, PowerupKind.AirBrakes, "AIR BRAKES");
         }
 
         if (view.Game.LuckActive)
         {
-            active.Add("LUCK");
+            AddTimedPowerup(view.Game, active, PowerupKind.Luck, "LUCK");
         }
 
         if (view.Game.TripleFireActive)
         {
-            active.Add("TRIPLE FIRE");
+            AddTimedPowerup(view.Game, active, PowerupKind.TripleFire, "TRIPLE FIRE");
         }
 
         if (view.Game.RiftVolleyActive)
         {
-            active.Add("RIFT VOLLEY");
+            AddTimedPowerup(view.Game, active, PowerupKind.RiftVolley, "RIFT VOLLEY");
         }
 
         if (view.Game.LongRangeActive)
         {
-            active.Add("LONG RANGE");
+            AddTimedPowerup(view.Game, active, PowerupKind.LongRange, "LONG RANGE");
         }
 
         if (view.Game.LaserShotsActive)
         {
-            active.Add("LASER SHOTS");
+            AddTimedPowerup(view.Game, active, PowerupKind.LaserShots, "LASER SHOTS");
         }
 
         if (view.Game.DoubleShotSizeActive)
         {
-            active.Add("DOUBLE SHOT SIZE");
+            AddTimedPowerup(view.Game, active, PowerupKind.DoubleShotSize, "DOUBLE SHOT SIZE");
         }
 
         if (view.Game.RicochetArenaActive)
         {
-            active.Add("RICOCHET ARENA");
+            active.Add(("RICOCHET ARENA", Color.FromRgb(118, 242, 206)));
         }
 
         if (view.Game.Player.Giant)
         {
-            active.Add("GIANT SHIP");
+            AddTimedPowerup(view.Game, active, PowerupKind.GiantShip, "GIANT SHIP");
         }
 
         if (view.Game.FreezeTime > 0)
         {
-            active.Add("TIME FREEZE");
+            active.Add(("TIME FREEZE", Color.FromRgb(126, 240, 255)));
         }
 
         if (active.Count > 0)
         {
-            string activeLabel = string.Join("   |   ", active);
             double activeSize = active.Count >= 6 ? 9.5 : active.Count >= 5 ? 10.5 : 12;
-            FormattedText measured = view.Format(activeLabel, activeSize, Brushes.White, FontWeights.SemiBold);
+            double textWidth = MeasureActivePowerups(view, active, activeSize);
 
-            if (measured.Width > 730)
+            if (textWidth > 730)
             {
-                activeSize = Math.Max(7.5, activeSize * 730 / measured.Width);
-                measured = view.Format(activeLabel, activeSize, Brushes.White, FontWeights.SemiBold);
+                activeSize = Math.Max(7.5, activeSize * 730 / textWidth);
+                textWidth = MeasureActivePowerups(view, active, activeSize);
             }
 
-            double panelWidth = Math.Min(760, measured.Width + 30);
+            double panelWidth = Math.Min(760, textWidth + 30);
             double panelPulse = .72 + .28 * Math.Sin(view.Game.TotalTime * 4.2);
             Color panelGlow = view.Game.FreezeTime > 0 ? Color.FromRgb(126, 240, 255) : Color.FromRgb(86, 193, 215);
 
@@ -610,8 +598,7 @@ internal sealed class EffectsHudRenderer
                         panelGlow.B)), 1 + panelPulse * .5),
                 new Rect(GameEngine.Width / 2 - panelWidth / 2, 674, panelWidth, 29), 3, 3);
 
-            view.DrawCenteredText(dc, activeLabel, GameEngine.Width / 2, 694, activeSize,
-                new SolidColorBrush(Color.FromRgb(121, 232, 255)), FontWeights.SemiBold);
+            DrawActivePowerups(view, dc, active, activeSize, textWidth);
         }
 
         if (view.Game is { BannerTime: > 0, Mode: GameMode.Playing })
@@ -621,6 +608,43 @@ internal sealed class EffectsHudRenderer
 
             view.DrawCenteredText(dc, view.Game.Banner, GameEngine.Width / 2, expandedTopHud ? 133 : 105, 24, b,
                 FontWeights.Bold);
+        }
+    }
+
+    private static void AddTimedPowerup(GameEngine game, List<(string Text, Color Color)> active, PowerupKind power,
+        string name)
+    {
+        int waves = game.UpgradeWavesRemaining.TryGetValue(power, out int remaining) ? remaining : 1;
+        active.Add(($"{name} {waves}W", waves >= 3 ? Color.FromRgb(106, 239, 151) :
+            waves == 2 ? Color.FromRgb(255, 222, 94) : Color.FromRgb(255, 102, 102)));
+    }
+
+    private static double MeasureActivePowerups(GameView view, List<(string Text, Color Color)> active, double size)
+    {
+        double separator = view.Format("  |  ", size, Brushes.White, FontWeights.SemiBold).Width;
+        return active.Sum(item => view.Format(item.Text, size, Brushes.White, FontWeights.SemiBold).Width) +
+               separator * (active.Count - 1);
+    }
+
+    private static void DrawActivePowerups(GameView view, DrawingContext dc, List<(string Text, Color Color)> active,
+        double size, double textWidth)
+    {
+        double separatorWidth = view.Format("  |  ", size, Brushes.White, FontWeights.SemiBold).Width;
+        double x = GameEngine.Width / 2 - textWidth / 2;
+
+        for (int i = 0; i < active.Count; i++)
+        {
+            (string text, Color color) = active[i];
+            FormattedText label = view.Format(text, size, new SolidColorBrush(color), FontWeights.SemiBold);
+            dc.DrawText(label, new Point(x, 694 - label.Baseline));
+            x += label.Width;
+
+            if (i < active.Count - 1)
+            {
+                FormattedText separator = view.Format("  |  ", size, Brushes.White, FontWeights.SemiBold);
+                dc.DrawText(separator, new Point(x, 694 - separator.Baseline));
+                x += separatorWidth;
+            }
         }
     }
 }

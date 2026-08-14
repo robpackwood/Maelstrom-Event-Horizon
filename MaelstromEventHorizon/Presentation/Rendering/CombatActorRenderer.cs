@@ -16,13 +16,12 @@ internal sealed class CombatActorRenderer
         {
             bool little = fighter.Kind == FighterKind.Interceptor;
             Color glow = little ? Color.FromRgb(63, 228, 255) : Color.FromRgb(255, 57, 112);
-            V2 exhaust = fighter.Position - fighter.Velocity.Normalized * (little ? 22 : 30);
-            view.DrawGlowEllipse(dc, exhaust, little ? 10 : 14, glow, 3, .36);
-
-            dc.DrawLine(view.Pen(Color.FromArgb(135, glow.R, glow.G, glow.B), little ? 2 : 2.8),
-                view.Pt(exhaust), view.Pt(exhaust - fighter.Velocity.Normalized * (little ? 19 : 27)));
-
             view.DrawGlowEllipse(dc, fighter.Position, fighter.Radius * .78, glow, 3, .2);
+
+            if (fighter.Elite)
+            {
+                view.DrawGlowEllipse(dc, fighter.Position, fighter.Radius * 1.18, Color.FromRgb(255, 220, 96), 2, .3);
+            }
             dc.PushTransform(new TranslateTransform(fighter.Position.X, fighter.Position.Y));
             dc.PushTransform(new RotateTransform(fighter.Angle * 180 / Math.PI));
             BitmapImage? sprite = little ? view.InterceptorSprite : view.RaiderSprite;
