@@ -19,8 +19,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double envelope = Envelope(t, .13, .009, 2.05);
                 double frequency = 1650 - 600 * Ease(t / .13);
 
-                return envelope * (.26 * Osc(frequency, t) + .08 * Osc(frequency * 1.5, t)
-                                                           + .025 * Noise(t, 7200, 71));
+                return envelope * (.26 * Osc(frequency, t) +
+                                   .08 * Osc(frequency * 1.5, t) +
+                                   .025 * Noise(t, 7200, 71));
             }, .06, .2),
 
             [SoundCue.EnemyFire] = Build(.24, t =>
@@ -61,8 +62,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double envelope = Envelope(t, .13, .002, 1.9);
                 double frequency = 540 + 310 * Smooth(t / .13);
 
-                return envelope * (.29 * Osc(frequency, t) + .14 * Osc(frequency * 1.5, t)
-                                                           + .055 * Noise(t, 4600, 883));
+                return envelope * (.29 * Osc(frequency, t) +
+                                   .14 * Osc(frequency * 1.5, t) +
+                                   .055 * Noise(t, 4600, 883));
             }, .08, .3),
 
             [SoundCue.Thrust] = Build(.72, t =>
@@ -86,8 +88,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             {
                 double body = Math.Exp(-3.6 * t);
                 double crack = Envelope(t, .12, .001, 2.7);
-                return body * (.42 * Noise(t, 1450 - 900 * Math.Min(t, .8), 47) + .25 * Osc(82 - 31 * t, t))
-                       + crack * (.30 * Noise(t, 7200, 91) + .11 * Osc(190, t));
+
+                return body * (.42 * Noise(t, 1450 - 900 * Math.Min(t, .8), 47) + .25 * Osc(82 - 31 * t, t)) +
+                       crack * (.30 * Noise(t, 7200, 91) + .11 * Osc(190, t));
             }, .28, .65),
 
             [SoundCue.AsteroidExplosion] = Build(.78, t =>
@@ -95,8 +98,11 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double crack = Envelope(t, .12, .001, 3.25) *
                                (.46 * Noise(t, 4700, 733) + .26 * Noise(t, 1250, 737) + .1 * Osc(310 - t * 1150, t));
 
-                double chunks = RockChip(t, .018, 743) + RockChip(t, .055, 751) + RockChip(t, .108, 757) +
-                                RockChip(t, .173, 761) + RockChip(t, .245, 769);
+                double chunks = RockChip(t, .018, 743) +
+                                RockChip(t, .055, 751) +
+                                RockChip(t, .108, 757) +
+                                RockChip(t, .173, 761) +
+                                RockChip(t, .245, 769);
 
                 double rubble = Envelope(t, .78, .01, 1.65) *
                                 (.18 * Noise(t, Math.Max(280, 1700 - t * 1300), 773) +
@@ -117,7 +123,8 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double local = t - step * .145;
                 double e = Envelope(local, .16, .006, 1.35);
 
-                return e * (.31 * Osc(PickupNotes[step], t) + .14 * Osc(PickupNotes[step] * 2, t) +
+                return e * (.31 * Osc(PickupNotes[step], t) +
+                            .14 * Osc(PickupNotes[step] * 2, t) +
                             .08 * Osc(PickupNotes[step] * .5, t));
             }, .35, .78),
 
@@ -136,8 +143,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double field = Envelope(t, .82, .004, 1.35);
                 double frequency = Math.Max(105, 520 - t * 430);
 
-                double resonance = field * (.34 * Osc(frequency, t) + .22 * Osc(frequency * 1.51, t)
-                                                                    + .13 * Saw(frequency * .5, t));
+                double resonance = field * (.34 * Osc(frequency, t) +
+                                            .22 * Osc(frequency * 1.51, t) +
+                                            .13 * Saw(frequency * .5, t));
 
                 double pulse = Envelope(t, .52, .002, 1.5) *
                                (.28 * Osc(Math.Max(42, 112 - t * 105), t) + .12 * Noise(t, 1850, 69));
@@ -150,8 +158,10 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double e = Envelope(t, 2.05, .025, .7);
                 double collapse = Math.Max(0, 1 - t / 2.05);
 
-                return e * (.32 * Noise(t, 1100 + collapse * 2500, 101) + .28 * Osc(78 - 24 * t, t) +
-                            .16 * Osc(156 - 42 * t, t) + .09 * Noise(t, 180, 3));
+                return e * (.32 * Noise(t, 1100 + collapse * 2500, 101) +
+                            .28 * Osc(78 - 24 * t, t) +
+                            .16 * Osc(156 - 42 * t, t) +
+                            .09 * Noise(t, 180, 3));
             }, .42, .9),
 
             [SoundCue.Wave] = Build(1.05, t =>
@@ -176,12 +186,15 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double note = notes[step];
 
                 double chime = Envelope(local, .24, .004, 1.05) *
-                               (.28 * Osc(note, local) + .16 * Osc(note * 2.002, local) + .08 * Osc(note * .5, local));
+                               (.28 * Osc(note, local) +
+                                .16 * Osc(note * 2.002, local) +
+                                .08 * Osc(note * .5, local));
 
                 double finaleTime = Math.Max(0, t - .72);
 
                 double finale = Envelope(finaleTime, .58, .01, .8) *
-                                (.16 * Osc(1046.5, finaleTime) + .12 * Osc(1318.51, finaleTime) +
+                                (.16 * Osc(1046.5, finaleTime) +
+                                 .12 * Osc(1318.51, finaleTime) +
                                  .09 * Osc(1567.98, finaleTime));
 
                 return chime + finale;
@@ -198,8 +211,9 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             {
                 double e = Envelope(t, .95, .035, .55);
 
-                return e * (.23 * Osc(51 + 17 * Math.Sin(t * 8), t) + .14 * Osc(103 + 21 * Math.Sin(t * 5), t)
-                                                                    + .12 * Noise(t, 480, 29));
+                return e * (.23 * Osc(51 + 17 * Math.Sin(t * 8), t) +
+                            .14 * Osc(103 + 21 * Math.Sin(t * 5), t) +
+                            .12 * Noise(t, 480, 29));
             }, .46, .92),
             [SoundCue.CashRegister] = Build(.24, t =>
             {
@@ -271,13 +285,17 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             {
                 double impact = Envelope(t, .26, .003, 2.3) *
                                 (.12 * Noise(t, 310, 591) + .52 * Osc(54, t) + .27 * Osc(32, t));
+
                 double combustion = Envelope(t, 1.8, .015, 1.12) *
                                     (.14 * Noise(t, Math.Max(80, 320 - t * 90), 593) +
                                      .28 * Osc(Math.Max(22, 48 - t * 11), t));
+
                 double rumble = Envelope(t, 2.05, .02, .92) *
                                 (.31 * Osc(Math.Max(16, 39 - t * 9), t) + .08 * Noise(t, 95, 599));
+
                 double glow = Envelope(t, 1.1, .012, 1.45) *
                               (.075 * Osc(147, t) + .045 * Osc(220, t) + .025 * Osc(294, t));
+
                 return impact + combustion + rumble + glow;
             }, .52, .92),
             [SoundCue.ShipCrash] = BuildShipCrashFallback(),
@@ -293,8 +311,8 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
                 double secondaryTime = Math.Max(0, t - .34);
 
                 double secondary = Envelope(secondaryTime, 1.75, .002, 1.28) *
-                                   (.3 * Osc(Math.Max(22, 48 - secondaryTime * 13), secondaryTime)
-                                    + .2 * Noise(secondaryTime, Math.Max(80, 480 - secondaryTime * 210), 641));
+                                   (.3 * Osc(Math.Max(22, 48 - secondaryTime * 13), secondaryTime) +
+                                    .2 * Noise(secondaryTime, Math.Max(80, 480 - secondaryTime * 210), 641));
 
                 return hit + pressure + secondary;
             }, .54, .96),
@@ -412,8 +430,8 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
             double secondaryTime = Math.Max(0, t - .48);
 
             double secondary = Envelope(secondaryTime, 1.45, .003, 1.45) *
-                               (.24 * Noise(secondaryTime, Math.Max(150, 1800 - secondaryTime * 980), 613)
-                                + .2 * Osc(Math.Max(31, 72 - secondaryTime * 24), secondaryTime));
+                               (.24 * Noise(secondaryTime, Math.Max(150, 1800 - secondaryTime * 980), 613) +
+                                .2 * Osc(Math.Max(31, 72 - secondaryTime * 24), secondaryTime));
 
             return impact + hull + metal + secondary;
         }, .48, .94);
@@ -425,9 +443,7 @@ internal sealed class SynthSoundEffectLibrary : ISoundEffectLibrary
         double envelope = Envelope(local, .18, .001, 3.0);
         double knock = Osc(Math.Max(210, 980 - local * 3100), local);
 
-        return envelope * (.13 * Noise(local, 4600, seed)
-                           + .1 * Noise(local, 1250, seed + 17)
-                           + .055 * knock);
+        return envelope * (.13 * Noise(local, 4600, seed) + .1 * Noise(local, 1250, seed + 17) + .055 * knock);
     }
 
     private static byte[] Build(double seconds, Func<double, double> source, double room, double stereoWidth)

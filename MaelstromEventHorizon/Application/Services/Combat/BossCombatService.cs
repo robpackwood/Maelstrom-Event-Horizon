@@ -48,10 +48,12 @@ internal sealed class BossCombatService
 
                     desired = direction * (44 * scale) + tangent * Math.Sin(boss.Age * 1.2) * 48;
                     break;
+
                 case AlienBossKind.EyeTyrant:
                     double rangeCorrection = Math.Clamp((toPlayer.Length - 360) * .34, -72, 72);
                     desired = direction * rangeCorrection + tangent * (74 * scale);
                     break;
+
                 case AlienBossKind.BoneBroodmother:
                     boss.SpecialTimer -= dt;
 
@@ -64,8 +66,10 @@ internal sealed class BossCombatService
 
                     desired = direction * (58 * scale) + tangent * Math.Sin(boss.Age * .85) * 26;
                     break;
+
                 case AlienBossKind.DreadHarvester:
                     boss.SpecialTimer -= dt;
+
                     if (game.ThreatRetreatTime <= 0 && boss.SpecialTimer <= 0)
                     {
                         boss.Velocity = tangent * (245 + boss.Encounter * 7);
@@ -75,10 +79,12 @@ internal sealed class BossCombatService
 
                     desired = direction * (36 * scale) + tangent * Math.Sin(boss.Age * 2.4) * 92;
                     break;
+
                 case AlienBossKind.SolarWarden:
                     double solarRange = Math.Clamp((toPlayer.Length - 290) * .48, -98, 98);
                     desired = direction * solarRange - tangent * (95 * scale);
                     break;
+
                 default:
                     desired = direction * (70 * scale) + tangent * Math.Sin(boss.Age * 1.9) * 80;
                     break;
@@ -124,6 +130,7 @@ internal sealed class BossCombatService
                 AddSludgeGlob(game, boss, aim);
                 boss.AttackTimer = Math.Max(1.75, 2.75 - tempo);
                 break;
+
             case AlienBossKind.EyeTyrant:
 
                 for (int i = -1; i <= 1; i++)
@@ -133,26 +140,31 @@ internal sealed class BossCombatService
 
                 boss.AttackTimer = Math.Max(.95, 1.75 - tempo);
                 break;
+
             case AlienBossKind.BoneBroodmother:
                 int radialCount = 8 + Math.Min(2, boss.Encounter / 3);
 
                 for (int i = 0; i < radialCount; i++)
                 {
-                    AddBossShot(game, boss, V2.FromAngle(i * Math.PI * 2 / radialCount + boss.Phase),
-                        225 + boss.Encounter * 5, 0xffff8c4d, 4.1);
+                    AddBossShot(
+                        game, boss, V2.FromAngle(i * Math.PI * 2 / radialCount + boss.Phase), 225 + boss.Encounter * 5,
+                        0xffff8c4d, 4.1);
                 }
 
                 boss.AttackTimer = Math.Max(1.55, 2.75 - tempo);
                 break;
+
             case AlienBossKind.DreadHarvester:
                 for (int i = 0; i < 10; i++)
                 {
-                    AddBossShot(game, boss, V2.FromAngle(boss.Phase * 1.7 + i * Math.PI * 2 / 10),
-                        245 + boss.Encounter * 7, 0xffd5d94a, 3.9);
+                    AddBossShot(
+                        game, boss, V2.FromAngle(boss.Phase * 1.7 + i * Math.PI * 2 / 10), 245 + boss.Encounter * 7,
+                        0xffd5d94a, 3.9);
                 }
 
                 boss.AttackTimer = Math.Max(1.15, 2.05 - tempo);
                 break;
+
             case AlienBossKind.SolarWarden:
                 for (int i = -2; i <= 2; i++)
                 {
@@ -161,12 +173,14 @@ internal sealed class BossCombatService
 
                 boss.AttackTimer = Math.Max(.85, 1.45 - tempo);
                 break;
+
             default:
 
                 for (int i = 0; i < 5; i++)
                 {
-                    AddBossShot(game, boss, V2.FromAngle(boss.Phase * 2.1 + i * Math.PI * 2 / 5),
-                        270 + boss.Encounter * 5, 0xff56f1d2, 3.6);
+                    AddBossShot(
+                        game, boss, V2.FromAngle(boss.Phase * 2.1 + i * Math.PI * 2 / 5), 270 + boss.Encounter * 5,
+                        0xff56f1d2, 3.6);
                 }
 
                 boss.AttackTimer = Math.Max(.8, 1.5 - tempo);
@@ -192,7 +206,10 @@ internal sealed class BossCombatService
     private void AddBossShot(GameEngine game, AlienBoss boss, V2 direction, double speed, uint tint, double lifetime)
     {
         direction = direction.Normalized;
-        Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72), direction * speed, true, lifetime);
+
+        Shot shot = game.SpawnShot(
+            boss.Position + direction * (boss.Radius * .72), direction * speed, true, lifetime);
+
         shot.Radius = 5.2;
         shot.BossShot = true;
         shot.Tint = tint;
@@ -202,8 +219,8 @@ internal sealed class BossCombatService
     {
         direction = direction.Normalized;
 
-        Shot shot = game.SpawnShot(boss.Position + direction * (boss.Radius * .72),
-            direction * (155 + boss.Encounter * 3), true, 4.2);
+        Shot shot = game.SpawnShot(
+            boss.Position + direction * (boss.Radius * .72), direction * (155 + boss.Encounter * 3), true, 4.2);
 
         shot.Radius = 12.5;
         shot.BossShot = true;
@@ -229,8 +246,9 @@ internal sealed class BossCombatService
             double spread = (i - (fragments - 1) / 2.0) * .17 + (game.Random.NextDouble() - .5) * .12;
             V2 direction = game.Rotate(forward, spread);
 
-            Shot fragment = game.SpawnShot(glob.Position + game.RandomDirection() * 5,
-                direction * (125 + game.Random.NextDouble() * 45), true, 2.5 + game.Random.NextDouble() * .5);
+            Shot fragment = game.SpawnShot(
+                glob.Position + game.RandomDirection() * 5, direction * (125 + game.Random.NextDouble() * 45), true,
+                2.5 + game.Random.NextDouble() * .5);
 
             fragment.Radius = 4.5 + game.Random.NextDouble() * 1.8;
             fragment.BossShot = true;
@@ -255,8 +273,8 @@ internal sealed class BossCombatService
             V2 direction = game.Rotate(aim, across * 1.35 + (game.Random.NextDouble() - .5) * .2);
             V2 origin = boss.Position + aim * (boss.Radius * .68) + tangent * ((game.Random.NextDouble() - .5) * 24);
 
-            Shot droplet = game.SpawnShot(origin, direction * (100 + game.Random.NextDouble() * 65), true,
-                2.8 + game.Random.NextDouble() * .7);
+            Shot droplet = game.SpawnShot(
+                origin, direction * (100 + game.Random.NextDouble() * 65), true, 2.8 + game.Random.NextDouble() * .7);
 
             droplet.Radius = 3.8 + game.Random.NextDouble() * 3.2;
             droplet.BossShot = true;

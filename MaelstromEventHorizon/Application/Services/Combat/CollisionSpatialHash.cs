@@ -34,12 +34,12 @@ internal sealed class CollisionSpatialHash
         int y = Math.Clamp((int)(body.Position.Y / CellSize), 0, Rows - 1);
 
         for (int oy = -1; oy <= 1; oy++)
-        for (int ox = -1; ox <= 1; ox++)
-        {
-            int cx = (x + ox + Columns) % Columns;
-            int cy = (y + oy + Rows) % Rows;
-            nearby.AddRange(cells[cy * Columns + cx]);
-        }
+            for (int ox = -1; ox <= 1; ox++)
+            {
+                int cx = (x + ox + Columns) % Columns;
+                int cy = (y + oy + Rows) % Rows;
+                nearby.AddRange(cells[cy * Columns + cx]);
+            }
 
         return nearby;
     }

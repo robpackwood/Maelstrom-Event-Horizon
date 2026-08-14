@@ -13,13 +13,9 @@ internal interface IGameRenderServices
 }
 
 internal sealed class GameRenderServices(
-    SceneRenderer sceneRenderer,
-    PlayerAsteroidRenderer playerAsteroidRenderer,
-    CombatActorRenderer combatActorRenderer,
-    HazardPickupRenderer hazardPickupRenderer,
-    EffectsHudRenderer effectsHudRenderer,
-    OverlayRenderer overlayRenderer,
-    TitleScreenRenderer titleScreenRenderer,
+    SceneRenderer sceneRenderer, PlayerAsteroidRenderer playerAsteroidRenderer,
+    CombatActorRenderer combatActorRenderer, HazardPickupRenderer hazardPickupRenderer,
+    EffectsHudRenderer effectsHudRenderer, OverlayRenderer overlayRenderer, TitleScreenRenderer titleScreenRenderer,
     DrawingPrimitiveService drawingPrimitiveService) : IGameRenderServices
 {
     public SceneRenderer SceneRenderer { get; } = sceneRenderer;

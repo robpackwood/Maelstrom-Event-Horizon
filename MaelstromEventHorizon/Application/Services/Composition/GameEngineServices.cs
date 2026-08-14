@@ -20,15 +20,10 @@ internal interface IGameEngineServices
 }
 
 internal sealed class GameEngineServices(
-    GameInputService gameInputService,
-    PlayerSimulationService playerSimulationService,
-    BossCombatService bossCombatService,
-    CollisionService collisionService,
-    PowerupService powerupService,
-    WaveEventService waveEventService,
-    WaveSpawnService waveSpawnService,
-    ScoreTransitionService scoreTransitionService,
-    EffectsPhysicsService effectsPhysicsService) : IGameEngineServices
+    GameInputService gameInputService, PlayerSimulationService playerSimulationService,
+    BossCombatService bossCombatService, CollisionService collisionService, PowerupService powerupService,
+    WaveEventService waveEventService, WaveSpawnService waveSpawnService,
+    ScoreTransitionService scoreTransitionService, EffectsPhysicsService effectsPhysicsService) : IGameEngineServices
 {
     public GameInputService GameInputService { get; } = gameInputService;
     public PlayerSimulationService PlayerSimulationService { get; } = playerSimulationService;

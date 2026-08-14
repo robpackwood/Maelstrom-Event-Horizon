@@ -29,9 +29,7 @@ internal sealed class WaveSpawnService
 
         game.Wave = game.BonusOnlyMode
             ? game.Wave < 5 ? 5 : game.Wave + 5
-            : game.BossOnlyMode
-                ? game.Wave < 6 ? 6 : game.Wave + 5
-                : game.Wave + 1;
+            : game.BossOnlyMode ? game.Wave < 6 ? 6 : game.Wave + 5 : game.Wave + 1;
 
         game.WaveStartedAt = game.TotalTime;
         game.AdvanceTemporaryUpgrades();
@@ -40,7 +38,9 @@ internal sealed class WaveSpawnService
                             (!game.BossOnlyMode && game.BonusStagesEnabled && game.Wave % 5 == 0);
 
         game.IsBossStage = game.BossOnlyMode ||
-                           (game is { BonusOnlyMode: false, Wave: > 1 } && game.BossFightsEnabled && game.Wave % 5 == 1);
+                           (game is { BonusOnlyMode: false, Wave: > 1 } &&
+                            game.BossFightsEnabled &&
+                            game.Wave % 5 == 1);
 
         if (game.IsBonusStage && game.Player.Giant)
         {
@@ -142,8 +142,9 @@ internal sealed class WaveSpawnService
                 {
                     V2 position = game.SafeEdgePosition();
 
-                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(18, 42), 3, false,
-                        game.Random.Next(), mega: true, colossal: true));
+                    game.Asteroids.Add(new Asteroid(
+                        position, game.RandomDirection() * game.Random.Next(18, 42), 3, false, game.Random.Next(),
+                        mega: true, colossal: true));
 
                     rocks -= 6;
                 }
@@ -152,8 +153,9 @@ internal sealed class WaveSpawnService
                 {
                     V2 position = game.SafeEdgePosition();
 
-                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
-                        game.Random.Next(), mega: true));
+                    game.Asteroids.Add(new Asteroid(
+                        position, game.RandomDirection() * game.Random.Next(24, 52), 3, false, game.Random.Next(),
+                        mega: true));
 
                     rocks -= Math.Min(3, rocks);
                 }
@@ -164,8 +166,9 @@ internal sealed class WaveSpawnService
                 {
                     V2 position = game.SafeEdgePosition();
 
-                    game.Asteroids.Add(new Asteroid(position, game.RandomDirection() * game.Random.Next(24, 52), 3, false,
-                        game.Random.Next(), mega: true));
+                    game.Asteroids.Add(new Asteroid(
+                        position, game.RandomDirection() * game.Random.Next(24, 52), 3, false, game.Random.Next(),
+                        mega: true));
 
                     rocks -= 3;
                 }
@@ -175,8 +178,9 @@ internal sealed class WaveSpawnService
                     V2 pos = game.SafeEdgePosition();
                     bool steel = game.Wave >= 4 && i == normalRocks - 1 && game.Wave % 3 == 1;
 
-                    game.Asteroids.Add(new Asteroid(pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3),
-                        3, steel, game.Random.Next()));
+                    game.Asteroids.Add(new Asteroid(
+                        pos, game.RandomDirection() * game.Random.Next(32, 78 + game.Wave * 3), 3, steel,
+                        game.Random.Next()));
                 }
             }
 
@@ -250,12 +254,15 @@ internal sealed class WaveSpawnService
             case BonusStageKind.DiagonalStorm:
                 SpawnDiagonalStorm(game, difficulty);
                 break;
+
             case BonusStageKind.Crossfire:
                 SpawnCrossfire(game, difficulty);
                 break;
+
             case BonusStageKind.SlalomGates:
                 SpawnSlalomGate(game, difficulty);
                 break;
+
             case BonusStageKind.SpiralSwarm:
                 SpawnSpiralSwarm(game, difficulty);
                 break;
@@ -270,7 +277,8 @@ internal sealed class WaveSpawnService
         V2 origin = new(GameEngine.Width + 60 + game.Random.NextDouble() * 100, -70 + game.Random.NextDouble() * 155);
 
         V2 target = aimed
-            ? game.Player.Position + game.Player.Velocity * .38 +
+            ? game.Player.Position +
+              game.Player.Velocity * .38 +
               new V2(game.Random.Next(-28, 29), game.Random.Next(-28, 29))
             : new V2(-120, 90 + game.BonusPatternStep % Math.Clamp(6 + difficulty, 7, 11) * 72);
 
@@ -296,7 +304,8 @@ internal sealed class WaveSpawnService
 
         if (game.BonusPatternStep % 3 == 0)
         {
-            V2 aim = game.Player.Position + game.Player.Velocity * .3 +
+            V2 aim = game.Player.Position +
+                     game.Player.Velocity * .3 +
                      game.RandomDirection() * game.Random.Next(8, 42);
 
             target = origin + (aim - origin).Normalized * 1700;
@@ -312,7 +321,8 @@ internal sealed class WaveSpawnService
             };
         }
 
-        SpawnBonusRock(game, origin, target, 225 + difficulty * 11 + game.Random.NextDouble() * 42,
+        SpawnBonusRock(
+            game, origin, target, 225 + difficulty * 11 + game.Random.NextDouble() * 42,
             game.BonusPatternStep % 4 == 2 ? 2 : 3);
 
         game.BonusAsteroidSpawnTimer = Math.Max(.48, .74 - difficulty * .018) + game.Random.NextDouble() * .17;
@@ -418,8 +428,8 @@ internal sealed class WaveSpawnService
                 ? FighterKind.Interceptor
                 : FighterKind.Raider;
 
-            game.Fighters.Add(CreateFighter(game, game.SafeEdgePosition(),
-                game.RandomDirection() * game.Random.Next(70, 105), kind));
+            game.Fighters.Add(CreateFighter(
+                game, game.SafeEdgePosition(), game.RandomDirection() * game.Random.Next(70, 105), kind));
         }
 
         game.Announce("ENEMY ASSAULT — THREE HOSTILES", 2.2);
@@ -612,6 +622,7 @@ internal sealed class WaveSpawnService
         };
 
         game.Comets.Add(new Comet(position, (target - position).Normalized * game.Random.Next(310, 430), value, tint));
+
         game.Audio.Play(SoundCue.CometSpawn, .96);
     }
 

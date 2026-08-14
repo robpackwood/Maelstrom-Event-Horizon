@@ -34,8 +34,12 @@ internal sealed class TransparentEffectBudget
 
     internal GlowDetail ReserveGlow(double radius, int layers)
     {
-        double scale = ReserveSquareRoot(Math.Min(PlayfieldArea, Math.PI * Math.Pow(radius + layers * 4, 2)) * layers);
-        return scale == 0 ? GlowDetail.Hidden : new(Math.Max(.55, scale), Math.Max(1, (int)Math.Ceiling(layers * scale)));
+        double scale = ReserveSquareRoot(
+            Math.Min(PlayfieldArea, Math.PI * Math.Pow(radius + layers * 4, 2)) * layers);
+
+        return scale == 0
+            ? GlowDetail.Hidden
+            : new(Math.Max(.55, scale), Math.Max(1, (int)Math.Ceiling(layers * scale)));
     }
 
     private double ReserveSquareRoot(double coverage)

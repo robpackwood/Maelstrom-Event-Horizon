@@ -44,7 +44,8 @@ internal sealed class JsonDisplaySettingsStore(IAppDataPathProvider paths) : IDi
         {
             Directory.CreateDirectory(paths.DirectoryPath);
 
-            File.WriteAllText(paths.WritePath("display.json"),
+            File.WriteAllText(
+                paths.WritePath("display.json"),
                 JsonSerializer.Serialize(preferences, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch

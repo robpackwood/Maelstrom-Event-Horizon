@@ -21,15 +21,16 @@ internal sealed class CachedBackdropPass : IDisposable
     {
         QuadVertex[] quad = [new(-1, 1, 0, 0), new(1, 1, 1, 0), new(-1, -1, 0, 1), new(1, -1, 1, 1)];
 
-        quadBuffer = device.CreateVertexBuffer((uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly,
-            VertexFormat.None, Pool.Default);
+        quadBuffer = device.CreateVertexBuffer(
+            (uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly, VertexFormat.None, Pool.Default);
 
         Upload(quadBuffer, quad);
 
         declaration = device.CreateVertexDeclaration(
         [
             new VertexElement(0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.Position),
-            new VertexElement(0, 8, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate),
+            new VertexElement(
+                0, 8, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate),
             VertexElement.VertexDeclarationEnd
         ]);
 
@@ -37,7 +38,9 @@ internal sealed class CachedBackdropPass : IDisposable
             (uint)TextureWidth, (uint)TextureHeight, 1, Usage.None, Format.A8R8G8B8, Pool.Default);
 
         BuildStars(game.Stars);
+
         vertexShader = device.CreateVertexShader(MemoryMarshal.Cast<byte, uint>(Compile(VertexSource, "vs_3_0").Span));
+
         pixelShader = device.CreatePixelShader(MemoryMarshal.Cast<byte, uint>(Compile(PixelSource, "ps_3_0").Span));
         device.SetSamplerState(0, SamplerState.MinFilter, (int)TextureFilter.Point);
         device.SetSamplerState(0, SamplerState.MagFilter, (int)TextureFilter.Point);
@@ -89,8 +92,9 @@ internal sealed class CachedBackdropPass : IDisposable
             int green = (int)(205 + star.Depth * 45);
             int alpha = (int)(125 + star.Depth * 105);
 
-            DrawStar(pixels, (int)Math.Round(star.Position.X), (int)Math.Round(star.Position.Y),
-                radius, red, green, alpha);
+            DrawStar(
+                pixels, (int)Math.Round(star.Position.X), (int)Math.Round(star.Position.Y), radius, red, green,
+                alpha);
         }
 
         LockedRectangle target = starTexture.LockRect(0, LockFlags.None);
@@ -138,8 +142,8 @@ internal sealed class CachedBackdropPass : IDisposable
 
         fixed (QuadVertex* data = source)
         {
-            Buffer.MemoryCopy(data, target.ToPointer(), source.Length * sizeof(QuadVertex),
-                source.Length * sizeof(QuadVertex));
+            Buffer.MemoryCopy(
+                data, target.ToPointer(), source.Length * sizeof(QuadVertex), source.Length * sizeof(QuadVertex));
         }
 
         buffer.Unlock();

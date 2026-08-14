@@ -134,14 +134,14 @@ internal sealed class GameView : FrameworkElement
         SmartBombSprite = LoadSprite("pickup-smart-bomb.png");
         RicochetArenaSprite = LoadSprite("pickup-ricochet-arena.png");
 
-        PlayerShipSprite = LoadOrPrerenderSprite("player-ship.png", 192, 72,
-            dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), false));
+        PlayerShipSprite = LoadOrPrerenderSprite(
+            "player-ship.png", 192, 72, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), false));
 
-        GiantPlayerShipSprite = LoadOrPrerenderSprite("player-ship-giant.png", 192, 80,
-            dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), true));
+        GiantPlayerShipSprite = LoadOrPrerenderSprite(
+            "player-ship-giant.png", 192, 80, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), true));
 
-        RescueShipSprite = LoadOrPrerenderSprite("rescue-ship.png", 192, 72,
-            dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(74, 255, 145), false));
+        RescueShipSprite = LoadOrPrerenderSprite(
+            "rescue-ship.png", 192, 72, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(74, 255, 145), false));
 
         MineBodySprite = LoadOrPrerenderSprite("hazard-mine-v2.png", 160, 54, DrawMineBody);
         VortexCoreSprite = LoadOrPrerenderSprite("hazard-black-hole-core-v2.png", 192, 84, DrawVortexCore);
@@ -235,8 +235,8 @@ internal sealed class GameView : FrameworkElement
         return bitmap;
     }
 
-    private BitmapSource LoadOrPrerenderSprite(string filename, int pixelSize, double logicalSize,
-        Action<DrawingContext> draw)
+    private BitmapSource LoadOrPrerenderSprite(
+        string filename, int pixelSize, double logicalSize, Action<DrawingContext> draw)
     {
         string? outputDirectory = Environment.GetEnvironmentVariable("MAELSTROM_SPRITE_OUTPUT");
         string? forceScope = Environment.GetEnvironmentVariable("MAELSTROM_SPRITE_FORCE");
@@ -275,7 +275,9 @@ internal sealed class GameView : FrameworkElement
         foreach (uint tint in tints)
         {
             Color color = FromArgb(tint);
-            sprites[tint] = LoadOrPrerenderSprite($"comet-head-{tint:x8}.png", 160, 80, dc => DrawCometHead(dc, color));
+
+            sprites[tint] = LoadOrPrerenderSprite($"comet-head-{tint:x8}.png", 160, 80, dc => DrawCometHead(
+                dc, color));
         }
 
         return sprites;
@@ -443,8 +445,8 @@ internal sealed class GameView : FrameworkElement
         {
             FastBonusSampling = useFastSampling;
 
-            RenderOptions.SetBitmapScalingMode(this,
-                FastBonusSampling ? BitmapScalingMode.Linear : BitmapScalingMode.Fant);
+            RenderOptions.SetBitmapScalingMode(
+                this, FastBonusSampling ? BitmapScalingMode.Linear : BitmapScalingMode.Fant);
         }
 
         InvalidateVisual();
@@ -716,20 +718,20 @@ internal sealed class GameView : FrameworkElement
         Renderers.DrawingPrimitiveService.DrawGlowGeometry(dc, geometry, color, width);
     }
 
-    internal void DrawGlowEllipse(DrawingContext dc, V2 center, double radius, Color color, int layers,
-        double intensity)
+    internal void DrawGlowEllipse(
+        DrawingContext dc, V2 center, double radius, Color color, int layers, double intensity)
     {
         Renderers.DrawingPrimitiveService.DrawGlowEllipse(this, dc, center, radius, color, layers, intensity);
     }
 
-    internal void DrawText(DrawingContext dc, string text, double x, double baseline, double size, Brush brush,
-        FontWeight weight)
+    internal void DrawText(
+        DrawingContext dc, string text, double x, double baseline, double size, Brush brush, FontWeight weight)
     {
         Renderers.DrawingPrimitiveService.DrawText(dc, text, x, baseline, size, brush, weight);
     }
 
-    internal void DrawCenteredText(DrawingContext dc, string text, double centerX, double baseline, double size,
-        Brush brush, FontWeight weight)
+    internal void DrawCenteredText(
+        DrawingContext dc, string text, double centerX, double baseline, double size, Brush brush, FontWeight weight)
     {
         Renderers.DrawingPrimitiveService.DrawCenteredText(dc, text, centerX, baseline, size, brush, weight);
     }

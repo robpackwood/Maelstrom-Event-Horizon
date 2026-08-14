@@ -273,8 +273,8 @@ internal sealed class PlayerSimulationService
 
         double desiredAngle = Math.Atan2(targetDelta.Y, targetDelta.X);
 
-        double angleError = Math.Atan2(Math.Sin(desiredAngle - game.Player.Angle),
-            Math.Cos(desiredAngle - game.Player.Angle));
+        double angleError = Math.Atan2(
+            Math.Sin(desiredAngle - game.Player.Angle), Math.Cos(desiredAngle - game.Player.Angle));
 
         double targetTurnVelocity = Math.Clamp(angleError * 5.5, -3.75, 3.75);
         game.TurnVelocity += (targetTurnVelocity - game.TurnVelocity) * Math.Min(1, dt * 9);
@@ -351,7 +351,8 @@ internal sealed class PlayerSimulationService
             {
                 if (!HasCanister(game))
                 {
-                    game.Pickups.Add(new Pickup(game.Wrap(game.Player.Position + V2.FromAngle(game.Player.Angle) * 230),
+                    game.Pickups.Add(new Pickup(game.Wrap(
+                        game.Player.Position + V2.FromAngle(game.Player.Angle) * 230),
                         V2.Zero, PickupKind.Canister));
                 }
 
@@ -405,7 +406,8 @@ internal sealed class PlayerSimulationService
         {
             V2 direction = V2.FromAngle(game.Player.Angle + offset);
 
-            Shot shot = game.SpawnShot(game.Player.Position + direction * (22 * game.Player.VisualScale),
+            Shot shot = game.SpawnShot(
+                game.Player.Position + direction * (22 * game.Player.VisualScale),
                 game.Player.Velocity * .231 + direction * GameEngine.PlayerShotSpeed, false, .82 * range);
 
             shot.Radius = (game.Player.Giant ? 7.42 : 4.945) * (game.DoubleShotSizeActive ? 2 : 1);
@@ -462,8 +464,10 @@ internal sealed class PlayerSimulationService
                     asteroid.EnteredArena = true;
                 }
 
-                bool outside = asteroid.Position.X < -margin || asteroid.Position.X > GameEngine.Width + margin ||
-                               asteroid.Position.Y < -margin || asteroid.Position.Y > GameEngine.Height + margin;
+                bool outside = asteroid.Position.X < -margin ||
+                               asteroid.Position.X > GameEngine.Width + margin ||
+                               asteroid.Position.Y < -margin ||
+                               asteroid.Position.Y > GameEngine.Height + margin;
 
                 if (asteroid.EnteredArena && outside)
                 {
@@ -486,10 +490,12 @@ internal sealed class PlayerSimulationService
             double weave = Math.Sin(fighter.Age * (fighter.Kind == FighterKind.Interceptor ? 2.8 : 1.5));
             bool retreating = game.PlayerRespawning || game.ThreatRetreatTime > 0;
             V2 pursuit = retreating ? -toShip.Normalized : toShip.Normalized;
-
             double eliteScale = fighter.Elite ? 1.18 : 1;
+
             V2 desired = pursuit * (fighter.Kind == FighterKind.Interceptor ? 68 : 72) * eliteScale +
-                         tangent.Normalized * weave * (fighter.Kind == FighterKind.Interceptor ? 38 : 68) * eliteScale;
+                         tangent.Normalized * weave * (fighter.Kind == FighterKind.Interceptor
+                             ? 38
+                             : 68) * eliteScale;
 
             desired += AsteroidAvoidance(game, fighter, desired);
             fighter.Velocity += (desired - fighter.Velocity) * Math.Min(1, dt * 1.15);
@@ -500,8 +506,8 @@ internal sealed class PlayerSimulationService
 
             double desiredAngle = Math.Atan2(predictedAim.Y, predictedAim.X);
 
-            double angleError = Math.Atan2(Math.Sin(desiredAngle - fighter.Angle),
-                Math.Cos(desiredAngle - fighter.Angle));
+            double angleError = Math.Atan2(
+                Math.Sin(desiredAngle - fighter.Angle), Math.Cos(desiredAngle - fighter.Angle));
 
             fighter.Angle += Math.Clamp(angleError, -1.74 * dt, 1.74 * dt);
             fighter.Position = game.MoveBody(fighter, fighter.Position + fighter.Velocity * dt);
@@ -589,10 +595,11 @@ internal sealed class PlayerSimulationService
             {
                 V2 tail = -comet.Velocity.Normalized;
 
-                game.SpawnParticle(comet.Position + tail * 16 + game.RandomDirection() * 6,
+                game.SpawnParticle(
+                    comet.Position + tail * 16 + game.RandomDirection() * 6,
                     tail * game.Random.Next(90, 250) + game.RandomDirection() * 24,
-                    .35 + game.Random.NextDouble() * .45,
-                    game.Random.Next(3) == 0 ? 0xffffffff : comet.Tint, 2 + game.Random.NextDouble() * 5);
+                    .35 + game.Random.NextDouble() * .45, game.Random.Next(3) == 0 ? 0xffffffff : comet.Tint,
+                    2 + game.Random.NextDouble() * 5);
             }
         }
 
@@ -632,8 +639,8 @@ internal sealed class PlayerSimulationService
             V2 asteroidDirection = toAsteroid / distance;
             double proximity = 1 - distance / lookAhead;
 
-            double ahead = Math.Max(0, asteroidDirection.X * travelDirection.X +
-                                       asteroidDirection.Y * travelDirection.Y);
+            double ahead = Math.Max(
+                0, asteroidDirection.X * travelDirection.X + asteroidDirection.Y * travelDirection.Y);
 
             V2 away = -asteroidDirection;
 
@@ -641,7 +648,10 @@ internal sealed class PlayerSimulationService
                 ? new V2(asteroidDirection.Y, -asteroidDirection.X)
                 : new V2(-asteroidDirection.Y, asteroidDirection.X);
 
-            double force = (fighter.Kind == FighterKind.Interceptor ? 62 : 82) * (fighter.Elite ? 1.16 : 1) * proximity;
+            double force = (fighter.Kind == FighterKind.Interceptor ? 62 : 82) * (fighter.Elite
+                ? 1.16
+                : 1) * proximity;
+
             avoidance += away * force + around * (force * ahead * 1.8);
         }
 
@@ -668,8 +678,10 @@ internal sealed class PlayerSimulationService
             {
                 shot.Position = nextPosition;
 
-                if (nextPosition.X < -shot.Radius || nextPosition.X > GameEngine.Width + shot.Radius ||
-                    nextPosition.Y < -shot.Radius || nextPosition.Y > GameEngine.Height + shot.Radius)
+                if (nextPosition.X < -shot.Radius ||
+                    nextPosition.X > GameEngine.Width + shot.Radius ||
+                    nextPosition.Y < -shot.Radius ||
+                    nextPosition.Y > GameEngine.Height + shot.Radius)
                 {
                     shot.Alive = false;
                     continue;

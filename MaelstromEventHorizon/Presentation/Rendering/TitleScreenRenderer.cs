@@ -17,28 +17,27 @@ internal sealed class TitleScreenRenderer
     {
         dc.DrawDrawing(TitleChrome);
 
-        view.DrawCenteredText(dc, "HAZARDS", 75, 593, 15,
-            view.Brush(Color.FromRgb(255, 137, 112)), FontWeights.Bold);
+        view.DrawCenteredText(dc, "HAZARDS", 75, 593, 15, view.Brush(Color.FromRgb(255, 137, 112)), FontWeights.Bold);
 
-        view.DrawCenteredText(dc, "THREATS + DANGERS", 75, 611, 9,
-            view.Brush(Color.FromRgb(174, 111, 102)), FontWeights.SemiBold);
+        view.DrawCenteredText(
+            dc, "THREATS + DANGERS", 75, 611, 9, view.Brush(Color.FromRgb(174, 111, 102)), FontWeights.SemiBold);
 
-        view.DrawCenteredText(dc, "ITEM GUIDE", 730, 593, 15,
-            view.Brush(Color.FromRgb(119, 227, 255)), FontWeights.Bold);
+        view.DrawCenteredText(
+            dc, "ITEM GUIDE", 730, 593, 15, view.Brush(Color.FromRgb(119, 227, 255)), FontWeights.Bold);
 
-        view.DrawCenteredText(dc, "PICKUPS + POWERUPS", 730, 611, 9,
-            view.Brush(Color.FromRgb(99, 153, 177)), FontWeights.SemiBold);
+        view.DrawCenteredText(
+            dc, "PICKUPS + POWERUPS", 730, 611, 9, view.Brush(Color.FromRgb(99, 153, 177)), FontWeights.SemiBold);
 
         DrawGuideTicker(view, dc, GameView.TitleHazardGuide, new Rect(151, 572, 488, 52), 57, 170);
         DrawGuideTicker(view, dc, GameView.TitleItemGuide, new Rect(821, 572, 458, 52), 62, 0);
 
         dc.PushClip(new RectangleGeometry(new Rect(0, 641, GameEngine.Width, 76)));
 
-        FormattedText objectiveHeader = view.Format("MISSION OBJECTIVES", 12.5,
-            view.Brush(Color.FromRgb(255, 215, 112)), FontWeights.Bold);
+        FormattedText objectiveHeader = view.Format(
+            "MISSION OBJECTIVES", 12.5, view.Brush(Color.FromRgb(255, 215, 112)), FontWeights.Bold);
 
-        FormattedText objectives = view.Format(GameView.TitleObjectives, 12.5,
-            view.Brush(Color.FromRgb(207, 226, 233)), FontWeights.SemiBold);
+        FormattedText objectives = view.Format(
+            GameView.TitleObjectives, 12.5, view.Brush(Color.FromRgb(207, 226, 233)), FontWeights.SemiBold);
 
         const double objectiveGap = 120;
         double objectiveCycleWidth = objectiveHeader.Width + 32 + objectives.Width + objectiveGap;
@@ -54,8 +53,8 @@ internal sealed class TitleScreenRenderer
 
         dc.Pop();
 
-        FormattedText version = view.Format("1.10.0", 10,
-            view.Brush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
+        FormattedText version = view.Format(
+            "1.10.0", 10, view.Brush(Color.FromRgb(111, 145, 160)), FontWeights.SemiBold);
 
         dc.DrawText(version, new Point(GameEngine.Width - version.Width - 12, 708 - version.Baseline));
     }
@@ -87,9 +86,10 @@ internal sealed class TitleScreenRenderer
         return group;
     }
 
-    private void DrawGuideTicker(GameView view, DrawingContext dc,
-        (GameView.TickerIcon Icon, string Name, string Description, uint Tint)[] entries,
-        Rect clip, double speed, double phase)
+    private void DrawGuideTicker(
+        GameView view, DrawingContext dc,
+        (GameView.TickerIcon Icon, string Name, string Description, uint Tint)[] entries, Rect clip, double speed,
+        double phase)
     {
         dc.PushClip(new RectangleGeometry(clip));
         double cycleWidth = MeasureGuideCycle(view, entries);
@@ -110,8 +110,8 @@ internal sealed class TitleScreenRenderer
                 dc.DrawText(name, new Point(x, centerY + 5 - name.Baseline));
                 x += name.Width + 10;
 
-                FormattedText description = view.Format(entry.Description, 13,
-                    view.Brush(Color.FromRgb(171, 194, 207)), FontWeights.Normal);
+                FormattedText description = view.Format(
+                    entry.Description, 13, view.Brush(Color.FromRgb(171, 194, 207)), FontWeights.Normal);
 
                 dc.DrawText(description, new Point(x, centerY + 5 - description.Baseline));
                 x += description.Width + 50;
@@ -157,6 +157,7 @@ internal sealed class TitleScreenRenderer
                 dc.DrawLine(pen, new Point(4, 0), new Point(12, 9));
                 dc.DrawRectangle(brush, null, new Rect(-2, -10, 4, 20));
                 break;
+
             case GameView.TickerIcon.Luck:
                 dc.DrawEllipse(brush, pen, new Point(-5, -5), 5.5, 5.5);
                 dc.DrawEllipse(brush, pen, new Point(5, -5), 5.5, 5.5);
@@ -164,6 +165,7 @@ internal sealed class TitleScreenRenderer
                 dc.DrawEllipse(brush, pen, new Point(5, 5), 5.5, 5.5);
                 dc.DrawLine(pen, new Point(1, 7), new Point(8, 13));
                 break;
+
             case GameView.TickerIcon.TripleFire:
                 foreach (double angle in new[] { -.48, 0.0, .48 })
                 {
@@ -173,32 +175,36 @@ internal sealed class TitleScreenRenderer
                 }
 
                 break;
+
             case GameView.TickerIcon.RiftVolley:
                 dc.DrawEllipse(new SolidColorBrush(
-                        Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(-8, 0), 6, 9);
+                    Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(-8, 0), 6, 9);
 
                 dc.DrawEllipse(new SolidColorBrush(
-                        Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(8, 0), 6, 9);
+                    Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(8, 0), 6, 9);
 
                 dc.DrawLine(pen, new Point(-4, -5), new Point(4, 5));
                 dc.DrawLine(pen, new Point(-4, 5), new Point(4, -5));
                 break;
+
             case GameView.TickerIcon.LongRange:
                 dc.DrawLine(pen, new Point(-13, 0), new Point(10, 0));
                 dc.DrawLine(pen, new Point(5, -5), new Point(11, 0));
                 dc.DrawLine(pen, new Point(5, 5), new Point(11, 0));
                 dc.DrawEllipse(brush, null, new Point(-10, 0), 3, 3);
                 break;
+
             case GameView.TickerIcon.Shield:
-                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(55, tint.R, tint.G, tint.B)), pen,
-                    new Point(0, 0), 12, 12);
+                dc.DrawEllipse(
+                    new SolidColorBrush(Color.FromArgb(55, tint.R, tint.G, tint.B)), pen, new Point(0, 0), 12, 12);
 
                 dc.DrawArc(new Pen(pale, 2.4), new Point(0, 0), 9, -60, 150);
                 dc.DrawArc(new Pen(pale, 2.4), new Point(0, 0), 9, 130, 95);
                 break;
+
             case GameView.TickerIcon.ReflectionShield:
-                dc.DrawEllipse(new SolidColorBrush(Color.FromArgb(48, tint.R, tint.G, tint.B)), pen,
-                    new Point(0, 0), 12, 12);
+                dc.DrawEllipse(
+                    new SolidColorBrush(Color.FromArgb(48, tint.R, tint.G, tint.B)), pen, new Point(0, 0), 12, 12);
 
                 dc.DrawArc(new Pen(pale, 2.5), new Point(0, 0), 10, -48, 116);
                 dc.DrawArc(new Pen(pale, 2.5), new Point(0, 0), 10, 132, 116);
@@ -206,6 +212,7 @@ internal sealed class TitleScreenRenderer
                 dc.DrawLine(pen, new Point(1, -4), new Point(5, 0));
                 dc.DrawLine(pen, new Point(1, 4), new Point(5, 0));
                 break;
+
             case GameView.TickerIcon.Freeze:
                 for (int i = 0; i < 3; i++)
                 {
@@ -216,32 +223,42 @@ internal sealed class TitleScreenRenderer
 
                 dc.DrawEllipse(pale, null, new Point(0, 0), 3, 3);
                 break;
+
             case GameView.TickerIcon.SmartBomb:
                 RadialGradientBrush bomb = new(view.Lighten(tint, .6), view.Darken(tint, .52));
                 dc.DrawEllipse(bomb, pen, new Point(0, 2), 10, 10);
                 dc.DrawLine(pen, new Point(5, -7), new Point(10, -13));
                 dc.DrawLine(new Pen(Brushes.White, 1.8), new Point(9, -13), new Point(13, -10));
                 break;
+
             case GameView.TickerIcon.RicochetArena:
-                dc.DrawRectangle(new SolidColorBrush(Color.FromArgb(70, tint.R, tint.G, tint.B)),
-                    new Pen(pale, 2), new Rect(-13, -11, 26, 22));
+                dc.DrawRectangle(
+                    new SolidColorBrush(Color.FromArgb(70, tint.R, tint.G, tint.B)), new Pen(pale, 2),
+                    new Rect(-13, -11, 26, 22));
 
                 dc.DrawLine(pen, new Point(-9, 7), new Point(8, -6));
 
-                dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(255, 238, 211)),
-                    new Pen(new SolidColorBrush(tint), 1), new Point(8, -6), 5, 5);
+                dc.DrawEllipse(
+                    new SolidColorBrush(Color.FromRgb(255, 238, 211)), new Pen(new SolidColorBrush(tint), 1),
+                    new Point(8, -6), 5, 5);
 
                 dc.DrawArc(new Pen(new SolidColorBrush(Color.FromRgb(255, 93, 101)), 2), new Point(8, -6), 4, -35, 75);
+
                 dc.DrawArc(new Pen(new SolidColorBrush(Color.FromRgb(255, 220, 71)), 2), new Point(8, -6), 4, 85, 75);
+
                 dc.DrawArc(new Pen(new SolidColorBrush(Color.FromRgb(70, 183, 255)), 2), new Point(8, -6), 4, 205, 75);
+
                 break;
+
             case GameView.TickerIcon.GiantShip:
                 dc.PushTransform(new ScaleTransform(.52, .52));
 
-                dc.DrawGeometry(new SolidColorBrush(Color.FromArgb(75, tint.R, tint.G, tint.B)),
-                    new Pen(pale, 3.4), view.ShipGeometry(5));
+                dc.DrawGeometry(
+                    new SolidColorBrush(Color.FromArgb(75, tint.R, tint.G, tint.B)), new Pen(pale, 3.4),
+                    view.ShipGeometry(5));
 
-                dc.DrawGeometry(new LinearGradientBrush(Colors.White, tint, 35),
+                dc.DrawGeometry(
+                    new LinearGradientBrush(Colors.White, tint, 35),
                     new Pen(new SolidColorBrush(view.Darken(tint, .42)), 1.8), view.ShipGeometry(0));
 
                 dc.Pop();
@@ -249,62 +266,73 @@ internal sealed class TitleScreenRenderer
                 dc.DrawLine(pen, new Point(-17, -8), new Point(-13, -13));
                 dc.DrawLine(pen, new Point(-9, -8), new Point(-13, -13));
                 break;
+
             case GameView.TickerIcon.Comet:
-                dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(65, tint.R, tint.G, tint.B)), 5),
-                    new Point(-14, 5), new Point(5, -2));
+                dc.DrawLine(
+                    new Pen(new SolidColorBrush(Color.FromArgb(65, tint.R, tint.G, tint.B)), 5), new Point(-14, 5),
+                    new Point(5, -2));
 
                 dc.DrawLine(pen, new Point(-14, 9), new Point(6, 0));
                 dc.DrawEllipse(new RadialGradientBrush(Colors.White, tint), pen, new Point(7, -1), 7, 7);
                 break;
+
             case GameView.TickerIcon.RescueShip:
                 dc.PushTransform(new ScaleTransform(.55, .55));
                 dc.DrawGeometry(brush, pen, view.ShipGeometry(0));
                 dc.Pop();
                 break;
+
             case GameView.TickerIcon.Mine:
                 for (int i = 0; i < 8; i++)
                 {
                     V2 direction = V2.FromAngle(i * Math.PI / 4);
 
-                    dc.DrawLine(pen, new Point(direction.X * 7, direction.Y * 7),
+                    dc.DrawLine(
+                        pen, new Point(direction.X * 7, direction.Y * 7),
                         new Point(direction.X * 14, direction.Y * 14));
                 }
 
-                dc.DrawEllipse(new RadialGradientBrush(view.Lighten(tint, .5), view.Darken(tint, .5)), pen,
-                    new Point(0, 0), 8, 8);
+                dc.DrawEllipse(
+                    new RadialGradientBrush(view.Lighten(tint, .5), view.Darken(tint, .5)), pen, new Point(0, 0), 8,
+                    8);
 
                 break;
+
             case GameView.TickerIcon.BlackHole:
                 dc.DrawEllipse(Brushes.Black, new Pen(brush, 2.6), new Point(0, 0), 7, 7);
                 dc.DrawArc(pen, new Point(0, 0), 12, view.Game.TotalTime * 150, 225);
                 dc.DrawArc(new Pen(brush, 1.2), new Point(0, 0), 9, -view.Game.TotalTime * 190, 150);
                 break;
+
             case GameView.TickerIcon.Supernova:
                 for (int i = 0; i < 8; i++)
                 {
                     V2 direction = V2.FromAngle(i * Math.PI / 4);
 
-                    dc.DrawLine(pen, new Point(direction.X * 4, direction.Y * 4),
+                    dc.DrawLine(
+                        pen, new Point(direction.X * 4, direction.Y * 4),
                         new Point(direction.X * 14, direction.Y * 14));
                 }
 
                 dc.DrawEllipse(new RadialGradientBrush(Colors.White, tint), null, new Point(0, 0), 7, 7);
                 break;
+
             case GameView.TickerIcon.AlienBoss:
                 for (int i = 0; i < 6; i++)
                 {
                     V2 direction = V2.FromAngle(i * Math.PI / 3);
 
                     dc.DrawLine(new Pen(new SolidColorBrush(view.Darken(tint, .25)), 3.2)
-                        {
-                            StartLineCap = PenLineCap.Round,
-                            EndLineCap = PenLineCap.Round
-                        }, new Point(direction.X * 7, direction.Y * 7),
+                    {
+                        StartLineCap = PenLineCap.Round,
+                        EndLineCap = PenLineCap.Round
+                    }, new Point(direction.X * 7, direction.Y * 7),
                         new Point(direction.X * 15, direction.Y * 15));
                 }
 
-                dc.DrawEllipse(new RadialGradientBrush(view.Lighten(tint, .45), view.Darken(tint, .55)), pen,
-                    new Point(), 11, 10);
+                dc.DrawEllipse(
+                    new RadialGradientBrush(view.Lighten(tint, .45), view.Darken(tint, .55)), pen, new Point(), 11,
+                    10);
 
                 dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(243, 235, 177)), null, new Point(1, -1), 7, 5);
                 dc.DrawEllipse(new SolidColorBrush(Color.FromRgb(15, 8, 18)), null, new Point(2, -1), 2.5, 4.5);
@@ -315,8 +343,8 @@ internal sealed class TitleScreenRenderer
         dc.Pop();
     }
 
-    private static double MeasureGuideCycle(GameView view,
-        (GameView.TickerIcon Icon, string Name, string Description, uint Tint)[] entries)
+    private static double MeasureGuideCycle(
+        GameView view, (GameView.TickerIcon Icon, string Name, string Description, uint Tint)[] entries)
     {
         double width = 0;
 
@@ -334,10 +362,12 @@ internal sealed class TitleScreenRenderer
     {
         view.DrawCenteredText(dc, "CONTROLS", GameEngine.Width / 2, 91, 40, Brushes.White, FontWeights.Black);
 
-        view.DrawCenteredText(dc, "KEYBOARD", GameEngine.Width / 2, 127, 14,
-            new SolidColorBrush(Color.FromRgb(95, 209, 238)), FontWeights.SemiBold);
+        view.DrawCenteredText(
+            dc, "KEYBOARD", GameEngine.Width / 2, 127, 14, new SolidColorBrush(Color.FromRgb(95, 209, 238)),
+            FontWeights.SemiBold);
 
-        dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(110, 80, 166, 197)), 1), new Point(344, 151),
+        dc.DrawLine(
+            new Pen(new SolidColorBrush(Color.FromArgb(110, 80, 166, 197)), 1), new Point(344, 151),
             new Point(936, 151));
 
         for (int i = 0; i < ControlBindings.Actions.Length; i++)
@@ -354,7 +384,8 @@ internal sealed class TitleScreenRenderer
                 view.DrawText(dc, ">", 354, baseline, 17, labelBrush, FontWeights.Bold);
             }
 
-            view.DrawText(dc, ControlBindings.ActionName(action), 390, baseline, 17, labelBrush,
+            view.DrawText(
+                dc, ControlBindings.ActionName(action), 390, baseline, 17, labelBrush,
                 selected ? FontWeights.Bold : FontWeights.SemiBold);
 
             string keyName = selected && view.Game.WaitingForBinding
@@ -367,7 +398,8 @@ internal sealed class TitleScreenRenderer
             view.DrawText(dc, keyName, 730, baseline, 17, keyBrush, FontWeights.Bold);
         }
 
-        view.DrawCenteredText(dc, "ENTER  CHANGE       R  DEFAULTS       ESC  BACK", GameEngine.Width / 2, 642, 12,
+        view.DrawCenteredText(
+            dc, "ENTER  CHANGE       R  DEFAULTS       ESC  BACK", GameEngine.Width / 2, 642, 12,
             new SolidColorBrush(Color.FromRgb(103, 175, 199)), FontWeights.SemiBold);
     }
 }

@@ -9,8 +9,8 @@ internal sealed class BundledAssetProvider : IAssetProvider
     private const string ResourcePrefix = "Assets/";
 
     private readonly string cacheRoot = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "MaelstromEventHorizon", "BundledAssets");
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaelstromEventHorizon",
+        "BundledAssets");
 
     private readonly Lock extractionGate = new();
     private bool extracted;

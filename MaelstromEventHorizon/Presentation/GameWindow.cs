@@ -114,8 +114,8 @@ internal sealed class GameWindow : Window
                 return;
             }
 
-            Icon = BitmapFrame.Create(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat,
-                BitmapCacheOption.OnLoad);
+            Icon = BitmapFrame.Create(
+                new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
         }
         catch
         {

@@ -16,7 +16,8 @@ internal sealed class DirectTriangleBatch : IDisposable
 
         for (int sourceIndex = 0, destination = 0; sourceIndex < floatCount; sourceIndex += FloatsPerVertex, destination++)
         {
-            vertices[destination] = new D3DVertex(source[sourceIndex], source[sourceIndex + 1], PackColor(source, sourceIndex));
+            vertices[destination] = new D3DVertex(source[sourceIndex], source[sourceIndex +
+                                                                              1], PackColor(source, sourceIndex));
         }
     }
 
@@ -32,8 +33,9 @@ internal sealed class DirectTriangleBatch : IDisposable
         device.VertexFormat = VertexFormat.PositionRhw | VertexFormat.Diffuse;
         device.Indices = null;
         IntPtr start = IntPtr.Add(pinnedVertices.AddrOfPinnedObject(), firstVertex * Marshal.SizeOf<D3DVertex>());
-        device.DrawPrimitiveUP(PrimitiveType.TriangleList, (uint)(vertexCount / 3), start,
-            (uint)Marshal.SizeOf<D3DVertex>());
+
+        device.DrawPrimitiveUP(
+            PrimitiveType.TriangleList, (uint)(vertexCount / 3), start, (uint)Marshal.SizeOf<D3DVertex>());
     }
 
     public void Dispose()

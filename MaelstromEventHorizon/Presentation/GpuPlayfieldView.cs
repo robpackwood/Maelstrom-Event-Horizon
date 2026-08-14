@@ -67,7 +67,8 @@ internal sealed class GpuPlayfieldView : Image
                 PresentationInterval = PresentInterval.Immediate
             };
 
-            device = direct3D.CreateDeviceEx(0, DeviceType.Hardware, windowHandle,
+            device = direct3D.CreateDeviceEx(
+                0, DeviceType.Hardware, windowHandle,
                 CreateFlags.HardwareVertexProcessing | CreateFlags.Multithreaded | CreateFlags.FpuPreserve,
                 presentation, new DisplayModeEx());
 
@@ -134,7 +135,8 @@ internal sealed class GpuPlayfieldView : Image
             bool hardwareTiming = gpuFrameTimer is not null && gpuFrameTimer.TryGetLatest(out gpuMilliseconds);
 
             frameTimings.RecordGpuPlayfield(hardwareTiming
-                    ? gpuMilliseconds : FrameTimingProfiler.ElapsedMilliseconds(submissionStartedAt),
+                ? gpuMilliseconds
+                : FrameTimingProfiler.ElapsedMilliseconds(submissionStartedAt),
                 hardwareTiming);
         }
         catch (Exception error)
@@ -160,8 +162,10 @@ internal sealed class GpuPlayfieldView : Image
     private V2 RenderPosition(Body body) => body.Position + body.Velocity * (game.RenderInterpolation / 120);
 
     private static bool IsWithinPlayfield(V2 position, double extent) =>
-        position.X + extent >= 0 && position.X - extent <= GameEngine.Width &&
-        position.Y + extent >= 0 && position.Y - extent <= GameEngine.Height;
+        position.X + extent >= 0 &&
+        position.X - extent <= GameEngine.Width &&
+        position.Y + extent >= 0 &&
+        position.Y - extent <= GameEngine.Height;
 
     private double TrailDetailScale => game.VisualQuality switch { 0 => .45, 1 => .7, _ => 1 };
 
@@ -210,13 +214,10 @@ internal sealed class GpuPlayfieldView : Image
         {
             uint color = asteroid.Steel
                 ? 0xff8faec2
-                : asteroid.Colossal
-                    ? 0xffff3c7d
-                    : asteroid.Mega
-                        ? 0xffff704d
-                        : 0xff98796b;
+                : asteroid.Colossal ? 0xffff3c7d : asteroid.Mega ? 0xffff704d : 0xff98796b;
 
             V2 position = RenderPosition(asteroid) + shake;
+
             if (!IsWithinPlayfield(position, asteroid.Radius * 1.1))
             {
                 continue;
@@ -224,7 +225,8 @@ internal sealed class GpuPlayfieldView : Image
 
             AddCircle(position.X, position.Y, asteroid.Radius, color, .96, 12);
 
-            AddEffectRing(position.X, position.Y, asteroid.Radius * .88,
+            AddEffectRing(
+                position.X, position.Y, asteroid.Radius * .88,
                 asteroid.Steel ? 0xffd8f5ff : asteroid.Colossal ? 0xffffd8e5 : 0xffd6ad8c, .7, 12, 1.2);
         }
     }
@@ -254,6 +256,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             uint color = BossColor(boss.Kind);
             V2 position = RenderPosition(boss) + shake;
+
             if (!IsWithinPlayfield(position, boss.Radius * 1.2))
             {
                 continue;
@@ -264,8 +267,8 @@ internal sealed class GpuPlayfieldView : Image
 
             if (game.VisualQuality > 0)
             {
-                AddEffectRing(position.X, position.Y, boss.Radius * 1.08, color,
-                    game.VisualQuality == 1 ? .14 : .22, 18, 3);
+                AddEffectRing(
+                    position.X, position.Y, boss.Radius * 1.08, color, game.VisualQuality == 1 ? .14 : .22, 18, 3);
             }
         }
     }
@@ -275,6 +278,7 @@ internal sealed class GpuPlayfieldView : Image
         foreach (HomingMine mine in game.Mines)
         {
             V2 position = RenderPosition(mine) + shake;
+
             if (!IsWithinPlayfield(position, mine.Radius * 1.4))
             {
                 continue;
@@ -290,6 +294,7 @@ internal sealed class GpuPlayfieldView : Image
         foreach (GravityVortex vortex in game.Vortices)
         {
             V2 position = RenderPosition(vortex) + shake;
+
             if (!IsWithinPlayfield(position, vortex.Radius * 1.25))
             {
                 continue;
@@ -309,6 +314,7 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Nova nova in game.Novas)
         {
             V2 position = RenderPosition(nova) + shake;
+
             if (!IsWithinPlayfield(position, nova.Radius * 1.5))
             {
                 continue;
@@ -325,6 +331,7 @@ internal sealed class GpuPlayfieldView : Image
         {
             V2 position = RenderPosition(comet) + shake;
             double trailLength = Comet.TrailLength * TrailDetailScale;
+
             if (!IsWithinPlayfield(position, trailLength + comet.Radius))
             {
                 continue;
@@ -341,6 +348,7 @@ internal sealed class GpuPlayfieldView : Image
         foreach (Pickup pickup in game.Pickups)
         {
             V2 position = RenderPosition(pickup) + shake;
+
             if (!IsWithinPlayfield(position, pickup.Radius * 1.6))
             {
                 continue;
@@ -358,6 +366,7 @@ internal sealed class GpuPlayfieldView : Image
             };
 
             AddDiamond(position.X, position.Y, pickup.Radius * 1.25, color, .96);
+
             if (game.VisualQuality > 0)
             {
                 AddEffectRing(position.X, position.Y, pickup.Radius * 1.5, color, .36, 8, 1);
@@ -372,6 +381,7 @@ internal sealed class GpuPlayfieldView : Image
             V2 position = RenderPosition(shot) + shake;
             double radius = shot.BossShot ? Math.Max(6, shot.Radius) : Math.Max(3.8, shot.Radius);
             double trailLength = shot.Laser ? 30 * TrailDetailScale : 0;
+
             if (!IsWithinPlayfield(position, trailLength + radius))
             {
                 continue;
@@ -399,6 +409,7 @@ internal sealed class GpuPlayfieldView : Image
         }
 
         V2 position = RenderPosition(ship) + shake;
+
         if (!IsWithinPlayfield(position, Math.Max(45 * ship.VisualScale, 40)))
         {
             return;
@@ -430,6 +441,7 @@ internal sealed class GpuPlayfieldView : Image
             double life = Math.Clamp(1 - particle.Age / particle.Lifetime, 0, 1);
             V2 position = RenderPosition(particle) + shake;
             double radius = Math.Max(1, particle.StartSize * (.3 + life * .7));
+
             if (!IsWithinPlayfield(position, radius))
             {
                 continue;
@@ -446,13 +458,15 @@ internal sealed class GpuPlayfieldView : Image
             double progress = ring.Age / ring.Lifetime;
             double radius = ring.MaxRadius * (1 - Math.Pow(1 - progress, 3));
             V2 position = ring.Position + shake;
+
             if (!IsWithinPlayfield(position, radius + 4))
             {
                 continue;
             }
 
-            AddEffectRing(position.X, position.Y, radius,
-                ring.Color, .82 * (1 - progress), 20, Math.Max(1, 4 * (1 - progress)));
+            AddEffectRing(
+                position.X, position.Y, radius, ring.Color, .82 * (1 - progress), 20,
+                Math.Max(1, 4 * (1 - progress)));
         }
     }
 
@@ -461,7 +475,8 @@ internal sealed class GpuPlayfieldView : Image
         V2 forward = V2.FromAngle(angle);
         V2 side = new(-forward.Y, forward.X);
 
-        AddTriangle(position + forward * radius, position - forward * radius * .78 + side * radius * .66,
+        AddTriangle(
+            position + forward * radius, position - forward * radius * .78 + side * radius * .66,
             position - forward * radius * .78 - side * radius * .66, color, alpha);
     }
 
@@ -488,7 +503,8 @@ internal sealed class GpuPlayfieldView : Image
             V2 first = points[i];
             V2 second = points[(i + 1) % sides];
 
-            AddTriangle(new V2(x, y), new V2(x + first.X * radius, y + first.Y * radius),
+            AddTriangle(
+                new V2(x, y), new V2(x + first.X * radius, y + first.Y * radius),
                 new V2(x + second.X * radius, y + second.Y * radius), color, alpha);
         }
     }
@@ -513,8 +529,9 @@ internal sealed class GpuPlayfieldView : Image
             V2 first = points[i];
             V2 second = points[(i + 1) % sides];
 
-            AddLine(x + first.X * radius, y + first.Y * radius,
-                x + second.X * radius, y + second.Y * radius, color, alpha, thickness);
+            AddLine(
+                x + first.X * radius, y + first.Y * radius, x + second.X * radius, y + second.Y * radius, color, alpha,
+                thickness);
         }
     }
 
@@ -538,7 +555,8 @@ internal sealed class GpuPlayfieldView : Image
         return pointsBySegmentCount;
     }
 
-    private void AddEffectRing(double x, double y, double radius, uint color, double alpha, int sides, double thickness)
+    private void AddEffectRing(
+        double x, double y, double radius, uint color, double alpha, int sides, double thickness)
     {
         double scale = transparentEffects.ReserveRing(radius, thickness);
 
@@ -562,8 +580,9 @@ internal sealed class GpuPlayfieldView : Image
         double nx = -dy / length * thickness / 2;
         double ny = dx / length * thickness / 2;
 
-        AddQuad(new V2(x0 + nx, y0 + ny), new V2(x1 + nx, y1 + ny), new V2(x1 - nx, y1 - ny),
-            new V2(x0 - nx, y0 - ny), color, alpha);
+        AddQuad(
+            new V2(x0 + nx, y0 + ny), new V2(x1 + nx, y1 + ny), new V2(x1 - nx, y1 - ny), new V2(x0 - nx, y0 - ny),
+            color, alpha);
     }
 
     private void AddQuad(V2 a, V2 b, V2 c, V2 d, uint color, double alpha)

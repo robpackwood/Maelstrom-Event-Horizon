@@ -294,9 +294,7 @@ internal sealed partial class CollisionService
     {
         double shieldCost = asteroid.Colossal
             ? 48
-            : asteroid.Mega
-                ? 34
-                : asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
+            : asteroid.Mega ? 34 : asteroid.Size switch { 3 => 24, 2 => 17, _ => 10 };
 
         game.Player.Shield = Math.Max(0, game.Player.Shield - shieldCost);
 
@@ -389,8 +387,9 @@ internal sealed partial class CollisionService
             {
                 V2 velocity = asteroid.Velocity * .32 + game.RandomDirection() * game.Random.Next(95, 205);
 
-                game.Asteroids.Add(new Asteroid(asteroid.Position + game.RandomDirection() * game.Random.Next(18, 45),
-                    velocity, 3, false, game.Random.Next()));
+                game.Asteroids.Add(new Asteroid(
+                    asteroid.Position + game.RandomDirection() * game.Random.Next(18, 45), velocity, 3, false,
+                    game.Random.Next()));
             }
 
             game.RollDrop(asteroid.Position);
@@ -440,8 +439,9 @@ internal sealed partial class CollisionService
             {
                 V2 velocity = asteroid.Velocity * .4 + game.RandomDirection() * game.Random.Next(75, 175);
 
-                game.Asteroids.Add(new Asteroid(asteroid.Position + game.RandomDirection() * 8, velocity,
-                    asteroid.Size - 1, false, game.Random.Next()));
+                game.Asteroids.Add(new Asteroid(
+                    asteroid.Position + game.RandomDirection() * 8, velocity, asteroid.Size - 1, false,
+                    game.Random.Next()));
             }
         }
 

@@ -311,7 +311,8 @@ internal sealed class SynthAudio : IAudioService
         {
             thrustIntensity = Math.Clamp(intensity, 0, .73);
 
-            if (audioPaused || thrustIntensity <= 0 ||
+            if (audioPaused ||
+                thrustIntensity <= 0 ||
                 !layeredEffectPaths.TryGetValue(SoundCue.Thrust, out string? path))
             {
                 StopThrustLoop();
@@ -370,7 +371,8 @@ internal sealed class SynthAudio : IAudioService
         StartTrack(normalMusicPath, true);
     }
 
-    private void StartTrack(string path, bool restart, double volume = .32, TimeSpan? loopStart = null, bool loop = true)
+    private void StartTrack(
+        string path, bool restart, double volume = .32, TimeSpan? loopStart = null, bool loop = true)
     {
         bool wasRequested = musicRequested;
         bool trackChanged = !string.Equals(openedMusicPath, path, StringComparison.OrdinalIgnoreCase);
@@ -547,8 +549,8 @@ internal sealed class SynthAudio : IAudioService
         try
         {
             string root = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "MaelstromEventHorizon", "EffectCache");
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MaelstromEventHorizon",
+                "EffectCache");
 
             Directory.CreateDirectory(root);
 
@@ -571,78 +573,78 @@ internal sealed class SynthAudio : IAudioService
             }
 
             foreach (KeyValuePair<SoundCue, string> recorded in new Dictionary<SoundCue, string>
-                     {
-                         [SoundCue.Fire] = "sfx_01a.wav",
-                         [SoundCue.EnemyFire] = "sfx_01b.wav",
-                         [SoundCue.EnemyWarning] = "enemy-arrival-danger-alarm.wav",
-                         [SoundCue.BossAlarm] = "sfx_02d.wav",
-                         [SoundCue.MenuMove] = "sfx_03a.wav",
-                         [SoundCue.Explosion] = "sfx_05a.wav",
-                         [SoundCue.SteelHit] = "sfx_06.wav",
-                         [SoundCue.Pickup] = "powerup-celebration.wav",
-                         [SoundCue.BonusVoice] = "bonus-male-voice.wav",
-                         [SoundCue.AnnouncerWarning] = "human-look-out.wav",
-                         [SoundCue.AnnouncerBossDown] = "human-target-destroyed.wav",
-                         [SoundCue.AnnouncerExtraShip] = "human-level-up.wav",
-                         [SoundCue.AnnouncerWaveStart] = "human-ready-set-go.wav",
-                         [SoundCue.AnnouncerEnemyInbound] = "human-target-engaged.wav",
-                         [SoundCue.AnnouncerEnemyAssault] = "human-call-for-backup.wav",
-                         [SoundCue.AnnouncerMineAlert] = "human-look-out.wav",
-                         [SoundCue.AnnouncerBlackHoleAlert] = "human-look-out.wav",
-                         [SoundCue.AnnouncerNovaAlert] = "human-look-out.wav",
-                         [SoundCue.AnnouncerItemBox] = "human-power-up.wav",
-                         [SoundCue.AnnouncerCometStorm] = "human-go-go-go.wav",
-                         [SoundCue.AnnouncerBonusComet] = "human-go-go-go.wav",
-                         [SoundCue.AnnouncerAirBrakes] = "human-power-up.wav",
-                         [SoundCue.AnnouncerLuck] = "human-power-up.wav",
-                         [SoundCue.AnnouncerTripleFire] = "human-power-up.wav",
-                         [SoundCue.AnnouncerRiftVolley] = "human-power-up.wav",
-                         [SoundCue.AnnouncerLongRange] = "human-power-up.wav",
-                         [SoundCue.AnnouncerShields] = "human-power-up.wav",
-                         [SoundCue.AnnouncerReflectionShield] = "human-power-up.wav",
-                         [SoundCue.AnnouncerTimeFreeze] = "human-hold.wav",
-                         [SoundCue.AnnouncerSmartBomb] = "human-fire-in-the-hole.wav",
-                         [SoundCue.AnnouncerRicochetArena] = "human-suppressing-fire.wav",
-                         [SoundCue.AnnouncerGiantShip] = "human-level-up.wav",
-                         [SoundCue.Shield] = "shield-activation.wav",
-                         [SoundCue.ShieldImpact] = "shield-impact.wav",
-                         [SoundCue.ShieldSave] = "shield-save-nice.mp3",
-                         [SoundCue.ReflectionBreak] = "sfx_05b.wav",
-                         [SoundCue.Nova] = "sfx_09a.wav",
-                         [SoundCue.Wave] = "sfx_10a.wav",
-                         [SoundCue.Life] = "extra-ship-fanfare.wav",
-                         [SoundCue.RescueCelebration] = "rescue-thank-you.wav",
-                         [SoundCue.Mine] = "sfx_12a.wav",
-                         [SoundCue.Vortex] = "sfx_13c.wav",
-                         [SoundCue.CashRegister] = "sfx_14a.wav",
-                         [SoundCue.Coin] = "bonus-coin-jingle.wav",
-                         [SoundCue.ChaChing] = "sfx_15b.wav",
-                         [SoundCue.CometCelebration] = "sfx_05c.wav",
-                         [SoundCue.ShipCrash] = "player-ship-heavy-explosion.wav",
-                         [SoundCue.ShipBlast] = "sfx_17a.wav",
-                         [SoundCue.BonusFailed] = "sfx_18a.wav",
-                         [SoundCue.GiantGrow] = "sfx_19a.wav",
-                         [SoundCue.GiantShrink] = "sfx_19b.wav",
-                         [SoundCue.VortexHit] = "sfx_13b.wav",
-                         [SoundCue.NovaHit] = "sfx_09b.wav",
-                         [SoundCue.RicochetBounce] = "ricochet-boing.mp3",
-                         [SoundCue.EnemyHit] = "sfx_06b.wav",
-                         [SoundCue.EnemyDestroyed] = "enemy-mechanical-explosion.wav",
-                         [SoundCue.MineHit] = "sfx_12b.wav",
-                         [SoundCue.SludgeMawHit] = "sludge-maw-gastric-hit.wav",
-                         [SoundCue.EyeTyrantHit] = "sfx_20a.wav",
-                         [SoundCue.BoneBroodmotherHit] = "sfx_21a.wav",
-                         [SoundCue.VoidLeechHit] = "sfx_22a.wav",
-                         [SoundCue.DreadHarvesterHit] = "sfx_20b.wav",
-                         [SoundCue.SolarWardenHit] = "sfx_21b.wav",
-                         [SoundCue.CometSpawn] = "comet-arrival-fire-crackle.wav",
-                         [SoundCue.SludgeMawFire] = "sfx_12c.wav",
-                         [SoundCue.EyeTyrantFire] = "sfx_01c.wav",
-                         [SoundCue.BoneBroodmotherFire] = "sfx_02b.wav",
-                         [SoundCue.VoidLeechFire] = "sfx_02c.wav",
-                         [SoundCue.DreadHarvesterFire] = "sfx_20c.wav",
-                         [SoundCue.SolarWardenFire] = "sfx_21b.wav"
-                     })
+            {
+                [SoundCue.Fire] = "sfx_01a.wav",
+                [SoundCue.EnemyFire] = "sfx_01b.wav",
+                [SoundCue.EnemyWarning] = "enemy-arrival-danger-alarm.wav",
+                [SoundCue.BossAlarm] = "sfx_02d.wav",
+                [SoundCue.MenuMove] = "sfx_03a.wav",
+                [SoundCue.Explosion] = "sfx_05a.wav",
+                [SoundCue.SteelHit] = "sfx_06.wav",
+                [SoundCue.Pickup] = "powerup-celebration.wav",
+                [SoundCue.BonusVoice] = "bonus-male-voice.wav",
+                [SoundCue.AnnouncerWarning] = "human-look-out.wav",
+                [SoundCue.AnnouncerBossDown] = "human-target-destroyed.wav",
+                [SoundCue.AnnouncerExtraShip] = "human-level-up.wav",
+                [SoundCue.AnnouncerWaveStart] = "human-ready-set-go.wav",
+                [SoundCue.AnnouncerEnemyInbound] = "human-target-engaged.wav",
+                [SoundCue.AnnouncerEnemyAssault] = "human-call-for-backup.wav",
+                [SoundCue.AnnouncerMineAlert] = "human-look-out.wav",
+                [SoundCue.AnnouncerBlackHoleAlert] = "human-look-out.wav",
+                [SoundCue.AnnouncerNovaAlert] = "human-look-out.wav",
+                [SoundCue.AnnouncerItemBox] = "human-power-up.wav",
+                [SoundCue.AnnouncerCometStorm] = "human-go-go-go.wav",
+                [SoundCue.AnnouncerBonusComet] = "human-go-go-go.wav",
+                [SoundCue.AnnouncerAirBrakes] = "human-power-up.wav",
+                [SoundCue.AnnouncerLuck] = "human-power-up.wav",
+                [SoundCue.AnnouncerTripleFire] = "human-power-up.wav",
+                [SoundCue.AnnouncerRiftVolley] = "human-power-up.wav",
+                [SoundCue.AnnouncerLongRange] = "human-power-up.wav",
+                [SoundCue.AnnouncerShields] = "human-power-up.wav",
+                [SoundCue.AnnouncerReflectionShield] = "human-power-up.wav",
+                [SoundCue.AnnouncerTimeFreeze] = "human-hold.wav",
+                [SoundCue.AnnouncerSmartBomb] = "human-fire-in-the-hole.wav",
+                [SoundCue.AnnouncerRicochetArena] = "human-suppressing-fire.wav",
+                [SoundCue.AnnouncerGiantShip] = "human-level-up.wav",
+                [SoundCue.Shield] = "shield-activation.wav",
+                [SoundCue.ShieldImpact] = "shield-impact.wav",
+                [SoundCue.ShieldSave] = "shield-save-nice.mp3",
+                [SoundCue.ReflectionBreak] = "sfx_05b.wav",
+                [SoundCue.Nova] = "sfx_09a.wav",
+                [SoundCue.Wave] = "sfx_10a.wav",
+                [SoundCue.Life] = "extra-ship-fanfare.wav",
+                [SoundCue.RescueCelebration] = "rescue-thank-you.wav",
+                [SoundCue.Mine] = "sfx_12a.wav",
+                [SoundCue.Vortex] = "sfx_13c.wav",
+                [SoundCue.CashRegister] = "sfx_14a.wav",
+                [SoundCue.Coin] = "bonus-coin-jingle.wav",
+                [SoundCue.ChaChing] = "sfx_15b.wav",
+                [SoundCue.CometCelebration] = "sfx_05c.wav",
+                [SoundCue.ShipCrash] = "player-ship-heavy-explosion.wav",
+                [SoundCue.ShipBlast] = "sfx_17a.wav",
+                [SoundCue.BonusFailed] = "sfx_18a.wav",
+                [SoundCue.GiantGrow] = "sfx_19a.wav",
+                [SoundCue.GiantShrink] = "sfx_19b.wav",
+                [SoundCue.VortexHit] = "sfx_13b.wav",
+                [SoundCue.NovaHit] = "sfx_09b.wav",
+                [SoundCue.RicochetBounce] = "ricochet-boing.mp3",
+                [SoundCue.EnemyHit] = "sfx_06b.wav",
+                [SoundCue.EnemyDestroyed] = "enemy-mechanical-explosion.wav",
+                [SoundCue.MineHit] = "sfx_12b.wav",
+                [SoundCue.SludgeMawHit] = "sludge-maw-gastric-hit.wav",
+                [SoundCue.EyeTyrantHit] = "sfx_20a.wav",
+                [SoundCue.BoneBroodmotherHit] = "sfx_21a.wav",
+                [SoundCue.VoidLeechHit] = "sfx_22a.wav",
+                [SoundCue.DreadHarvesterHit] = "sfx_20b.wav",
+                [SoundCue.SolarWardenHit] = "sfx_21b.wav",
+                [SoundCue.CometSpawn] = "comet-arrival-fire-crackle.wav",
+                [SoundCue.SludgeMawFire] = "sfx_12c.wav",
+                [SoundCue.EyeTyrantFire] = "sfx_01c.wav",
+                [SoundCue.BoneBroodmotherFire] = "sfx_02b.wav",
+                [SoundCue.VoidLeechFire] = "sfx_02c.wav",
+                [SoundCue.DreadHarvesterFire] = "sfx_20c.wav",
+                [SoundCue.SolarWardenFire] = "sfx_21b.wav"
+            })
             {
                 string path = assets.PathFor("SoundEffects", recorded.Value);
 
@@ -746,15 +748,21 @@ internal sealed class SynthAudio : IAudioService
 
     private void ScheduleEffectCutoff(LayeredEffectVoice voice, SoundCue cue)
     {
-        double seconds = cue is SoundCue.Pickup ? .75 :
-            cue is SoundCue.BonusVoice ? 1.1 :
-            cue is SoundCue.ShieldImpact ? .55 :
-            cue is SoundCue.ShieldSave ? 1.0 :
-            cue is SoundCue.RescueCelebration ? .9 :
-            cue is SoundCue.SludgeMawHit ? .19 :
-            cue is SoundCue.EyeTyrantHit or
-                SoundCue.BoneBroodmotherHit or SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit
-                or SoundCue.SolarWardenHit ? .15 : 0;
+        double seconds = cue is SoundCue.Pickup
+            ? .75
+            : cue is SoundCue.BonusVoice
+                ? 1.1
+                : cue is SoundCue.ShieldImpact
+                    ? .55
+                    : cue is SoundCue.ShieldSave
+                        ? 1.0
+                        : cue is SoundCue.RescueCelebration
+                            ? .9
+                            : cue is SoundCue.SludgeMawHit
+                                ? .19
+                                : cue is SoundCue.EyeTyrantHit or SoundCue.BoneBroodmotherHit or SoundCue.VoidLeechHit or SoundCue.DreadHarvesterHit or SoundCue.SolarWardenHit
+                                    ? .15
+                                    : 0;
 
         if (seconds <= 0)
         {
@@ -804,9 +812,7 @@ internal sealed class SynthAudio : IAudioService
             }
         }
 
-        double headroom = activeCount <= 1
-            ? 1
-            : Math.Max(.4, 1 / Math.Sqrt(1 + (activeCount - 1) * .38));
+        double headroom = activeCount <= 1 ? 1 : Math.Max(.4, 1 / Math.Sqrt(1 + (activeCount - 1) * .38));
 
         for (int i = 0; i < layeredEffectVoices.Count; i++)
         {

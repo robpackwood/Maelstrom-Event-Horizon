@@ -88,37 +88,48 @@ internal sealed class PowerupService
             case PowerupKind.AirBrakes:
                 game.AirBrakesActive = true;
                 break;
+
             case PowerupKind.Luck:
                 game.LuckActive = true;
                 game.EnsureLuckyWaveEvents();
                 break;
+
             case PowerupKind.TripleFire:
                 game.TripleFireActive = true;
                 break;
+
             case PowerupKind.RiftVolley:
                 game.RiftVolleyActive = true;
                 break;
+
             case PowerupKind.LongRange:
                 game.LongRangeActive = true;
                 break;
+
             case PowerupKind.LaserShots:
                 game.LaserShotsActive = true;
                 break;
+
             case PowerupKind.DoubleShotSize:
                 game.DoubleShotSizeActive = true;
                 break;
+
             case PowerupKind.Shields:
                 game.Player.Shield = Math.Min(100, game.Player.Shield + 65);
                 break;
+
             case PowerupKind.ReflectionShield:
                 game.ReflectionShieldActive = true;
                 break;
+
             case PowerupKind.Freeze:
                 game.FreezeTime = 8;
                 break;
+
             case PowerupKind.RicochetArena:
                 game.RicochetArenaActive = true;
                 break;
+
             case PowerupKind.GiantShip:
                 game.Player.SetGiant(true);
                 game.Player.Invulnerable = Math.Max(game.Player.Invulnerable, .65);
@@ -218,10 +229,16 @@ internal sealed class PowerupService
 
     private static bool HasEveryEquipablePowerup(GameEngine game)
     {
-        return game.AirBrakesActive && game.LuckActive && game.TripleFireActive &&
-               game.RiftVolleyActive && game.LongRangeActive && game.LaserShotsActive && game.DoubleShotSizeActive &&
+        return game.AirBrakesActive &&
+               game.LuckActive &&
+               game.TripleFireActive &&
+               game.RiftVolleyActive &&
+               game.LongRangeActive &&
+               game.LaserShotsActive &&
+               game.DoubleShotSizeActive &&
                game.Player.Shield >= 100 &&
-               game.ReflectionShieldActive && game.Player.Giant;
+               game.ReflectionShieldActive &&
+               game.Player.Giant;
     }
 
     internal void ShrinkGiantShip(GameEngine game, V2 impactPosition)
@@ -283,15 +300,41 @@ internal sealed class PowerupService
     {
         switch (power)
         {
-            case PowerupKind.AirBrakes: game.AirBrakesActive = false; break;
-            case PowerupKind.Luck: game.LuckActive = false; break;
-            case PowerupKind.TripleFire: game.TripleFireActive = false; break;
-            case PowerupKind.RiftVolley: game.RiftVolleyActive = false; break;
-            case PowerupKind.LongRange: game.LongRangeActive = false; break;
-            case PowerupKind.LaserShots: game.LaserShotsActive = false; break;
-            case PowerupKind.DoubleShotSize: game.DoubleShotSizeActive = false; break;
-            case PowerupKind.ReflectionShield: game.ReflectionShieldActive = false; break;
-            case PowerupKind.GiantShip: game.Player.SetGiant(false); break;
+            case PowerupKind.AirBrakes:
+                game.AirBrakesActive = false;
+                break;
+
+            case PowerupKind.Luck:
+                game.LuckActive = false;
+                break;
+
+            case PowerupKind.TripleFire:
+                game.TripleFireActive = false;
+                break;
+
+            case PowerupKind.RiftVolley:
+                game.RiftVolleyActive = false;
+                break;
+
+            case PowerupKind.LongRange:
+                game.LongRangeActive = false;
+                break;
+
+            case PowerupKind.LaserShots:
+                game.LaserShotsActive = false;
+                break;
+
+            case PowerupKind.DoubleShotSize:
+                game.DoubleShotSizeActive = false;
+                break;
+
+            case PowerupKind.ReflectionShield:
+                game.ReflectionShieldActive = false;
+                break;
+
+            case PowerupKind.GiantShip:
+                game.Player.SetGiant(false);
+                break;
         }
     }
 
@@ -329,7 +372,8 @@ internal sealed class PowerupService
             {
                 V2 direction = game.RandomDirection();
 
-                fragments.Add(new Asteroid(asteroid.Position + direction * 8,
+                fragments.Add(new Asteroid(
+                    asteroid.Position + direction * 8,
                     asteroid.Velocity * .45 + direction * game.Random.Next(105, 190), asteroid.Size - 1, false,
                     game.Random.Next()));
             }

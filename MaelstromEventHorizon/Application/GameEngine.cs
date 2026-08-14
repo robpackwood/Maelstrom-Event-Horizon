@@ -103,9 +103,9 @@ internal sealed class GameEngine
     internal double TransitionElapsed;
     internal double TurnVelocity;
 
-    public GameEngine(IAudioService audio, IHighScoreRepository highScoreRepository,
-        IDisplaySettingsStore displaySettingsStore, ControlBindings bindings, DisplayPreferences preferences,
-        IRandomSource random, IGameEngineServices services)
+    public GameEngine(
+        IAudioService audio, IHighScoreRepository highScoreRepository, IDisplaySettingsStore displaySettingsStore,
+        ControlBindings bindings, DisplayPreferences preferences, IRandomSource random, IGameEngineServices services)
     {
         Audio = audio;
         HighScoreRepository = highScoreRepository;
@@ -126,8 +126,9 @@ internal sealed class GameEngine
 
         for (int i = 0; i < 115; i++)
         {
-            Stars.Add(new Star(new V2(random.NextDouble() * Width, random.NextDouble() * Height),
-                .25 + random.NextDouble() * .75, random.NextDouble() * Math.PI * 2));
+            Stars.Add(new Star(
+                new V2(random.NextDouble() * Width, random.NextDouble() * Height), .25 + random.NextDouble() * .75,
+                random.NextDouble() * Math.PI * 2));
         }
     }
 

@@ -199,8 +199,8 @@ internal sealed class GameInputService
             }
             else if (game.TitleMenuSelection is 2 or 3 && key is Key.Left or Key.Right)
             {
-                AdjustTitleVolume(game, game.TitleMenuSelection,
-                    key == Key.Right ? GameEngine.VolumeStep : -GameEngine.VolumeStep);
+                AdjustTitleVolume(
+                    game, game.TitleMenuSelection, key == Key.Right ? GameEngine.VolumeStep : -GameEngine.VolumeStep);
             }
             else if (game.TitleMenuSelection == 4 && !isRepeat && key is Key.Left or Key.Right)
             {
@@ -268,8 +268,7 @@ internal sealed class GameInputService
 
         if (game.Mode == GameMode.Playing && !game.BossCountdownActive && key == game.Bindings[GameAction.Fire])
         {
-            if (game is { IsBonusStage: false, PlayerRespawning: false } &&
-                game.FireCooldown <= 0)
+            if (game is { IsBonusStage: false, PlayerRespawning: false } && game.FireCooldown <= 0)
             {
                 game.FirePlayer();
             }

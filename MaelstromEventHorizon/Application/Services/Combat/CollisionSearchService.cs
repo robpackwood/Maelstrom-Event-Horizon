@@ -27,7 +27,8 @@ internal sealed partial class CollisionService
     {
         foreach (Body body in hash.Nearby(shot))
         {
-            if (body is Asteroid { Alive: true } asteroid && asteroid != shot.LastPiercedAsteroid &&
+            if (body is Asteroid { Alive: true } asteroid &&
+                asteroid != shot.LastPiercedAsteroid &&
                 game.Touching(shot, asteroid))
             {
                 return asteroid;
@@ -53,44 +54,85 @@ internal sealed partial class CollisionService
         {
             switch (body)
             {
-                case Asteroid candidate when asteroid is null && candidate.Alive && candidate != shot.LastPiercedAsteroid &&
+                case Asteroid candidate when asteroid is null &&
+                                             candidate.Alive &&
+                                             candidate != shot.LastPiercedAsteroid &&
                                              game.Touching(shot, candidate):
                     asteroid = candidate;
+
                     break;
+
                 case Fighter candidate when fighter is null && candidate.Alive && game.Touching(shot, candidate):
                     fighter = candidate;
                     break;
+
                 case AlienBoss candidate when boss is null && candidate.Alive && game.Touching(shot, candidate):
                     boss = candidate;
                     break;
+
                 case HomingMine candidate when mine is null && candidate.Alive && game.Touching(shot, candidate):
                     mine = candidate;
                     break;
+
                 case GravityVortex candidate when vortex is null && candidate.Alive && game.Touching(shot, candidate):
                     vortex = candidate;
                     break;
-                case Nova candidate when nova is null && candidate is { Alive: true, Detonated: false } &&
+
+                case Nova candidate when nova is null &&
+                                         candidate is { Alive: true, Detonated: false } &&
                                          game.Touching(shot, candidate):
                     nova = candidate;
+
                     break;
+
                 case Comet candidate when comet is null && candidate.Alive && game.TouchingComet(shot, candidate):
                     comet = candidate;
                     break;
+
                 case Pickup candidate when prize is null &&
-                                            candidate is { Alive: true, Kind: PickupKind.Multiplier or PickupKind.Bonus } &&
-                                            game.Touching(shot, candidate):
+                                           candidate is { Alive: true, Kind: PickupKind.Multiplier or PickupKind.Bonus } &&
+                                           game.Touching(shot, candidate):
                     prize = candidate;
+
                     break;
             }
         }
 
-        if (asteroid is not null) return asteroid;
-        if (fighter is not null) return fighter;
-        if (boss is not null) return boss;
-        if (mine is not null) return mine;
-        if (vortex is not null) return vortex;
-        if (nova is not null) return nova;
-        if (comet is not null) return comet;
+        if (asteroid is not null)
+        {
+            return asteroid;
+        }
+
+        if (fighter is not null)
+        {
+            return fighter;
+        }
+
+        if (boss is not null)
+        {
+            return boss;
+        }
+
+        if (mine is not null)
+        {
+            return mine;
+        }
+
+        if (vortex is not null)
+        {
+            return vortex;
+        }
+
+        if (nova is not null)
+        {
+            return nova;
+        }
+
+        if (comet is not null)
+        {
+            return comet;
+        }
+
         return prize;
     }
 

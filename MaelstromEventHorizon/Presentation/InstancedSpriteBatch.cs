@@ -21,14 +21,15 @@ internal sealed class InstancedSpriteBatch : IDisposable
         QuadVertex[] quad = [new(-1, -1), new(1, -1), new(1, 1), new(-1, 1)];
         ushort[] indices = [0, 1, 2, 0, 2, 3];
 
-        quadBuffer = device.CreateVertexBuffer((uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly,
+        quadBuffer = device.CreateVertexBuffer(
+            (uint)(quad.Length * Marshal.SizeOf<QuadVertex>()), Usage.WriteOnly, VertexFormat.None, Pool.Default);
+
+        indexBuffer = device.CreateIndexBuffer(
+            (uint)(indices.Length * sizeof(ushort)), Usage.WriteOnly, true, Pool.Default);
+
+        instanceBuffer = device.CreateVertexBuffer(
+            (uint)(MaximumInstances * Marshal.SizeOf<SpriteInstance>()), Usage.Dynamic | Usage.WriteOnly,
             VertexFormat.None, Pool.Default);
-
-        indexBuffer = device.CreateIndexBuffer((uint)(indices.Length * sizeof(ushort)), Usage.WriteOnly,
-            true, Pool.Default);
-
-        instanceBuffer = device.CreateVertexBuffer((uint)(MaximumInstances * Marshal.SizeOf<SpriteInstance>()),
-            Usage.Dynamic | Usage.WriteOnly, VertexFormat.None, Pool.Default);
 
         Upload(quadBuffer, quad, LockFlags.None);
         Upload(indexBuffer, indices, LockFlags.None);
@@ -39,8 +40,7 @@ internal sealed class InstancedSpriteBatch : IDisposable
                 0, 0, DeclarationType.Float2, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate),
             new VertexElement(
                 1, 0, DeclarationType.Float4, DeclarationMethod.Default, DeclarationUsage.TextureCoordinate, 1),
-            new VertexElement(
-                1, 16, DeclarationType.Color, DeclarationMethod.Default, DeclarationUsage.Color),
+            new VertexElement(1, 16, DeclarationType.Color, DeclarationMethod.Default, DeclarationUsage.Color),
             VertexElement.VertexDeclarationEnd
         ]);
 

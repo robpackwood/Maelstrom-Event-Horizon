@@ -17,7 +17,8 @@ internal sealed class EffectsPhysicsService
         {
             V2 outward = Rotate(offsets[i], game.Player.Angle);
 
-            V2 velocity = game.Player.Velocity * .32 + outward.Normalized * game.Random.Next(70, 165) +
+            V2 velocity = game.Player.Velocity * .32 +
+                          outward.Normalized * game.Random.Next(70, 165) +
                           RandomDirection(game) * game.Random.Next(15, 65);
 
             double spin = (game.Random.NextDouble() * 2 - 1) * (2.8 + game.Random.NextDouble() * 5.2);
@@ -39,9 +40,10 @@ internal sealed class EffectsPhysicsService
             double speed = game.Random.Next(18, 118);
             uint color = i % 5 == 0 ? 0xffff9c5a : i % 3 == 0 ? 0xff6bd9e9 : 0xff8b9ca2;
 
-            AddParticle(game, game.Player.Position + direction * game.Random.NextDouble() * 12,
-                game.Player.Velocity * .12 + direction * speed,
-                .48 + game.Random.NextDouble() * .55, color, game.Random.Next(5, 13));
+            AddParticle(
+                game, game.Player.Position + direction * game.Random.NextDouble() * 12,
+                game.Player.Velocity * .12 + direction * speed, .48 + game.Random.NextDouble() * .55, color,
+                game.Random.Next(5, 13));
         }
     }
 
@@ -69,7 +71,8 @@ internal sealed class EffectsPhysicsService
 
         for (int i = 0; i < EffectCount(game, 2); i++)
         {
-            AddParticle(game, game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
+            AddParticle(
+                game, game.Player.Position + back * (18 * game.Player.VisualScale) + RandomDirection(game) * 2,
                 game.Player.Velocity * .2 + back * game.Random.Next(120, 260) + RandomDirection(game) * 25,
                 .28 + game.Random.NextDouble() * .25, i == 0 ? 0xff5be8ff : 0xffff7b45, game.Random.Next(2, 6));
         }
@@ -79,8 +82,9 @@ internal sealed class EffectsPhysicsService
     {
         for (int i = 0; i < EffectCount(game, count); i++)
         {
-            AddParticle(game, position, RandomDirection(game) * game.Random.Next(70, 260),
-                .2 + game.Random.NextDouble() * .45, color, 2 + game.Random.NextDouble() * 4);
+            AddParticle(
+                game, position, RandomDirection(game) * game.Random.Next(70, 260), .2 + game.Random.NextDouble() * .45,
+                color, 2 + game.Random.NextDouble() * 4);
         }
     }
 
@@ -93,8 +97,9 @@ internal sealed class EffectsPhysicsService
             double speed = game.Random.NextDouble() * game.Random.Next(100, 390);
             uint c = i % 4 == 0 ? 0xffffffff : i % 3 == 0 ? 0xffff5a36 : color;
 
-            AddParticle(game, position, RandomDirection(game) * speed,
-                .35 + game.Random.NextDouble() * .85, c, 2 + game.Random.NextDouble() * 7);
+            AddParticle(
+                game, position, RandomDirection(game) * speed, .35 + game.Random.NextDouble() * .85, c,
+                2 + game.Random.NextDouble() * 7);
         }
 
         AddShockwave(game, position, .38, color, 55 + effectCount * 1.7);
@@ -109,14 +114,16 @@ internal sealed class EffectsPhysicsService
             double speed = game.Random.Next(150, 410);
             uint fragmentColor = i % 5 == 0 ? 0xffffe1a4 : i % 3 == 0 ? 0xffd77542 : color;
 
-            AddParticle(game, position, RandomDirection(game) * speed,
-                .16 + game.Random.NextDouble() * .32, fragmentColor, 1.5 + game.Random.NextDouble() * 4.5);
+            AddParticle(
+                game, position, RandomDirection(game) * speed, .16 + game.Random.NextDouble() * .32, fragmentColor,
+                1.5 + game.Random.NextDouble() * 4.5);
         }
 
         AddShockwave(game, position, .22, color, 38 + effectCount * 1.15);
     }
 
-    private static void AddParticle(GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
+    private static void AddParticle(
+        GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
     {
         int maximum = game.VisualQuality switch { 0 => 160, 1 => 400, _ => MaxParticles };
 
@@ -344,7 +351,8 @@ internal sealed class EffectsPhysicsService
 
     internal V2 Wrap(V2 p)
     {
-        return new V2((p.X % GameEngine.Width + GameEngine.Width) % GameEngine.Width,
+        return new V2(
+            (p.X % GameEngine.Width + GameEngine.Width) % GameEngine.Width,
             (p.Y % GameEngine.Height + GameEngine.Height) % GameEngine.Height);
     }
 

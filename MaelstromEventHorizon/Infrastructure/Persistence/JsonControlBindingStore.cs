@@ -32,7 +32,8 @@ internal sealed class JsonControlBindingStore(IAppDataPathProvider paths) : ICon
             foreach ((string actionName, string keyName) in saved)
             {
                 if (Enum.TryParse(actionName, out GameAction action) &&
-                    Enum.TryParse(keyName, out Key key) && key != Key.None)
+                    Enum.TryParse(keyName, out Key key) &&
+                    key != Key.None)
                 {
                     result[action] = key;
                 }
@@ -56,7 +57,8 @@ internal sealed class JsonControlBindingStore(IAppDataPathProvider paths) : ICon
             Dictionary<string, string> data =
                 bindings.ToDictionary(pair => pair.Key.ToString(), pair => pair.Value.ToString());
 
-            File.WriteAllText(path, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+            File.WriteAllText(path, JsonSerializer.Serialize(
+                data, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch
         {

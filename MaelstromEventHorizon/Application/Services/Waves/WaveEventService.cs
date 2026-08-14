@@ -147,11 +147,14 @@ internal sealed class WaveEventService
             }
         }
 
-        bool pendingStorm = game is { CometStormWave: true, CometSpawned: false } ||
-                            game.CometStormRemaining > 0;
+        bool pendingStorm = game is { CometStormWave: true, CometSpawned: false } || game.CometStormRemaining > 0;
 
-        bool waveClear = !game.PlayerRespawning && !HasAlive(game.Asteroids) && !HasAlive(game.Fighters) &&
-                         !HasAlive(game.Vortices) && !pendingStorm && game.BlackHoleTimer <= 0;
+        bool waveClear = !game.PlayerRespawning &&
+                         !HasAlive(game.Asteroids) &&
+                         !HasAlive(game.Fighters) &&
+                         !HasAlive(game.Vortices) &&
+                         !pendingStorm &&
+                         game.BlackHoleTimer <= 0;
 
         if (waveClear)
         {

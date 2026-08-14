@@ -48,8 +48,7 @@ internal sealed class ScoreTransitionService
 
         const double boostedEventChance = .8;
 
-        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 } &&
-            game.Random.NextDouble() < boostedEventChance)
+        if (game is { CanisterSpawned: false, CanisterTimer: <= 0 } && game.Random.NextDouble() < boostedEventChance)
         {
             game.CanisterTimer = .8 + game.Random.NextDouble() * 2.8;
         }
@@ -60,8 +59,7 @@ internal sealed class ScoreTransitionService
             game.MultiplierTimer = 1.1 + game.Random.NextDouble() * 3.0;
         }
 
-        if (game is { CometSpawned: false, CometTimer: <= 0 } &&
-            game.Random.NextDouble() < boostedEventChance)
+        if (game is { CometSpawned: false, CometTimer: <= 0 } && game.Random.NextDouble() < boostedEventChance)
         {
             game.CometTimer = 1.4 + game.Random.NextDouble() * 3.2;
         }
@@ -254,8 +252,10 @@ internal sealed class ScoreTransitionService
         var ship = game.Player;
         double margin = ship.Radius + 32;
 
-        return ship.Position.X < -margin || ship.Position.X > GameEngine.Width + margin ||
-               ship.Position.Y < -margin || ship.Position.Y > GameEngine.Height + margin;
+        return ship.Position.X < -margin ||
+               ship.Position.X > GameEngine.Width + margin ||
+               ship.Position.Y < -margin ||
+               ship.Position.Y > GameEngine.Height + margin;
     }
 
     internal void BeginWaveSummaryExit(GameEngine game)

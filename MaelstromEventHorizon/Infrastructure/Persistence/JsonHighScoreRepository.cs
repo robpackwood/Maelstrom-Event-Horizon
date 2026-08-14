@@ -41,7 +41,8 @@ internal sealed class JsonHighScoreRepository(IAppDataPathProvider paths) : IHig
                 .Take(10)
                 ];
 
-            File.WriteAllText(paths.WritePath("highscores.json"),
+            File.WriteAllText(
+                paths.WritePath("highscores.json"),
                 JsonSerializer.Serialize(topTen, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch

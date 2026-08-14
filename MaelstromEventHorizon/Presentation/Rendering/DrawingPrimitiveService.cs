@@ -35,7 +35,8 @@ internal sealed class DrawingPrimitiveService
         DrawText(dc, "SCORE", 687, 222, 11, label, FontWeights.SemiBold);
         DrawText(dc, "WAVE", 833, 222, 11, label, FontWeights.SemiBold);
 
-        dc.DrawLine(new Pen(new SolidColorBrush(Color.FromArgb(110, 79, 153, 184)), 1), new Point(388, 232),
+        dc.DrawLine(
+            new Pen(new SolidColorBrush(Color.FromArgb(110, 79, 153, 184)), 1), new Point(388, 232),
             new Point(892, 232));
 
         for (int i = 0; i < 10; i++)
@@ -45,7 +46,8 @@ internal sealed class DrawingPrimitiveService
 
             if (highlighted)
             {
-                dc.DrawRoundedRectangle(new SolidColorBrush(Color.FromArgb(82, 255, 211, 83)),
+                dc.DrawRoundedRectangle(
+                    new SolidColorBrush(Color.FromArgb(82, 255, 211, 83)),
                     new Pen(new SolidColorBrush(Color.FromArgb(160, 255, 225, 119)), 1),
                     new Rect(384, baseline - 20, 512, 26), 3, 3);
             }
@@ -66,10 +68,12 @@ internal sealed class DrawingPrimitiveService
             }
             else
             {
-                DrawText(dc, $"{i + 1:00}", 400, baseline, 14, new SolidColorBrush(Color.FromRgb(70, 92, 107)),
+                DrawText(
+                    dc, $"{i + 1:00}", 400, baseline, 14, new SolidColorBrush(Color.FromRgb(70, 92, 107)),
                     FontWeights.SemiBold);
 
-                DrawText(dc, "---", 475, baseline, 14, new SolidColorBrush(Color.FromRgb(70, 92, 107)),
+                DrawText(
+                    dc, "---", 475, baseline, 14, new SolidColorBrush(Color.FromRgb(70, 92, 107)),
                     FontWeights.Normal);
             }
         }
@@ -82,8 +86,9 @@ internal sealed class DrawingPrimitiveService
             return geometry;
         }
 
-        geometry = Polygon((27 + expand, 0), (5, -8), (-14 - expand, -16 - expand), (-18 - expand, -8),
-            (-9, 0), (-18 - expand, 8), (-14 - expand, 16 + expand), (5, 8));
+        geometry = Polygon(
+            (27 + expand, 0), (5, -8), (-14 - expand, -16 - expand), (-18 - expand, -8), (-9, 0), (-18 - expand, 8),
+            (-14 - expand, 16 + expand), (5, 8));
 
         shipGeometry.Add(expand, geometry);
         return geometry;
@@ -169,13 +174,13 @@ internal sealed class DrawingPrimitiveService
     {
         for (int i = 3; i >= 1; i--)
         {
-            dc.DrawGeometry(null, Pen(Color.FromArgb((byte)(20 + i * 8), color.R, color.G, color.B), width * i),
-                geometry);
+            dc.DrawGeometry(
+                null, Pen(Color.FromArgb((byte)(20 + i * 8), color.R, color.G, color.B), width * i), geometry);
         }
     }
 
-    internal void DrawGlowEllipse(GameView view, DrawingContext dc, V2 center, double radius, Color color, int layers,
-        double intensity)
+    internal void DrawGlowEllipse(
+        GameView view, DrawingContext dc, V2 center, double radius, Color color, int layers, double intensity)
     {
         TransparentEffectBudget.GlowDetail detail = view.TransparentEffects.ReserveGlow(radius, layers);
 
@@ -187,15 +192,15 @@ internal sealed class DrawingPrimitiveService
         }
     }
 
-    internal void DrawText(DrawingContext dc, string text, double x, double baseline, double size, Brush brush,
-        FontWeight weight)
+    internal void DrawText(
+        DrawingContext dc, string text, double x, double baseline, double size, Brush brush, FontWeight weight)
     {
         FormattedText ft = Format(text, size, brush, weight);
         dc.DrawText(ft, new Point(x, baseline - ft.Baseline));
     }
 
-    internal void DrawCenteredText(DrawingContext dc, string text, double centerX, double baseline, double size,
-        Brush brush, FontWeight weight)
+    internal void DrawCenteredText(
+        DrawingContext dc, string text, double centerX, double baseline, double size, Brush brush, FontWeight weight)
     {
         FormattedText ft = Format(text, size, brush, weight);
         dc.DrawText(ft, new Point(centerX - ft.Width / 2, baseline - ft.Baseline));
@@ -280,10 +285,11 @@ internal sealed class DrawingPrimitiveService
 
     private static FormattedText CreateFormattedText(string text, double size, Brush brush, FontWeight weight)
     {
-        return new FormattedText(text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
-                new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, weight, FontStretches.Normal), size, brush,
-                1.0)
-            { TextAlignment = TextAlignment.Left };
+        return new FormattedText(
+            text, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+            new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, weight, FontStretches.Normal), size, brush,
+            1.0)
+        { TextAlignment = TextAlignment.Left };
     }
 
     private static uint ColorKey(Color color)
@@ -313,7 +319,8 @@ internal sealed class DrawingPrimitiveService
 
     internal Color Lighten(Color c, double amount)
     {
-        return Color.FromRgb((byte)(c.R + (255 - c.R) * amount), (byte)(c.G + (255 - c.G) * amount),
+        return Color.FromRgb(
+            (byte)(c.R + (255 - c.R) * amount), (byte)(c.G + (255 - c.G) * amount),
             (byte)(c.B + (255 - c.B) * amount));
     }
 
