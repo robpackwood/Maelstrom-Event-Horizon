@@ -35,7 +35,6 @@ internal sealed class SynthAudio : IAudioService
     private readonly DispatcherTimer canisterPulseTimer = new() { Interval = TimeSpan.FromSeconds(.76) };
     private readonly string titleMusicPath;
     private readonly Lock playerGate = new();
-    private readonly string[] waveMusicPaths;
     private bool audioPaused;
     private bool canisterPulseActive;
     private double effectsVolume = 1;
@@ -66,8 +65,7 @@ internal sealed class SynthAudio : IAudioService
         gameOverMusicPath = assets.PathFor("Music", "game-over-alone.mp3");
         waveSuccessCelebrationPath = assets.PathFor("Music", "level-complete-victory-party.mp3");
 
-        waveMusicPaths =
-        [
+        string[] waveMusicPaths1 = [
             assets.PathFor("Music", "wave-12-gsf-discovery.mp3"),
             assets.PathFor("Music", "wave-02-lift-off.mp3"),
             assets.PathFor("Music", "singularity-action.mp3"),
@@ -89,12 +87,12 @@ internal sealed class SynthAudio : IAudioService
         // the next regular background without shifting every later wave.
         backgroundWaveMusicPaths =
         [
-            waveMusicPaths[0], waveMusicPaths[1], waveMusicPaths[3], waveMusicPaths[3], waveMusicPaths[4],
-            waveMusicPaths[5], waveMusicPaths[6], waveMusicPaths[7], waveMusicPaths[8], waveMusicPaths[9],
-            waveMusicPaths[10], waveMusicPaths[11], waveMusicPaths[12], waveMusicPaths[13], waveMusicPaths[14]
+            waveMusicPaths1[0], waveMusicPaths1[1], waveMusicPaths1[3], waveMusicPaths1[3], waveMusicPaths1[4],
+            waveMusicPaths1[5], waveMusicPaths1[6], waveMusicPaths1[7], waveMusicPaths1[8], waveMusicPaths1[9],
+            waveMusicPaths1[10], waveMusicPaths1[11], waveMusicPaths1[12], waveMusicPaths1[13], waveMusicPaths1[14]
         ];
 
-        titleMusicPath = waveMusicPaths[TitleMusicWave - 1];
+        titleMusicPath = waveMusicPaths1[TitleMusicWave - 1];
         PrepareLayeredEffects(assets);
         thrustLoopTimer.Tick += (_, _) => StartNextThrustSegment();
         canisterPulseTimer.Tick += (_, _) => PlayCanisterPulse();

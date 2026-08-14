@@ -614,7 +614,8 @@ internal sealed class EffectsHudRenderer
     private static void AddTimedPowerup(GameEngine game, List<(string Text, Color Color)> active, PowerupKind power,
         string name)
     {
-        int waves = game.UpgradeWavesRemaining.TryGetValue(power, out int remaining) ? remaining : 1;
+        int waves = game.UpgradeWavesRemaining.GetValueOrDefault(power, 1);
+
         active.Add(($"{name} {waves}W", waves >= 3 ? Color.FromRgb(106, 239, 151) :
             waves == 2 ? Color.FromRgb(255, 222, 94) : Color.FromRgb(255, 102, 102)));
     }
@@ -622,6 +623,7 @@ internal sealed class EffectsHudRenderer
     private static double MeasureActivePowerups(GameView view, List<(string Text, Color Color)> active, double size)
     {
         double separator = view.Format("  |  ", size, Brushes.White, FontWeights.SemiBold).Width;
+
         return active.Sum(item => view.Format(item.Text, size, Brushes.White, FontWeights.SemiBold).Width) +
                separator * (active.Count - 1);
     }
