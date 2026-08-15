@@ -31,20 +31,7 @@ internal sealed class GameWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
         Background = Brushes.Black;
         SetWindowIcon();
-        view.UseGpuPlayfield = true;
         Grid surface = new();
-        GpuPlayfieldView gpuPlayfield = new(game, view.FrameTimings);
-
-        gpuPlayfield.Failed += _ =>
-        {
-            view.UseGpuPlayfield = false;
-            view.FrameTimings.ClearGpuPlayfield();
-            surface.Children.Remove(gpuPlayfield);
-            view.InvalidateVisual();
-            view.Focus();
-        };
-
-        surface.Children.Add(gpuPlayfield);
         surface.Children.Add(view);
         Content = surface;
         ApplyFullScreen(display.FullScreen);

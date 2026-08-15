@@ -16,6 +16,8 @@ internal sealed class SynthAudio : IAudioService
     private readonly string bonusMusicPath;
     private readonly string[] backgroundWaveMusicPaths;
     private readonly string bossMusicPath;
+    private readonly string disabledBonusStageMusicPath;
+    private readonly string disabledBossStageMusicPath;
     private readonly string calmSummaryMusicPath;
     private readonly string celebrationSummaryMusicPath;
     private readonly IReadOnlyDictionary<SoundCue, byte[]> clips;
@@ -60,6 +62,8 @@ internal sealed class SynthAudio : IAudioService
         normalMusicPath = assets.PathFor("through-the-universe.mp3");
         bonusMusicPath = assets.PathFor("Music", "singularity-action.mp3");
         bossMusicPath = assets.PathFor("Music", "boss-heavy-ominous.mp3");
+        disabledBossStageMusicPath = assets.PathFor("Music", "disabled-boss-space-battle.mp3");
+        disabledBonusStageMusicPath = assets.PathFor("Music", "disabled-bonus-party-sector.mp3");
         calmSummaryMusicPath = assets.PathFor("Music", "summary-calm-space-music.mp3");
         celebrationSummaryMusicPath = assets.PathFor("Music", "summary-celebration-our-expanse.mp3");
         gameOverMusicPath = assets.PathFor("Music", "game-over-alone.mp3");
@@ -67,7 +71,7 @@ internal sealed class SynthAudio : IAudioService
 
         string[] waveMusicPaths1 = [
             assets.PathFor("Music", "wave-12-gsf-discovery.mp3"),
-            assets.PathFor("Music", "wave-02-lift-off.mp3"),
+            assets.PathFor("Music", "wave-02-persevere.mp3"),
             assets.PathFor("Music", "singularity-action.mp3"),
             assets.PathFor("Music", "wave-04-star-on-the-horizon.mp3"),
             assets.PathFor("Music", "wave-05-racing-through-asteroids.mp3"),
@@ -131,6 +135,24 @@ internal sealed class SynthAudio : IAudioService
         string preferred = earnedCashBonus ? celebrationSummaryMusicPath : calmSummaryMusicPath;
         string fallback = earnedCashBonus ? bonusMusicPath : normalMusicPath;
         StartTrack(File.Exists(preferred) ? preferred : fallback, true, earnedCashBonus ? .34 : .22);
+    }
+
+    public void StartDisabledBossStageMusic()
+    {
+        StopActiveEffects();
+        StartTrack(
+            File.Exists(disabledBossStageMusicPath) ? disabledBossStageMusicPath : normalMusicPath,
+            true,
+            .42);
+    }
+
+    public void StartDisabledBonusStageMusic()
+    {
+        StopActiveEffects();
+        StartTrack(
+            File.Exists(disabledBonusStageMusicPath) ? disabledBonusStageMusicPath : normalMusicPath,
+            true,
+            .40);
     }
 
     public void PlayWaveSuccessFanfare()
@@ -620,7 +642,7 @@ internal sealed class SynthAudio : IAudioService
                 [SoundCue.Coin] = "bonus-coin-jingle.wav",
                 [SoundCue.ChaChing] = "sfx_15b.wav",
                 [SoundCue.CometCelebration] = "sfx_05c.wav",
-                [SoundCue.ShipCrash] = "player-ship-heavy-explosion.wav",
+                [SoundCue.ShipCrash] = "ship-explosion-retro.wav",
                 [SoundCue.ShipBlast] = "sfx_17a.wav",
                 [SoundCue.BonusFailed] = "sfx_18a.wav",
                 [SoundCue.GiantGrow] = "sfx_19a.wav",

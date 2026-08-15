@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using MaelstromEventHorizon.Application;
 using MaelstromEventHorizon.Domain.Effects;
 using MaelstromEventHorizon.Domain.Entities;
@@ -57,11 +58,28 @@ internal sealed class EffectsHudRenderer
 
     internal void DrawShots(GameView view, DrawingContext dc)
     {
+        DrawShots(view, dc, null);
+    }
+
+    internal void DrawSpriteShots(GameView view, DrawingContext dc)
+    {
+        DrawShots(view, dc, true);
+    }
+
+    private void DrawShots(GameView view, DrawingContext dc, bool? spriteShotsOnly)
+    {
         foreach (Shot shot in view.Game.Shots)
         {
+            bool spriteShot = view.Game.RicochetArenaActive || !shot.Enemy;
+
+            if (spriteShotsOnly is not null && spriteShot != spriteShotsOnly.Value)
+            {
+                continue;
+            }
+
             if (view.Game.RicochetArenaActive)
             {
-                DrawBeachBallShot(view, dc, shot);
+                DrawRicochetShot(view, dc, shot);
                 continue;
             }
 
@@ -89,6 +107,32 @@ internal sealed class EffectsHudRenderer
 
             bool enhanced = shot.BossShot || shot is { Enemy: false, PowerLevel: > 0 };
             (Brush Glow, Brush Body, Pen Outline) visual = GetShotVisual(view, color, enhanced, shot.PowerLevel);
+
+            BitmapSource? playerProjectileSprite = shot.Laser ? view.LaserShotSprite : view.PlayerShotSprite;
+
+            if (!shot.Enemy && playerProjectileSprite is not null)
+            {
+                double width = shot.Laser ? radius * 8.5 : radius * 3.8;
+                double height = shot.Laser ? radius * 3.9 : radius * 3.8;
+
+                if (!shot.Laser)
+                {
+                    dc.DrawEllipse(visual.Glow, null, view.Pt(shot.Position), radius * 1.8, radius * 1.8);
+                    dc.DrawEllipse(visual.Body, visual.Outline, view.Pt(shot.Position), radius * 1.25, radius * 1.25);
+                }
+
+                DrawProjectileSprite(dc, playerProjectileSprite, shot, width, height);
+
+                if (shot.PowerLevel > 0)
+                {
+                    double orbit = radius * (1.28 + .05 * Math.Sin(view.Game.TotalTime * 18 + shot.Age * 9));
+                    dc.DrawArc(
+                        GetOrbitPen(color, shot.PowerLevel), view.Pt(shot.Position), orbit, shot.Angle * 180 / Math.PI,
+                        155 + shot.PowerLevel * 28);
+                }
+
+                continue;
+            }
 
             if (shot.Laser)
             {
@@ -245,9 +289,16 @@ internal sealed class EffectsHudRenderer
         dc.Pop();
     }
 
-    private void DrawBeachBallShot(GameView view, DrawingContext dc, Shot shot)
+    private void DrawRicochetShot(GameView view, DrawingContext dc, Shot shot)
     {
         double radius = Math.Max(7.5, shot.Radius * 1.35);
+
+        if (view.RicochetShotSprite is not null)
+        {
+            DrawProjectileSprite(dc, view.RicochetShotSprite, shot, radius * 3.1, radius * 2.35);
+            return;
+        }
+
         Color glowColor = shot.Enemy ? Color.FromRgb(255, 111, 103) : Color.FromRgb(91, 226, 255);
         view.DrawGlowEllipse(dc, shot.Position, radius * 1.25, glowColor, 3, .35);
         dc.PushTransform(new TranslateTransform(shot.Position.X, shot.Position.Y));
@@ -289,6 +340,16 @@ internal sealed class EffectsHudRenderer
             Brushes.White, new Pen(view.Brush(Color.FromRgb(44, 95, 121)), .6), new Point(), radius * .22,
             radius * .22);
 
+        dc.Pop();
+        dc.Pop();
+    }
+
+    private static void DrawProjectileSprite(DrawingContext dc, BitmapSource sprite, Shot shot, double width, double height)
+    {
+        dc.PushTransform(new TranslateTransform(shot.Position.X, shot.Position.Y));
+        double direction = Math.Atan2(shot.Velocity.Y, shot.Velocity.X) * 180 / Math.PI;
+        dc.PushTransform(new RotateTransform(direction));
+        dc.DrawImage(sprite, new Rect(-width / 2, -height / 2, width, height));
         dc.Pop();
         dc.Pop();
     }
@@ -338,12 +399,19 @@ internal sealed class EffectsHudRenderer
         {
             Particle p = view.Game.Particles[index];
 
-            if (!Visible(p.Position.X, p.Position.Y, 42))
+            if (!Visible(p.Position.X, p.Position.Y, p.ShipExplosion ? p.StartSize * 2 : 42))
             {
                 continue;
             }
 
             double life = Math.Clamp(1 - p.Age / p.Lifetime, 0, 1);
+
+            if (p.ShipExplosion && view.ShipExplosionFrames[0] is not null)
+            {
+                DrawShipExplosionSprite(view, dc, p, life);
+                continue;
+            }
+
             Color c = view.FromArgb(p.Color, (byte)(255 * life));
             double r = p.StartSize * (.35 + life * .8);
             dc.DrawEllipse(view.Brush(c), null, view.Pt(p.Position), r, r);
@@ -368,6 +436,42 @@ internal sealed class EffectsHudRenderer
                 }
             }
         }
+    }
+
+    internal void DrawShipExplosionSprites(GameView view, DrawingContext dc)
+    {
+        if (view.ShipExplosionFrames[0] is null)
+        {
+            return;
+        }
+
+        foreach (Particle particle in view.Game.Particles)
+        {
+            if (particle.ShipExplosion && Visible(particle.Position.X, particle.Position.Y, particle.StartSize * 2))
+            {
+                DrawShipExplosionSprite(view, dc, particle, Math.Clamp(1 - particle.Age / particle.Lifetime, 0, 1));
+            }
+        }
+    }
+
+    private static void DrawShipExplosionSprite(GameView view, DrawingContext dc, Particle particle, double life)
+    {
+        int frameIndex = Math.Min(
+            view.ShipExplosionFrames.Length - 1,
+            (int)(particle.Age / particle.Lifetime * view.ShipExplosionFrames.Length));
+        BitmapSource? frame = view.ShipExplosionFrames[frameIndex];
+
+        if (frame is null)
+        {
+            return;
+        }
+
+        double size = particle.StartSize * (.55 + life * .8);
+        dc.PushOpacity(Math.Min(1, life * 1.5));
+        dc.DrawImage(
+            frame,
+            new Rect(particle.Position.X - size, particle.Position.Y - size, size * 2, size * 2));
+        dc.Pop();
     }
 
     internal void DrawShockwaves(GameView view, DrawingContext dc)
@@ -481,7 +585,19 @@ internal sealed class EffectsHudRenderer
                 GameEngine.Width / 2, 91, 9.5, view.Brush(Color.FromRgb(255, 177, 108)), FontWeights.Black);
         }
 
-        view.DrawText(dc, $"SHIPS  {view.Game.Lives}", 1138, 30, 17, Brushes.White, FontWeights.Bold);
+        view.DrawText(dc, "SHIPS", 1070, 29, 15, Brushes.White, FontWeights.Bold);
+
+        for (int i = 0; i < GameEngine.MaxLives; i++)
+        {
+            Rect slot = new(1126 + i * 29, 18, 26, 20);
+            bool filled = i < view.Game.Lives;
+            dc.DrawRoundedRectangle(
+                view.Brush(filled ? Color.FromArgb(64, 91, 231, 255) : Color.FromArgb(30, 12, 26, 42)),
+                view.Pen(filled ? Color.FromRgb(122, 238, 255) : Color.FromRgb(61, 91, 108), .8), slot, 3, 3);
+            dc.PushOpacity(filled ? 1 : .22);
+            dc.DrawImage(view.PlayerShipSprite, new Rect(slot.X + 2, slot.Y + 5, 22, 8.25));
+            dc.Pop();
+        }
 
         if (activeBoss is not null)
         {
@@ -588,7 +704,7 @@ internal sealed class EffectsHudRenderer
 
         if (view.Game.RicochetArenaActive)
         {
-            active.Add(("RICOCHET ARENA", Color.FromRgb(118, 242, 206)));
+            AddTimedPowerup(view.Game, active, PowerupKind.RicochetArena, "RICOCHET ARENA");
         }
 
         if (view.Game.Player.Giant)
@@ -638,7 +754,8 @@ internal sealed class EffectsHudRenderer
     private static void AddTimedPowerup(
         GameEngine game, List<(string Text, Color Color)> active, PowerupKind power, string name)
     {
-        int waves = game.UpgradeWavesRemaining.GetValueOrDefault(power, 1);
+        int remaining = game.UpgradeWavesRemaining.GetValueOrDefault(power, 1);
+        int waves = Math.Min(4, remaining);
 
         active.Add(($"{name} {waves}W", waves >= 3
             ? Color.FromRgb(106, 239, 151)

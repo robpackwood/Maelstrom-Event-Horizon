@@ -22,7 +22,7 @@ internal sealed class GameInputService
         game.Wave = 0;
         game.Lives = 3;
         game.Multiplier = 1;
-        game.NextLifeScore = GameEngine.ExtraShipScoreInterval;
+        game.RescueThankYouTimer = -1;
         game.Player = new Ship(new V2(GameEngine.Width / 2, GameEngine.Height / 2));
         game.TurnVelocity = 0;
         game.ThrustRamp = 0;

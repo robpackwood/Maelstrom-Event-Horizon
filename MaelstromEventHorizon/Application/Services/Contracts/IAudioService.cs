@@ -6,6 +6,8 @@ internal interface IAudioService
 {
     void StartTitleMusic();
     void StartWaveMusic(int wave);
+    void StartDisabledBossStageMusic();
+    void StartDisabledBonusStageMusic();
     void StartBossMusic();
     void StartSummaryMusic(bool earnedCashBonus);
     void PlayWaveSuccessFanfare();

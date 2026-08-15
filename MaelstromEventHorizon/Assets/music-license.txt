@@ -12,6 +12,20 @@ Source: https://opengameart.org/content/muffled-distant-explosion
 Released under CC0 1.0 Universal / Public Domain.
 https://creativecommons.org/publicdomain/zero/1.0/
 
+Fireball
+Sound effect by Julien Matthey
+Source: https://opengameart.org/content/fireball-1
+
+Released under CC0 1.0 Universal / Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Explosion
+Sound effect by TinyWorlds
+Source: https://opengameart.org/content/explosion-0
+
+Released under CC0 1.0 Universal / Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/
+
 Singularity (Action)
 Music by Vitalezzz
 Source: https://opengameart.org/content/singularity-0
@@ -55,6 +69,27 @@ https://creativecommons.org/publicdomain/zero/1.0/
 Magic Space
 Music by CodeManu
 Source: https://opengameart.org/content/magic-space
+
+Released under CC0 1.0 Universal / Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Persevere
+Music by Vitalezzz
+Source: https://opengameart.org/content/persevere
+
+Released under CC0 1.0 Universal / Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Space Battle
+Music by MintoDog
+Source: https://opengameart.org/content/space-battle
+
+Released under CC0 1.0 Universal / Public Domain.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+Party Sector
+Music by Joth
+Source: https://opengameart.org/content/party-sector
 
 Released under CC0 1.0 Universal / Public Domain.
 https://creativecommons.org/publicdomain/zero/1.0/

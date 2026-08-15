@@ -9,8 +9,9 @@ internal sealed class Particle(V2 position, V2 velocity, double lifetime, uint c
     public uint Color = color;
     public double Lifetime = lifetime;
     public double StartSize = size;
+    public bool ShipExplosion;
 
-    internal Particle Reset(V2 position, V2 velocity, double lifetime, uint color, double size)
+    internal Particle Reset(V2 position, V2 velocity, double lifetime, uint color, double size, bool shipExplosion = false)
     {
         Position = position;
         Velocity = velocity;
@@ -21,6 +22,7 @@ internal sealed class Particle(V2 position, V2 velocity, double lifetime, uint c
         Age = 0;
         Angle = 0;
         Spin = 0;
+        ShipExplosion = shipExplosion;
         Alive = true;
         return this;
     }

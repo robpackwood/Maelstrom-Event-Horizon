@@ -22,7 +22,7 @@ internal sealed class GameEngine
     internal const double ShieldReleaseDelay = .5;
     internal const double ArenaWallInset = 12;
     internal const int TitleMenuItemCount = 10;
-    internal const int ExtraShipScoreInterval = 100_000;
+    internal const int MaxLives = 5;
     internal const double VolumeStep = .05;
     private const int MaxPooledShots = 240;
     private const int MaxPooledParticles = 900;
@@ -80,7 +80,7 @@ internal sealed class GameEngine
     internal GameMode ModeBeforeQuitConfirmation;
     internal bool MultiplierSpawned;
     internal double MultiplierTimer = -1;
-    internal int NextLifeScore = ExtraShipScoreInterval;
+    internal double RescueThankYouTimer = -1;
     internal double NextWaveTimer;
     internal double WaveStartedAt;
     internal bool PendingGameOverHighScore;
@@ -265,6 +265,17 @@ internal sealed class GameEngine
         TotalTime += dt;
         RicochetBounceSoundCooldown = Math.Max(0, RicochetBounceSoundCooldown - dt);
 
+        if (RescueThankYouTimer >= 0)
+        {
+            RescueThankYouTimer -= dt;
+
+            if (RescueThankYouTimer <= 0)
+            {
+                RescueThankYouTimer = -1;
+                Audio.Play(SoundCue.RescueCelebration, .7);
+            }
+        }
+
         if (Mode == GameMode.Title)
         {
             TitleIdleTime += dt;
@@ -386,13 +397,13 @@ internal sealed class GameEngine
         return shot;
     }
 
-    internal Particle SpawnParticle(V2 position, V2 velocity, double lifetime, uint color, double size)
+    internal Particle SpawnParticle(V2 position, V2 velocity, double lifetime, uint color, double size, bool shipExplosion = false)
     {
         TrimPool(Particles, particlePool, MaxPooledParticles);
 
         Particle particle = particlePool.Count > 0
-            ? particlePool.Pop().Reset(position, velocity, lifetime, color, size)
-            : new Particle(position, velocity, lifetime, color, size);
+            ? particlePool.Pop().Reset(position, velocity, lifetime, color, size, shipExplosion)
+            : new Particle(position, velocity, lifetime, color, size) { ShipExplosion = shipExplosion };
 
         Particles.Add(particle);
         return particle;
@@ -452,17 +463,6 @@ internal sealed class GameEngine
                 ShipDebrisPieces.RemoveAt(i);
             }
         }
-    }
-
-    internal bool LowerVisualQualityIfNeeded()
-    {
-        if (VisualQuality == 0)
-        {
-            return false;
-        }
-
-        VisualQuality--;
-        return true;
     }
 
     internal void AdjustVisualQuality(int direction)
@@ -931,7 +931,12 @@ internal sealed class GameEngine
 
     internal void SpawnShipDestructionCloud()
     {
-        services.EffectsPhysicsService.SpawnShipDestructionCloud(this);
+        services.EffectsPhysicsService.SpawnShipDestructionCloud(this, Player.Position, Player.Velocity, Player.VisualScale);
+    }
+
+    internal void SpawnShipDestructionCloud(V2 position, V2 velocity, double scale)
+    {
+        services.EffectsPhysicsService.SpawnShipDestructionCloud(this, position, velocity, scale);
     }
 
     private void UpdateCanisterPulse()

@@ -24,7 +24,6 @@ internal sealed class WaveSpawnService
         game.Mode = GameMode.Playing;
         game.BossCountdown = 0;
         game.BossInvulnerability = 0;
-        game.RicochetArenaActive = false;
         game.CenterPlayerWithShield();
 
         game.Wave = game.BonusOnlyMode
@@ -77,7 +76,7 @@ internal sealed class WaveSpawnService
         game.CometStormWave = standardWave && game.Random.NextDouble() < .075;
         bool lucky = game.LuckActive;
         double eventChance = lucky ? .8 : 1.0 / 3;
-        double canisterChance = .5;
+        double canisterChance = .70;
 
         game.CanisterTimer = standardWave && game.Random.NextDouble() < canisterChance
             ? 3 + game.Random.NextDouble() * 30
@@ -197,14 +196,24 @@ internal sealed class WaveSpawnService
 
         game.NextWaveTimer = 0;
 
-        // Only an enabled boss stage may replace the wave background. Bonus
-        // stages retain their wave's background music, and disabled modes can
-        // never select a special-stage track.
+        // Disabled boss and bonus stage slots each use a separate, energetic
+        // regular-wave track rather than either special-stage soundtrack.
         bool playBossMusic = game.IsBossStage && (game.BossOnlyMode || game.BossFightsEnabled);
+        bool disabledBonusStageSlot = !game.BossOnlyMode && !game.BonusStagesEnabled && game.Wave % 5 == 0;
+        bool disabledBossStageSlot = !game.BonusOnlyMode && !game.BossOnlyMode &&
+                                     !game.BossFightsEnabled && game.Wave > 1 && game.Wave % 5 == 1;
 
         if (playBossMusic)
         {
             game.Audio.StartBossMusic();
+        }
+        else if (disabledBonusStageSlot)
+        {
+            game.Audio.StartDisabledBonusStageMusic();
+        }
+        else if (disabledBossStageSlot)
+        {
+            game.Audio.StartDisabledBossStageMusic();
         }
         else
         {
@@ -658,7 +667,7 @@ internal sealed class WaveSpawnService
 
     internal void SpawnRescueShip(GameEngine game)
     {
-        if (game.BonusSpawnsDisabled)
+        if (game.BonusSpawnsDisabled || game.Lives >= GameEngine.MaxLives)
         {
             return;
         }

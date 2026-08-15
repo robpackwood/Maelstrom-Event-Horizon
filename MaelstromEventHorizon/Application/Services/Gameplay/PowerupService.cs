@@ -7,7 +7,7 @@ namespace MaelstromEventHorizon.Application.Services.Gameplay;
 
 internal sealed class PowerupService
 {
-    internal const int UpgradeDurationWaves = 3;
+    internal const int UpgradeDurationWaves = 4;
 
     internal void UpdateDeathEffects(GameEngine game, double dt)
     {
@@ -140,7 +140,9 @@ internal sealed class PowerupService
 
         if (IsTemporaryUpgrade(power))
         {
-            game.UpgradeWavesRemaining[power] = UpgradeDurationWaves;
+            // Do not charge the partly completed pickup wave against the
+            // duration: upgrades remain through the next four full waves.
+            game.UpgradeWavesRemaining[power] = UpgradeDurationWaves + 1;
         }
 
         game.ShowBanner(PowerupAnnouncementText(power), 2.2);
@@ -175,6 +177,7 @@ internal sealed class PowerupService
         }
 
         game.RicochetArenaActive = true;
+        game.UpgradeWavesRemaining[PowerupKind.RicochetArena] = UpgradeDurationWaves + 1;
         game.ShowBanner("RICOCHET ARENA ACQUIRED", 2.2);
         game.Audio.Play(SoundCue.Pickup, .9);
         game.SpawnShockwave(game.Player.Position, .52, 0xffd78cff, 120);
@@ -293,7 +296,8 @@ internal sealed class PowerupService
     {
         return power is PowerupKind.AirBrakes or PowerupKind.Luck or PowerupKind.TripleFire or
             PowerupKind.RiftVolley or PowerupKind.LongRange or PowerupKind.LaserShots or
-            PowerupKind.DoubleShotSize or PowerupKind.ReflectionShield or PowerupKind.GiantShip;
+            PowerupKind.DoubleShotSize or PowerupKind.ReflectionShield or PowerupKind.RicochetArena or
+            PowerupKind.GiantShip;
     }
 
     private static void DeactivateTemporaryUpgrade(GameEngine game, PowerupKind power)
@@ -330,6 +334,10 @@ internal sealed class PowerupService
 
             case PowerupKind.ReflectionShield:
                 game.ReflectionShieldActive = false;
+                break;
+
+            case PowerupKind.RicochetArena:
+                game.RicochetArenaActive = false;
                 break;
 
             case PowerupKind.GiantShip:

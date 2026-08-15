@@ -30,8 +30,9 @@ internal sealed class EffectsPhysicsService
         }
     }
 
-    internal void SpawnShipDestructionCloud(GameEngine game)
+    internal void SpawnShipDestructionCloud(GameEngine game, V2 position, V2 velocity, double scale = 1)
     {
+        AddParticle(game, position, velocity * .08, 1.2, 0xffffffff, 82 * scale, true);
         int count = EffectCount(game, 30);
 
         for (int i = 0; i < count; i++)
@@ -41,9 +42,9 @@ internal sealed class EffectsPhysicsService
             uint color = i % 5 == 0 ? 0xffff9c5a : i % 3 == 0 ? 0xff6bd9e9 : 0xff8b9ca2;
 
             AddParticle(
-                game, game.Player.Position + direction * game.Random.NextDouble() * 12,
-                game.Player.Velocity * .12 + direction * speed, .48 + game.Random.NextDouble() * .55, color,
-                game.Random.Next(5, 13));
+                game, position + direction * game.Random.NextDouble() * 12 * scale,
+                velocity * .12 + direction * speed * scale, .48 + game.Random.NextDouble() * .55, color,
+                game.Random.Next(5, 13) * scale);
         }
     }
 
@@ -123,7 +124,7 @@ internal sealed class EffectsPhysicsService
     }
 
     private static void AddParticle(
-        GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size)
+        GameEngine game, V2 position, V2 velocity, double lifetime, uint color, double size, bool shipExplosion = false)
     {
         int maximum = game.VisualQuality switch { 0 => 160, 1 => 400, _ => MaxParticles };
 
@@ -132,7 +133,7 @@ internal sealed class EffectsPhysicsService
             game.Particles[0].Alive = false;
         }
 
-        game.SpawnParticle(position, velocity, lifetime, color, size);
+        game.SpawnParticle(position, velocity, lifetime, color, size, shipExplosion);
     }
 
     private static void AddShockwave(GameEngine game, V2 position, double lifetime, uint color, double maxRadius)

@@ -29,14 +29,6 @@ internal sealed class ScoreTransitionService
         }
 
         game.Score += amount;
-
-        while (game.Score >= game.NextLifeScore)
-        {
-            game.Lives++;
-            game.NextLifeScore += GameEngine.ExtraShipScoreInterval;
-            game.Announce("EXTRA SHIP", 2);
-            game.Audio.Play(SoundCue.Life);
-        }
     }
 
     internal void EnsureLuckyWaveEvents(GameEngine game)

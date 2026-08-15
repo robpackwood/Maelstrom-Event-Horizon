@@ -26,6 +26,9 @@ All newly added or enabled audio is commercially usable CC0/public-domain materi
 - **Victory Party** by Of Far Different Nature, CC BY 4.0 — level-complete music: https://opengameart.org/content/victory-party
 - **Space Music** by Nia Mi, CC0 — calm wave-summary music: https://opengameart.org/content/space-music-3
 - **Magic Space** by CodeManu, CC0 — included as an ambient/warning option: https://opengameart.org/content/magic-space
+- **Persevere** by Vitalezzz, CC0 — Wave 2 background: https://opengameart.org/content/persevere
+- **Space Battle** by MintoDog, CC0 — fallback for disabled boss-stage slots: https://opengameart.org/content/space-battle
+- **Party Sector** by Joth, CC0 — fallback for disabled bonus-stage slots: https://opengameart.org/content/party-sector
 - **Heavy Boss Battle 1** by MintoDog, CC0 — ominous boss-stage music: https://opengameart.org/content/heavy-boss-battle-1
 - **Applause in a large hall or church** by eXpl0it3r, CC0 — successful wave-bonus crowd celebration: https://opengameart.org/content/applause-in-a-large-hall-or-church
 - **Gastric Distress** by LFA, CC0 — Sludge Maw burp/fart hit reactions: https://opengameart.org/content/gastric-distress

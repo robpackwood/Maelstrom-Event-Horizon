@@ -11,6 +11,18 @@ namespace MaelstromEventHorizon.Presentation.Rendering;
 
 internal sealed class SceneRenderer
 {
+    private static readonly V2[] BackgroundPanDirections =
+    [
+        new(1, 0),
+        new(.707, .707),
+        new(0, 1),
+        new(-.707, .707),
+        new(-1, 0),
+        new(-.707, -.707),
+        new(0, -1),
+        new(.707, -.707)
+    ];
+
     internal void DrawGameCanvas(GameView view, DrawingContext dc)
     {
         view.TransparentEffects.Reset(view.Game.VisualQuality);
@@ -96,27 +108,23 @@ internal sealed class SceneRenderer
 
         if (selectedBackground is not null)
         {
-            if (view.Game.IsBonusStage)
-            {
-                dc.DrawImage(selectedBackground, new Rect(0, 0, GameEngine.Width, GameEngine.Height));
-            }
-            else
-            {
-                int cycle = waveIndex / view.WaveBackgrounds.Length;
-                double overscan = 12 + waveIndex % 4 * 3;
-                double panX = Math.Sin(view.Game.TotalTime * .018 + waveIndex * 1.73) * 7;
-                double panY = Math.Cos(view.Game.TotalTime * .014 + waveIndex * .91) * 5;
+            int cycle = waveIndex / view.WaveBackgrounds.Length;
+            double overscan = 62 + waveIndex % 4 * 4;
+            V2 panDirection = BackgroundPanDirections[waveIndex % BackgroundPanDirections.Length];
+            double travel = (view.Game.TotalTime * .05 + waveIndex * .37) % 2;
+            double drift = titleScene ? 0 : (1 - Math.Abs(travel - 1) * 2) * (42 + waveIndex % 3 * 5);
+            double panX = panDirection.X * drift;
+            double panY = panDirection.Y * drift;
 
-                dc.PushTransform(new ScaleTransform(
-                    cycle % 2 == 1 ? -1 : 1, cycle % 4 >= 2 ? -1 : 1, GameEngine.Width / 2, GameEngine.Height / 2));
+            dc.PushTransform(new ScaleTransform(
+                cycle % 2 == 1 ? -1 : 1, cycle % 4 >= 2 ? -1 : 1, GameEngine.Width / 2, GameEngine.Height / 2));
 
-                dc.DrawImage(selectedBackground,
-                    new Rect(
-                        -overscan + panX, -overscan + panY, GameEngine.Width + overscan * 2,
-                        GameEngine.Height + overscan * 2));
+            dc.DrawImage(selectedBackground,
+                new Rect(
+                    -overscan + panX, -overscan + panY, GameEngine.Width + overscan * 2,
+                    GameEngine.Height + overscan * 2));
 
-                dc.Pop();
-            }
+            dc.Pop();
 
             Color grade = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
 

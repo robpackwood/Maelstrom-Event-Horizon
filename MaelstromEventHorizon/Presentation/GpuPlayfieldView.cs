@@ -124,7 +124,7 @@ internal sealed class GpuPlayfieldView : Image
             device.BeginScene();
             gpuFrameTimer?.Begin();
             int directVertexCount = floatCount / FloatsPerVertex;
-            backdrop!.Draw(device, BackdropColor());
+            backdrop!.Draw(device, BackdropColor(), game.TotalTime, game.Wave);
             spriteBatch.Draw(device);
             directBatch.Draw(device, directVertexCount, 0, directVertexCount);
             device.EndScene();
@@ -378,6 +378,11 @@ internal sealed class GpuPlayfieldView : Image
     {
         foreach (Shot shot in game.Shots)
         {
+            if (game.RicochetArenaActive || !shot.Enemy)
+            {
+                continue;
+            }
+
             V2 position = RenderPosition(shot) + shake;
             double radius = shot.BossShot ? Math.Max(6, shot.Radius) : Math.Max(3.8, shot.Radius);
             double trailLength = shot.Laser ? 30 * TrailDetailScale : 0;
@@ -438,6 +443,11 @@ internal sealed class GpuPlayfieldView : Image
     {
         foreach (Particle particle in game.Particles)
         {
+            if (particle.ShipExplosion)
+            {
+                continue;
+            }
+
             double life = Math.Clamp(1 - particle.Age / particle.Lifetime, 0, 1);
             V2 position = RenderPosition(particle) + shake;
             double radius = Math.Max(1, particle.StartSize * (.3 + life * .7));

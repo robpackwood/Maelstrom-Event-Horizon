@@ -181,9 +181,13 @@ internal sealed partial class CollisionService
 
                 if (pickup.Kind == PickupKind.RescueShip)
                 {
-                    game.Lives++;
-                    game.ShowBanner("RESCUE +1 SHIP", 2);
-                    game.Audio.Play(SoundCue.RescueCelebration, .534375);
+                    if (game.Lives < GameEngine.MaxLives)
+                    {
+                        game.Lives++;
+                        game.ShowBanner("RESCUE +1 SHIP", 2);
+                        game.Audio.Play(SoundCue.Life, .9);
+                        game.RescueThankYouTimer = 1.05;
+                    }
                 }
                 else if (pickup.Kind == PickupKind.Canister)
                 {
@@ -470,9 +474,9 @@ internal sealed partial class CollisionService
 
         game.AwardImmediateScore(fighter.Kind == FighterKind.Interceptor ? 1000 : 500, fighter.Position);
         game.Explosion(fighter.Position, 24, fighter.Kind == FighterKind.Interceptor ? 0xff58e9ff : 0xffff4f83);
+        game.SpawnShipDestructionCloud(fighter.Position, fighter.Velocity, fighter.Elite ? .9 : .72);
         game.RollDrop(fighter.Position, .24);
-        game.Audio.Play(SoundCue.EnemyDestroyed);
-        game.Audio.Play(SoundCue.Explosion, .55);
+        game.Audio.Play(SoundCue.ShipCrash, .72);
     }
 
     internal void DamageBoss(GameEngine game, AlienBoss boss, int damage, V2 hitPosition, bool playerBulletHit = false)
@@ -611,7 +615,6 @@ internal sealed partial class CollisionService
             return;
         }
 
-        game.SpawnShipWreck();
         bool noShipsRemaining = game.Lives <= 0;
 
         if (!noShipsRemaining)
@@ -623,8 +626,7 @@ internal sealed partial class CollisionService
         game.LastPowerupTime = 0;
         game.Audio.SetThrustIntensity(0);
         game.SpawnShipDestructionCloud();
-        game.Audio.Play(SoundCue.EnemyDestroyed);
-        game.Audio.Play(SoundCue.Explosion, .55);
+        game.Audio.Play(SoundCue.ShipCrash, 1.05);
 
         if (noShipsRemaining)
         {

@@ -24,8 +24,8 @@ internal sealed class GameView : FrameworkElement
     internal const string TitleObjectives =
         "BREAK ASTEROIDS  /  SURVIVE EACH WAVE  /  DESTROY ENEMY SHIPS  /  SHOOT COMETS FOR CASH  /  " +
         "COLLECT POWER-UPS  /  BANK WAVE EARNINGS  /  SURVIVE A NEW DODGE TRIAL EVERY 5 WAVES  /  DEFEAT THE ALIEN BOSS THAT FOLLOWS  /  " +
-        "UPGRADES LAST 3 WAVES: GREEN / YELLOW / RED SHOWS TIME LEFT  /  ELITE FIGHTERS SCALE UP WITH EACH WAVE  /  " +
-        "EARN AN EXTRA SHIP EVERY $100,000  /  CHASE THE HIGHEST SCORE";
+        "UPGRADES LAST 4 FULL WAVES: GREEN / YELLOW / RED SHOWS TIME LEFT  /  ELITE FIGHTERS SCALE UP WITH EACH WAVE  /  " +
+        "RESCUE SHIPS RESTORE A SLOT, UP TO FIVE SHIPS  /  CHASE THE HIGHEST SCORE";
 
     internal static readonly Color[] WaveGrades =
     [
@@ -37,7 +37,7 @@ internal sealed class GameView : FrameworkElement
 
     internal static readonly (TickerIcon Icon, string Name, string Description, uint Tint)[] TitleItemGuide =
     [
-        (TickerIcon.Canister, "ITEM CANISTER", "contains one upgrade for three waves", 0xff50eaff),
+        (TickerIcon.Canister, "ITEM CANISTER", "contains one upgrade for four full waves", 0xff50eaff),
         (TickerIcon.AirBrakes, "AIR BRAKES", "adds strong momentum control", 0xff73d8ff),
         (TickerIcon.Luck, "LUCK OF THE IRISH", "greatly boosts the chance of bonus items while active", 0xff72f09a),
         (TickerIcon.TripleFire, "TRIPLE FIRE", "launches a three-way shot", 0xffffb85d),
@@ -47,7 +47,7 @@ internal sealed class GameView : FrameworkElement
         (TickerIcon.ReflectionShield, "REFLECTION SHIELD", "bounces one enemy shot back, then breaks", 0xffffc65b),
         (TickerIcon.Freeze, "TIME FREEZE", "stops everything except your ship for eight seconds", 0xffb18cff),
         (TickerIcon.SmartBomb, "SMART BOMB", "fractures asteroids and clears nearby threats", 0xffff7b68),
-        (TickerIcon.RicochetArena, "RICOCHET ARENA", "seals the screen and makes every moving object bounce",
+        (TickerIcon.RicochetArena, "RICOCHET ARENA", "seals the screen and makes every moving object bounce for four waves",
             0xff74f3c5),
         (TickerIcon.GiantShip, "GIANT SHIP", "doubles ship size and absorbs one lethal hit", 0xffffd85a),
         (TickerIcon.Cash, "CASH BONUS", "adds dollars to the current wave", 0xffffd66b),
@@ -83,6 +83,7 @@ internal sealed class GameView : FrameworkElement
     internal readonly GameEngine Game;
     internal readonly BitmapSource GiantPlayerShipSprite;
     internal readonly BitmapImage? InterceptorSprite;
+    internal readonly BitmapImage? LaserShotSprite;
     internal readonly BitmapImage? MetalAsteroidSprite;
     internal readonly BitmapSource MineBodySprite;
     internal readonly BitmapImage? MultiplierSprite;
@@ -92,6 +93,9 @@ internal sealed class GameView : FrameworkElement
     internal readonly IGameRenderServices Renderers;
     internal readonly BitmapSource RescueShipSprite;
     internal readonly BitmapImage? RicochetArenaSprite;
+    internal readonly BitmapImage? RicochetShotSprite;
+    internal readonly BitmapImage? PlayerShotSprite;
+    internal readonly BitmapImage?[] ShipExplosionFrames;
     internal readonly BitmapImage? SmartBombSprite;
     internal readonly BitmapImage? TimeFreezeSprite;
     internal readonly BitmapSource VortexCoreSprite;
@@ -103,7 +107,6 @@ internal sealed class GameView : FrameworkElement
     internal double NextFrameTime;
     internal double PreviousTime;
     private double simulationAccumulator;
-    internal int SlowFrameCount;
     private int renderedFrames;
     private double frameSampleStarted;
     private DrawingGroup? cachedHudFrame;
@@ -133,6 +136,20 @@ internal sealed class GameView : FrameworkElement
         TimeFreezeSprite = LoadSprite("pickup-time-freeze.png");
         SmartBombSprite = LoadSprite("pickup-smart-bomb.png");
         RicochetArenaSprite = LoadSprite("pickup-ricochet-arena.png");
+        PlayerShotSprite = LoadSprite("player-shot-sprite.png");
+        LaserShotSprite = LoadSprite("laser-shot-sprite.png");
+        ShipExplosionFrames =
+        [
+            LoadSprite("ship-explosion-0.png"), LoadSprite("ship-explosion-1.png"),
+            LoadSprite("ship-explosion-2.png"), LoadSprite("ship-explosion-3.png"),
+            LoadSprite("ship-explosion-4.png"), LoadSprite("ship-explosion-5.png"),
+            LoadSprite("ship-explosion-6.png"), LoadSprite("ship-explosion-7.png"),
+            LoadSprite("ship-explosion-8.png"), LoadSprite("ship-explosion-9.png"),
+            LoadSprite("ship-explosion-10.png"), LoadSprite("ship-explosion-11.png"),
+            LoadSprite("ship-explosion-12.png"), LoadSprite("ship-explosion-13.png"),
+            LoadSprite("ship-explosion-14.png"), LoadSprite("ship-explosion-15.png")
+        ];
+        RicochetShotSprite = LoadSprite("ricochet-shot-sprite.png");
 
         PlayerShipSprite = LoadOrPrerenderSprite(
             "player-ship.png", 192, 72, dc => DrawDetailedShipHull(dc, 0, Color.FromRgb(72, 220, 255), false));
@@ -430,15 +447,6 @@ internal sealed class GameView : FrameworkElement
             NextFrameTime = 0;
         }
 
-        SlowFrameCount = elapsed > (isCapped ? Math.Max(.022, targetFrameInterval * 1.15) : .022)
-            ? SlowFrameCount + 1
-            : Math.Max(0, SlowFrameCount - 2);
-
-        if (SlowFrameCount >= 12 && Game.LowerVisualQualityIfNeeded())
-        {
-            SlowFrameCount = 0;
-        }
-
         bool useFastSampling = Game is { IsBonusStage: true, Mode: GameMode.Playing };
 
         if (useFastSampling != FastBonusSampling)
@@ -505,6 +513,8 @@ internal sealed class GameView : FrameworkElement
 
     private void DrawGpuOverlay(DrawingContext dc)
     {
+        Renderers.EffectsHudRenderer.DrawSpriteShots(this, dc);
+        Renderers.EffectsHudRenderer.DrawShipExplosionSprites(this, dc);
         DrawHud(dc);
         DrawOverlay(dc);
 

@@ -9,6 +9,12 @@ namespace MaelstromEventHorizon.Presentation;
 
 internal sealed class CachedBackdropPass : IDisposable
 {
+    private static readonly Vector2[] PanDirections =
+    [
+        new(1, 0), new(.707f, .707f), new(0, 1), new(-.707f, .707f),
+        new(-1, 0), new(-.707f, -.707f), new(0, -1), new(.707f, -.707f)
+    ];
+
     private static readonly int TextureWidth = (int)GameEngine.Width;
     private static readonly int TextureHeight = (int)GameEngine.Height;
     private readonly IDirect3DVertexBuffer9 quadBuffer;
@@ -45,11 +51,11 @@ internal sealed class CachedBackdropPass : IDisposable
         device.SetSamplerState(0, SamplerState.MinFilter, (int)TextureFilter.Point);
         device.SetSamplerState(0, SamplerState.MagFilter, (int)TextureFilter.Point);
         device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.None);
-        device.SetSamplerState(0, SamplerState.AddressU, (int)TextureAddress.Clamp);
-        device.SetSamplerState(0, SamplerState.AddressV, (int)TextureAddress.Clamp);
+        device.SetSamplerState(0, SamplerState.AddressU, (int)TextureAddress.Wrap);
+        device.SetSamplerState(0, SamplerState.AddressV, (int)TextureAddress.Wrap);
     }
 
-    public void Draw(IDirect3DDevice9 device, uint color)
+    public void Draw(IDirect3DDevice9 device, uint color, double totalTime, int wave)
     {
         device.SetRenderState(RenderState.AlphaBlendEnable, false);
         device.Indices = null;
@@ -61,6 +67,10 @@ internal sealed class CachedBackdropPass : IDisposable
         [
             new Vector4(((color >> 16) & 0xff) / 255f, ((color >> 8) & 0xff) / 255f, (color & 0xff) / 255f, 1)
         ]);
+
+        Vector2 direction = PanDirections[Math.Max(0, wave - 1) % PanDirections.Length];
+        float distance = (float)(totalTime * .005);
+        device.SetPixelShaderConstant(1, [new Vector4(direction * distance, 0, 0)]);
 
         device.SetTexture(0, starTexture);
         device.SetStreamSource(0, quadBuffer, 0, (uint)Marshal.SizeOf<QuadVertex>());
@@ -159,5 +169,5 @@ internal sealed class CachedBackdropPass : IDisposable
     }
 
     private const string VertexSource = "struct I{float2 p:POSITION0;float2 uv:TEXCOORD0;};struct O{float4 p:POSITION0;float2 uv:TEXCOORD0;};O main(I i){O o;o.p=float4(i.p,0,1);o.uv=i.uv;return o;}";
-    private const string PixelSource = "sampler stars:register(s0);float4 tint:register(c0);struct I{float2 uv:TEXCOORD0;};float4 main(I i):COLOR0{float4 star=tex2D(stars,i.uv);return float4(lerp(tint.rgb,star.rgb,star.a),1);}";
+    private const string PixelSource = "sampler stars:register(s0);float4 tint:register(c0);float4 pan:register(c1);struct I{float2 uv:TEXCOORD0;};float4 main(I i):COLOR0{float4 star=tex2D(stars,frac(i.uv+pan.xy));return float4(lerp(tint.rgb,star.rgb,star.a),1);}";
 }
