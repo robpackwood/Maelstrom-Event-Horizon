@@ -113,7 +113,7 @@ internal sealed class EffectsHudRenderer
             if (!shot.Enemy && playerProjectileSprite is not null)
             {
                 double width = shot.Laser ? radius * 8.5 : radius * 3.8;
-                double height = shot.Laser ? radius * 3.9 : radius * 3.8;
+                double height = shot.Laser ? radius * 6.4 : radius * 3.8;
 
                 if (!shot.Laser)
                 {

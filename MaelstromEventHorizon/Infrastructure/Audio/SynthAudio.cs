@@ -83,7 +83,10 @@ internal sealed class SynthAudio : IAudioService
             assets.PathFor("Music", "wave-11-outworld.mp3"), assets.PathFor("Music", "wave-13-joining-forces.mp3"),
             assets.PathFor("Music", "wave-18-robotic-soundtrack.mp3"),
             assets.PathFor("Music", "wave-19-anti-entity-original.mp3"),
-            assets.PathFor("Music", "wave-20-stillness-of-space.mp3")
+            assets.PathFor("Music", "wave-20-stillness-of-space.mp3"),
+            assets.PathFor("Music", "wave-07-virtual-rush.mp3"),
+            assets.PathFor("Music", "wave-10-subspace.mp3"),
+            assets.PathFor("Music", "wave-13-the-rift.mp3")
         ];
 
         // Keep numbered backgrounds aligned with their waves. The special
@@ -91,9 +94,10 @@ internal sealed class SynthAudio : IAudioService
         // the next regular background without shifting every later wave.
         backgroundWaveMusicPaths =
         [
-            waveMusicPaths1[0], waveMusicPaths1[1], waveMusicPaths1[3], waveMusicPaths1[3], waveMusicPaths1[4],
+            waveMusicPaths1[1], waveMusicPaths1[0], waveMusicPaths1[3], waveMusicPaths1[3], waveMusicPaths1[4],
             waveMusicPaths1[5], waveMusicPaths1[6], waveMusicPaths1[7], waveMusicPaths1[8], waveMusicPaths1[9],
-            waveMusicPaths1[10], waveMusicPaths1[11], waveMusicPaths1[12], waveMusicPaths1[13], waveMusicPaths1[14]
+            waveMusicPaths1[10], waveMusicPaths1[11], waveMusicPaths1[12], waveMusicPaths1[13], waveMusicPaths1[14],
+            waveMusicPaths1[15], waveMusicPaths1[16], waveMusicPaths1[17]
         ];
 
         titleMusicPath = waveMusicPaths1[TitleMusicWave - 1];
@@ -645,8 +649,6 @@ internal sealed class SynthAudio : IAudioService
                 [SoundCue.ShipCrash] = "ship-explosion-retro.wav",
                 [SoundCue.ShipBlast] = "sfx_17a.wav",
                 [SoundCue.BonusFailed] = "sfx_18a.wav",
-                [SoundCue.GiantGrow] = "sfx_19a.wav",
-                [SoundCue.GiantShrink] = "sfx_19b.wav",
                 [SoundCue.VortexHit] = "sfx_13b.wav",
                 [SoundCue.NovaHit] = "sfx_09b.wav",
                 [SoundCue.RicochetBounce] = "ricochet-boing.mp3",

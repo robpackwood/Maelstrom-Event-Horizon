@@ -50,6 +50,9 @@ The following local files exactly match their OpenGameArt downloads:
 | `Assets/Music/wave-04-star-on-the-horizon.mp3` | `4FD203B7DA64F5F40FBC965FA15AE9AC3BFA70E9253744379F0646470D219812` | Star On The Horizon |
 | `Assets/Music/wave-07-magic-space.mp3` | `4B64E483ED54FD2A35B90C47D79403AC72480116BB7C58C958A2A2E7A568DA81` | Magic Space |
 | `Assets/Music/wave-02-persevere.mp3` | `358F712FF35B59CE249D0797CB9BF028B5082C37E9244E4C9B55A0AEAB11A309` | Persevere |
+| `Assets/Music/wave-07-virtual-rush.mp3` | `BE1BEF582464C164F11869291662ED04FA9844AF1921B558853BE7E9B7B0D5E5` | Virtual Rush, loop version |
+| `Assets/Music/wave-10-subspace.mp3` | `7648921D67B43F8125C5F420BE0F28AF272E1DF285D70D4E854F8D448252FD14` | Subspace, loop version |
+| `Assets/Music/wave-13-the-rift.mp3` | `4246D86D68F9CC5F0923E6D4888264328A8E3D35A1FDC7BE99563AD3471A6647` | The Rift, loop version |
 | `Assets/Music/disabled-boss-space-battle.mp3` | `DE0DB250712A4050AF4D4711D5D7EA2A0B100AD51B4D31D740F605CF6C78A974` | Space Battle |
 | `Assets/Music/disabled-bonus-party-sector.mp3` | `77E1AD0BD0A7C5625A12EAA1C8099408EDE6959B2EE2DBF5BACE85D09A602ADA` | Party Sector |
 | `Assets/Music/wave-09-anti-entity.mp3` | `078E82E8DAF3D769CF0EF1540239E203CA03C1A752C9CD3C5BAE684E43F0D562` | Anti Entity, loopable version |

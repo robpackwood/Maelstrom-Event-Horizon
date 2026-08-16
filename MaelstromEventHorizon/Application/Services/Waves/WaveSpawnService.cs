@@ -31,7 +31,6 @@ internal sealed class WaveSpawnService
             : game.BossOnlyMode ? game.Wave < 6 ? 6 : game.Wave + 5 : game.Wave + 1;
 
         game.WaveStartedAt = game.TotalTime;
-        game.AdvanceTemporaryUpgrades();
 
         game.IsBonusStage = game.BonusOnlyMode ||
                             (!game.BossOnlyMode && game.BonusStagesEnabled && game.Wave % 5 == 0);
@@ -53,6 +52,12 @@ internal sealed class WaveSpawnService
         }
 
         bool standardWave = game is { IsBonusStage: false, IsBossStage: false };
+
+        if (standardWave)
+        {
+            game.AdvanceTemporaryUpgrades();
+        }
+
         game.BonusStageFailed = false;
         game.RespawnTimer = 0;
         game.ThreatRetreatTime = 0;

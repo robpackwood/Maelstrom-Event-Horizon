@@ -101,18 +101,19 @@ internal sealed class SceneRenderer
     {
         bool titleScene = view.Game.Mode is GameMode.Title or GameMode.Controls;
         int waveIndex = Math.Max(0, view.Game.Wave - 1);
+        int backgroundWaveIndex = waveIndex switch { 0 => 1, 1 => 0, _ => waveIndex };
 
         BitmapSource? selectedBackground = titleScene
             ? view.Background
-            : view.WaveBackgrounds[waveIndex % view.WaveBackgrounds.Length] ?? view.Background;
+            : view.WaveBackgrounds[backgroundWaveIndex % view.WaveBackgrounds.Length] ?? view.Background;
 
         if (selectedBackground is not null)
         {
-            int cycle = waveIndex / view.WaveBackgrounds.Length;
-            double overscan = 62 + waveIndex % 4 * 4;
-            V2 panDirection = BackgroundPanDirections[waveIndex % BackgroundPanDirections.Length];
-            double travel = (view.Game.TotalTime * .05 + waveIndex * .37) % 2;
-            double drift = titleScene ? 0 : (1 - Math.Abs(travel - 1) * 2) * (42 + waveIndex % 3 * 5);
+            int cycle = backgroundWaveIndex / view.WaveBackgrounds.Length;
+            double overscan = 62 + backgroundWaveIndex % 4 * 4;
+            V2 panDirection = BackgroundPanDirections[backgroundWaveIndex % BackgroundPanDirections.Length];
+            double travel = (view.Game.TotalTime * .05 + backgroundWaveIndex * .37) % 2;
+            double drift = titleScene ? 0 : (1 - Math.Abs(travel - 1) * 2) * (42 + backgroundWaveIndex % 3 * 5);
             double panX = panDirection.X * drift;
             double panY = panDirection.Y * drift;
 
@@ -126,7 +127,7 @@ internal sealed class SceneRenderer
 
             dc.Pop();
 
-            Color grade = GameView.WaveGrades[waveIndex % GameView.WaveGrades.Length];
+            Color grade = GameView.WaveGrades[backgroundWaveIndex % GameView.WaveGrades.Length];
 
             dc.DrawRectangle(
                 view.Brush(Color.FromArgb(titleScene ? (byte)36 : (byte)58, grade.R, grade.G, grade.B)), null,

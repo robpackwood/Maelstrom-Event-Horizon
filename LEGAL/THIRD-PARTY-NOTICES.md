@@ -28,6 +28,10 @@ https://creativecommons.org/publicdomain/zero/1.0/
   Source: https://opengameart.org/content/magic-space
 - Persevere, by Vitalezzz.
   Source: https://opengameart.org/content/persevere
+- Virtual Rush, Subspace, and The Rift, by Vitalezzz.
+  Sources: https://opengameart.org/content/virtual-rush,
+  https://opengameart.org/content/subspace, and
+  https://opengameart.org/content/the-rift
 - Space Battle, by MintoDog.
   Source: https://opengameart.org/content/space-battle
 - Party Sector, by Joth.
